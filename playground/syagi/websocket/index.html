@@ -14,14 +14,10 @@
   <script>
     const ws = new WebSocket('ws://localhost:8080');
 
-    // サーバーからのメッセージ受信 (async/await でBlobを文字列に変換)
     ws.onmessage = async (event) => {
-      let message = event.data;
-      if (message instanceof Blob) {
-        message = await message.text();
-      }
-      console.log('Received:', message);
-      document.getElementById('output').innerHTML += message + '<br>';
+      let data = JSON.parse(event.data);
+      console.log('Received data:', data);
+      document.getElementById('output').innerHTML += data.count + ": " + data.message + '<br>';
     };
 
     function sendMessage() {
