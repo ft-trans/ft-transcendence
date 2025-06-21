@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>WebSocket Client</title>
+</head>
+
+<body>
+  <h1>WebSocket Client</h1>
+  <input type="text" id="message" placeholder="メッセージを入力">
+  <button onclick="sendMessage()">送信</button>
+  <div id="output"></div>
+
+  <script>
+    const ws = new WebSocket('ws://localhost:8080');
+
+    // サーバーからのメッセージ受信 (async/await でBlobを文字列に変換)
+    ws.onmessage = async (event) => {
+      let message = event.data;
+      if (message instanceof Blob) {
+        message = await message.text();
+      }
+      console.log('Received:', message);
+      document.getElementById('output').innerHTML += message + '<br>';
+    };
+
+    function sendMessage() {
+      const message = document.getElementById('message').value;
+      ws.send(message);
+      document.getElementById('message').value = '';
+    }
+  </script>
+</body>
+
+</html>

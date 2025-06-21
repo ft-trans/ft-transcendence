@@ -1,0 +1,14 @@
+.DS_Store
+
+*.code-workspace
+.vscode/*
+
+*.orig
+*.log
+
+node_modules
+
+
+########### playground ###########
+## syagi
+
