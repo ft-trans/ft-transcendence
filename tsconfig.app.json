@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "module": "ES2020",
+    "target": "ESNext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "types": ["node"]
+  },
+  "include": ["app"],
+}

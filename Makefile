@@ -6,4 +6,7 @@ setup.env:
 	asdf install
 
 client.run:
-	cd front && pnpm run dev
+	cd front && pnpm dev:front
+
+server.run:
+	cd app && pnpm dev:app
