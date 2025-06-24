@@ -5,7 +5,7 @@
       "path": "./tsconfig.app.json"
     },
     {
-      "path": "./tsconfig.front.json"
+      "path": "./tsconfig.client.json"
     }
   ]
 }
