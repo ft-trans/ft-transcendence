@@ -1,11 +1,20 @@
 {
   "compilerOptions": {
-    "module": "ES2020",
+    /* Basic Settings */
     "target": "ESNext",
+    "module": "node16",
+
+    /* Module Resolution */
+    "moduleResolution": "node16",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node",
-    "types": ["node"]
+
+    /* Type Checking */
+    "skipLibCheck": true,
+    "types": ["node"],
+
+    /* Output */
+    "outDir": "dist"
   },
-  "include": ["app"],
+  "include": ["app"]
 }

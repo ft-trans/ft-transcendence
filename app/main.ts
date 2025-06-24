@@ -1,14 +1,28 @@
-import fastify from 'fastify';
+import Fastify from 'fastify';
+import { resolve } from 'node:path';
+import FastifyVite from '@fastify/vite';
 
-const app = fastify({ logger: true });
+const app = Fastify({ logger: true });
 
-app.get('/api/health', async (request, reply) => {
+app.get('/api/health', async (req, reply) => {
   return { message: 'OK' };
 });
 
 const start = async () => {
   try {
-    await app.listen({ port: 3030 });
+    await app.register(FastifyVite, {
+      root: resolve(import.meta.dirname, '..'),
+      distDir: resolve(import.meta.dirname, '..'),
+      dev: process.argv.includes("--dev"),
+      spa: true,
+    });
+
+    app.get('/', (req, reply) => {
+      return reply.html()
+    })
+
+    await app.vite.ready();
+    await app.listen({ port: 3000 });
   } catch (err) {
     app.log.error(err);
     process.exit(1);

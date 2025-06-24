@@ -5,8 +5,5 @@ setup.env:
 	asdf plugin add pnpm
 	asdf install
 
-client.run:
-	cd front && pnpm dev:front
-
-server.run:
-	cd app && pnpm dev:app
+run:
+	pnpm run dev
