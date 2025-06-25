@@ -9,6 +9,7 @@
     "dev": "node --import @swc-node/register/esm-register ./app/main.ts --dev"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.0.5",
     "@swc-node/register": "^1.10.10",
     "@swc/cli": "^0.7.7",
     "@swc/core": "^1.12.5",
