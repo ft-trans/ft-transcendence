@@ -4,8 +4,8 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"check": "biome check",
-		"check:fix": "biome check --write",
+		"check": "biome check .",
+		"check:fix": "biome check --write .",
 		"typecheck": "tsc --build --noEmit",
 		"build": "vite build && swc ./app/main.ts -d dist",
 		"dev": "node --import @swc-node/register/esm-register ./app/main.ts --dev"

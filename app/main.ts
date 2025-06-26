@@ -4,7 +4,7 @@ import Fastify from "fastify";
 
 const app = Fastify({ logger: true });
 
-app.get("/api/health", async (req, reply) => {
+app.get("/api/health", async (_req, _reply) => {
 	return { message: "OK" };
 });
 
@@ -17,7 +17,7 @@ const start = async () => {
 			spa: true,
 		});
 
-		app.get("/", (req, reply) => {
+		app.get("/", (_req, reply) => {
 			return reply.html();
 		});
 
