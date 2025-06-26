@@ -11,6 +11,11 @@
 make setup
 ```
 
+```
+cp .envrc.sample .envrc
+direnv allow
+```
+
 ### 起動
 
 ```
