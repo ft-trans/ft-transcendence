@@ -1,6 +1,7 @@
 setup: setup.env
 
 setup.env:
+	asdf plugin add direnv
 	asdf plugin add nodejs
 	asdf plugin add pnpm
 	asdf install
