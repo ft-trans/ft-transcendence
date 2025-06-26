@@ -14,5 +14,5 @@ make setup
 ### 起動
 
 ```
-make client.run
+make run
 ```
