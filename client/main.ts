@@ -1,6 +1,7 @@
 import typescriptLogo from './typescript.svg'
 import viteLogo from '/vite.svg'
 import { setupCounter } from './counter.ts'
+import { setupRegisterUser } from './user.ts'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
@@ -17,6 +18,11 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="card">
       <button id="counter" type="button"></button>
     </div>
+    <div class="user">
+      <input id="email" type="text" placeholder="Enter your email" />
+      <button id="register" type="button">send</button>
+      <div id="users"></div>
+    </div>
     <p class="read-the-docs">
       Click on the Vite and TypeScript logos to learn more
     </p>
@@ -24,3 +30,4 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 `
 
 setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+setupRegisterUser(document.querySelector<HTMLButtonElement>('#register')!)
