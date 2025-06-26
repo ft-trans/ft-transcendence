@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client';
 type User = Prisma.UserGetPayload<{
-  select: { id: true; name: true };
+  select: { id: true; email: true };
 }>;
 
 function renderUser(user: User, container: HTMLDivElement): void {
@@ -48,7 +48,7 @@ export function setupRegisterUser(element: HTMLButtonElement) {
       })
       .then(response => {
         if (!response.ok) {
-          console.log('User createion failed:', response.statusText);
+          console.log('User creation failed:', response.statusText);
         }
         return response.json();
       })
