@@ -6,8 +6,8 @@ setup.env:
 	asdf plugin add sqlite
 	asdf install
 
-setup.db.dev:
-	pnpm prisma migrate dev --name init
+db.migrate:
+	pnpm prisma migrate dev
 
 run:
 	pnpm run dev
