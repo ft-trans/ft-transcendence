@@ -1,8 +1,9 @@
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import viteLogo from "/vite.svg";
+import { setupCounter } from "./counter.ts";
+import typescriptLogo from "./typescript.svg";
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
+// biome-ignore lint/style/noNonNullAssertion: app は必ず存在する
+document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <div>
     <h1 class="text-3xl font-bold underline">
       Hello world!
@@ -21,6 +22,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       Click on the Vite and TypeScript logos to learn more
     </p>
   </div>
-`
+`;
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+// biome-ignore lint/style/noNonNullAssertion: button は必ず存在する
+setupCounter(document.querySelector<HTMLButtonElement>("#counter")!);

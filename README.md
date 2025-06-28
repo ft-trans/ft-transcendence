@@ -15,8 +15,12 @@ make setup
 make db.migrate
 ```
 
+```
+cp .vscode/settings.sample.json .vscode/settings.json
+```
+
 ### 起動
 
 ```
-make client.run
+make run
 ```
