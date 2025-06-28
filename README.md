@@ -12,7 +12,6 @@ make setup
 ```
 
 ```
-cp .env.development .env
 make db.migrate
 ```
 
