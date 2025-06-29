@@ -12,6 +12,10 @@ make setup
 ```
 
 ```
+make db.migrate
+```
+
+```
 cp .vscode/settings.sample.json .vscode/settings.json
 ```
 
