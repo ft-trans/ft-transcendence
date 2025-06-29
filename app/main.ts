@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import FastifyVite from "@fastify/vite";
 import Fastify from "fastify";
+import { usersController } from "./presentation/controller";
 
 const app = Fastify({ logger: true });
 
@@ -10,6 +11,8 @@ app.get("/api/health", async (_req, _reply) => {
 
 const start = async () => {
 	try {
+		await app.register(usersController, { prefix: "/api" });
+
 		await app.register(FastifyVite, {
 			root: resolve(import.meta.dirname, ".."),
 			distDir: resolve(import.meta.dirname, ".."),

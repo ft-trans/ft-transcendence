@@ -2,17 +2,16 @@
 	"compilerOptions": {
 		/* Basic Settings */
 		"target": "ESNext",
-		"module": "node16",
-
+		"module": "ESNext",
 		/* Module Resolution */
-		"moduleResolution": "node16",
+		"moduleResolution": "bundler",
 		"esModuleInterop": true,
 		"allowSyntheticDefaultImports": true,
-
+		"noEmit": true,
+		"allowImportingTsExtensions": true,
 		/* Type Checking */
 		"skipLibCheck": true,
 		"types": ["node"],
-
 		/* Output */
 		"outDir": "dist"
 	},
