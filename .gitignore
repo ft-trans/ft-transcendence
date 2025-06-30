@@ -29,3 +29,6 @@ dist-ssr
 /generated/prisma
 .env
 *.sqlite3
+
+*.pid
+*.rdb

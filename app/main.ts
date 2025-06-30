@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import fastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
 import Fastify from "fastify";
 
@@ -15,6 +16,11 @@ const start = async () => {
 			distDir: resolve(import.meta.dirname, ".."),
 			dev: process.argv.includes("--dev"),
 			spa: true,
+		});
+
+		await app.register(fastifyRedis, {
+			url: process.env.REDIS_URL,
+			closeClient: true,
 		});
 
 		app.get("/", (_req, reply) => {
