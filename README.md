@@ -12,11 +12,12 @@ make setup
 ```
 
 ```
-make db.migrate
+cp .env.sample .env
+cp .vscode/settings.sample.json .vscode/settings.json
 ```
 
 ```
-cp .vscode/settings.sample.json .vscode/settings.json
+make db.migrate
 ```
 
 ### 起動

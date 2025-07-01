@@ -8,7 +8,7 @@
 		"check:fix": "biome check --write .",
 		"typecheck": "tsc --build --noEmit",
 		"build": "vite build && swc ./app/main.ts -d dist",
-		"dev": "node --import @swc-node/register/esm-register ./app/main.ts --dev"
+		"dev": "node --import @swc-node/register/esm-register --env-file=.env ./app/main.ts --dev"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.0.5",
