@@ -18,7 +18,7 @@ run:
 
 .PHONY: up
 up:
-	docker compose -f compose.dev.yaml up
+	docker compose -f compose.dev.yaml up -d
 
 .PHONY: down
 down:
