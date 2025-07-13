@@ -1,7 +1,8 @@
 {
-	"recommendations": [
-		"ms-vscode.vscode-typescript-next",
-		"biomejs.biome",
-		"vitest.explorer"
-	]
+  "recommendations": [
+    "ms-vscode.vscode-typescript-next",
+    "biomejs.biome",
+    "vitest.explorer",
+    "prisma.prisma"
+  ]
 }
