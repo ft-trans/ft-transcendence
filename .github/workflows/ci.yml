@@ -13,9 +13,9 @@ jobs:
       - name: Setup Biome
         uses: biomejs/setup-biome@v2
         with:
-          version: latest
+          version: '2.0.5'
       - name: Run Biome
-        run: biome ci .
+        run: biome ci . --error-on-warnings
 
   typecheck:
     runs-on: ubuntu-latest
