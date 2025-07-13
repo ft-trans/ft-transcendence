@@ -18,10 +18,10 @@ const ErrorCodeMessages: Record<ErrorCode, string> = {
 };
 
 class AppError extends Error {
-	public readonly code: ErrorCode;
-	public readonly userMessage: string;
-	public readonly systemMessage?: string;
-	public readonly details?: Record<string, string>;
+	readonly code: ErrorCode;
+	readonly userMessage: string;
+	readonly systemMessage?: string;
+	readonly details?: Record<string, string>;
 
 	constructor({
 		code,

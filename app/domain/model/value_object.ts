@@ -11,11 +11,11 @@ export abstract class ValueObject<T, U> {
 
 	protected abstract validate(value: T): void;
 
-	public get value(): T {
+	get value(): T {
 		return this._value;
 	}
 
-	public equals(other: ValueObject<T, U>): boolean {
+	equals(other: ValueObject<T, U>): boolean {
 		return isEqual(this._value, other._value);
 	}
 }
