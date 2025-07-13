@@ -14,27 +14,16 @@ export class UserId extends ValueObject<string, "UserId"> {
 	}
 }
 
-export class UserName extends ValueObject<string, "UserName"> {
-	static MIN_LENGTH = 3;
-	static MAX_LENGTH = 50;
-	static PATTERN = /^[a-zA-Z0-9_]+$/;
+export class UserEmail extends ValueObject<string, "UserEmail"> {
+  // https://html.spec.whatwg.org/multipage/input.html#email-state-(type=email)
+	static readonly PATTERN =
+		/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
-	protected validate(value: string): void {
-		if (!UserName.PATTERN.test(value)) {
+	validate(value: string) {
+		if (!UserEmail.PATTERN.test(value)) {
 			throw new BadRequestError({
 				details: {
-					userName:
-						"ユーザー名は英数字とアンダースコアのみを含む必要があります",
-				},
-			});
-		}
-		if (
-			value.length < UserName.MIN_LENGTH ||
-			value.length > UserName.MAX_LENGTH
-		) {
-			throw new BadRequestError({
-				details: {
-					userName: `ユーザー名は${UserName.MIN_LENGTH}文字以上、${UserName.MAX_LENGTH}文字以下である必要があります`,
+					userEmail: "メールアドレスの形式が正しくありません",
 				},
 			});
 		}
@@ -44,15 +33,15 @@ export class UserName extends ValueObject<string, "UserName"> {
 export class User {
 	private constructor(
 		readonly id: UserId,
-		readonly name: UserName,
+		readonly email: UserEmail,
 	) {}
 
-	static create(name: UserName): User {
+	static create(email: UserEmail): User {
 		const id = new UserId(ulid());
-		return new User(id, name);
+		return new User(id, email);
 	}
 
-	static reconstruct(id: UserId, name: UserName): User {
-		return new User(id, name);
+	static reconstruct(id: UserId, email: UserEmail): User {
+		return new User(id, email);
 	}
 }
