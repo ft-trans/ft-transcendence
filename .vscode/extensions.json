@@ -1,3 +1,7 @@
 {
-	"recommendations": ["ms-vscode.vscode-typescript-next", "biomejs.biome"]
+	"recommendations": [
+		"ms-vscode.vscode-typescript-next",
+		"biomejs.biome",
+		"vitest.explorer"
+	]
 }
