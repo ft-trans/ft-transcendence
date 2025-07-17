@@ -42,9 +42,6 @@ services:
     depends_on:
       app:
         condition: service_healthy
-    volumes:
-      - app:/app
-      - node_modules:/app/node_modules # Avoids overwriting node_modules with host's version
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
