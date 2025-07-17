@@ -1,3 +1,5 @@
+COMPOSE_YML := compose.dev.yaml
+
 .PHONY: setup
 setup: setup.env
 
@@ -18,10 +20,13 @@ run:
 
 .PHONY: up
 up:
-	docker compose -f compose.dev.yaml up -d
+	docker compose -f $(COMPOSE_YML) up -d
 
 .PHONY: down
 down:
-	docker compose -f compose.dev.yaml down
+	docker compose -f $(COMPOSE_YML) down
 
+.PHONY: clean_docker
+clean_docker:
+	docker compose -f $(COMPOSE_YML) down --rmi all -v
 

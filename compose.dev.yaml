@@ -1,6 +1,26 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.app
+      target: development
+      args:
+        - DATABASE_URL=${DATABASE_URL}
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+    ports:
+      - "3001:3000"
+    networks:
+      - transcendence_net
+    depends_on:
+      - redis
+    volumes:
+      - app:/app
+      - node_modules:/app/node_modules # Avoids overwriting node_modules with host's version
 
- redis:
+  redis:
     image: redis:8.0.2
     ports:
       - "6379:6379"
@@ -11,6 +31,13 @@ services:
 
 volumes:
   redis:
+  app:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./
+      o: bind
+  node_modules:
 
 networks:
   transcendence_net:
