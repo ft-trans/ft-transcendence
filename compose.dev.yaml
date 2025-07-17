@@ -15,12 +15,18 @@ services:
     networks:
       - transcendence_net
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     volumes:
       - app:/app
       - node_modules:/app/node_modules # Avoids overwriting with host's version
       - generated:/app/generated # Avoids overwriting with host's version
-
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   front:
     build:
@@ -34,10 +40,17 @@ services:
     networks:
       - transcendence_net
     depends_on:
-      - app
+      app:
+        condition: service_healthy
     volumes:
       - app:/app
       - node_modules:/app/node_modules # Avoids overwriting node_modules with host's version
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   redis:
     image: redis:8.0.2
@@ -47,6 +60,12 @@ services:
       - redis:/data
     networks:
       - transcendence_net
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
   redis:
