@@ -1,7 +1,6 @@
 # .dockerignore
 .git
 .github
-deploy
 Makefile
 compose.dev.yaml
 
