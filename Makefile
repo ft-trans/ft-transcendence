@@ -22,12 +22,16 @@ run:
 up:
 	docker compose -f $(COMPOSE_YML) up -d
 
+.PHONY: build.no-cache
+build.no-cache:
+	docker compose -f $(COMPOSE_YML) build --no-cache
+
 .PHONY: down
 down:
 	docker compose -f $(COMPOSE_YML) down
 
-.PHONY: clean_docker
-clean_docker:
+.PHONY: clean.docker
+clean.docker:
 	docker compose -f $(COMPOSE_YML) down --rmi all -v
 
 .PHONY: clean
