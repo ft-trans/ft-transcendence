@@ -30,3 +30,6 @@ down:
 clean_docker:
 	docker compose -f $(COMPOSE_YML) down --rmi all -v
 
+.PHONY: clean
+clean:
+	rm -rf dist
