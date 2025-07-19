@@ -2,6 +2,7 @@
 	"recommendations": [
 		"ms-vscode.vscode-typescript-next",
 		"biomejs.biome",
-		"vitest.explorer"
+		"vitest.explorer",
+		"prisma.prisma"
 	]
 }

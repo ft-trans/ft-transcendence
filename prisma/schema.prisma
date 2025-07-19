@@ -3,7 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  output   = "../app/infra/database/generated"
 }
 
 datasource db {
@@ -12,7 +12,7 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
+  id    String     @id
   email String  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
