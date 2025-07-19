@@ -1,9 +1,9 @@
 import { User, UserEmail, UserId } from "@domain/model";
 import type { IUserRepository } from "@domain/repository";
-import type { PrismaClient } from "./generated";
+import type { Client } from "./repository";
 
 export class UserRepository implements IUserRepository {
-	constructor(private readonly client: PrismaClient) {}
+	constructor(private readonly client: Client) {}
 
 	async findById(id: UserId): Promise<User | undefined> {
 		const user = await this.client.user.findUnique({
