@@ -11,15 +11,16 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-RUN pnpm run build
+RUN pnpm run build:production
 
-FROM nginx:1.29 AS development
+
+FROM nginx:1.29 AS production
 
 RUN set -x \
   && rm -f /etc/nginx/conf.d/default.conf
 
-COPY front/nginx.dev.conf /etc/nginx/nginx.conf
-COPY front/default.dev.conf /etc/nginx/conf.d/default.conf
+COPY deploy/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 COPY --from=build --chown=nginx:nginx /app/dist/client /var/www/html
 

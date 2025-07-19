@@ -8,6 +8,7 @@
 		"check:fix": "biome check --write .",
 		"typecheck": "tsc --build --noEmit",
 		"build": "vite build && swc ./app/main.ts -d dist",
+		"build:production": "vite build --mode production --config vite.config.production.ts && swc ./app/main.ts -d dist --config-file .swcrc.production",
 		"dev": "node --import @swc-node/register/esm-register --env-file=.env ./app/main.ts --dev",
 		"test": "vitest --run",
 		"test:watch": "vitest",

@@ -3,24 +3,19 @@ services:
     build:
       context: .
       dockerfile: deploy/Dockerfile.app
-      target: development
+      target: production
       args:
-        - DATABASE_URL=${DATABASE_URL}
+        DATABASE_URL: ${DATABASE_URL}
     environment:
-      - NODE_ENV=development
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
-    ports:
-      - "3001:3000"
     networks:
       - transcendence_net
     depends_on:
       redis:
         condition: service_healthy
     volumes:
-      - app:/app
-      - node_modules:/app/node_modules # Avoids overwriting with host's version
-      - generated:/app/generated # Avoids overwriting with host's version
+      - prisma:/app/prisma
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
@@ -28,13 +23,11 @@ services:
       timeout: 5s
       retries: 3
 
-  front:
+  nginx:
     build:
       context: .
-      dockerfile: deploy/Dockerfile.front
-      target: development
-    environment:
-      - NODE_ENV=development
+      dockerfile: deploy/Dockerfile.nginx
+      target: production
     ports:
       - "80:80"
     networks:
@@ -51,6 +44,7 @@ services:
 
   redis:
     image: redis:8.0.2
+    # TODO 提出前にports削除
     ports:
       - "6379:6379"
     volumes:
@@ -72,8 +66,7 @@ volumes:
       type: none
       device: ./
       o: bind
-  node_modules:
-  generated:
+  prisma:
 
 networks:
   transcendence_net:
