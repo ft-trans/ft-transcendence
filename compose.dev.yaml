@@ -1,6 +1,55 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.app
+      target: development
+      args:
+        - DATABASE_URL=${DATABASE_URL}
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+    ports:
+      - "3001:3000"
+    networks:
+      - transcendence_net
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - app:/app
+      - node_modules:/app/node_modules # Avoids overwriting with host's version
+      - generated:/app/generated # Avoids overwriting with host's version
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
- redis:
+  front:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.front
+      target: development
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "80:80"
+    networks:
+      - transcendence_net
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  redis:
     image: redis:8.0.2
     ports:
       - "6379:6379"
@@ -8,9 +57,23 @@ services:
       - redis:/data
     networks:
       - transcendence_net
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
   redis:
+  app:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./
+      o: bind
+  node_modules:
+  generated:
 
 networks:
   transcendence_net:
