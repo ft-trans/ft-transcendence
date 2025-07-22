@@ -13,9 +13,6 @@ export class Transaction implements ITransaction {
 			const repo = new Repository(tx);
 
 			const result = await callback(repo);
-			if (!result) {
-				return undefined;
-			}
 			return result;
 		});
 	}
