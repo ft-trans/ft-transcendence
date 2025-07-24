@@ -3,12 +3,13 @@
 import viteFastify from "@fastify/vite/plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
 	build: {
 		outDir: "dist",
 	},
-	plugins: [viteFastify({ spa: true }), tailwindcss()],
+	plugins: [viteFastify({ spa: true }), tailwindcss(), tsconfigPaths()],
 	root: import.meta.dirname,
 	server: {
 		port: 3000,
