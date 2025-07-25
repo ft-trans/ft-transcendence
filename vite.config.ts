@@ -29,11 +29,11 @@ export default defineConfig(({ mode }: { mode: string }) => {
 			strictPort: true,
 			open: true,
 		},
-   	test: {
-  		coverage: {
-	  		reporter: ["text", "json-summary", "json"],
-  			reportOnFailure: true,
-  		},
-  	},
+		test: {
+			coverage: {
+				reporter: ["text", "json-summary", "json"],
+				reportOnFailure: true,
+			},
+		},
 	};
 });
