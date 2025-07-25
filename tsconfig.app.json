@@ -14,7 +14,16 @@
 		"types": ["node"],
 
 		/* Output */
-		"outDir": "dist"
+		"outDir": "dist",
+
+		/* Path Aliases */
+		"baseUrl": ".",
+		"paths": {
+			"@domain/*": ["./app/domain/*"],
+			"@infra/*": ["./app/infra/*"],
+			"@presentation/*": ["./app/presentation/*"],
+			"@usecase/*": ["./app/usecase/*"]
+		}
 	},
 	"include": ["app"]
 }
