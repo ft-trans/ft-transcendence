@@ -61,12 +61,6 @@ services:
 
 volumes:
   redis:
-  app:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./
-      o: bind
   prisma:
 
 networks:
