@@ -2,24 +2,39 @@
 /// <reference types="vitest/config" />
 import viteFastify from "@fastify/vite/plugin";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vite";
+import { defineConfig, type UserConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
-export default defineConfig({
-	build: {
-		outDir: "dist",
-	},
-	plugins: [viteFastify({ spa: true }), tailwindcss(), tsconfigPaths()],
-	root: import.meta.dirname,
-	server: {
-		port: 3000,
-		strictPort: true,
-		open: true,
-	},
-	test: {
-		coverage: {
-			reporter: ["text", "json-summary", "json"],
-			reportOnFailure: true,
+export default defineConfig(({ mode }: { mode: string }) => {
+	const config: UserConfig = {
+		build: {
+			outDir: "dist",
 		},
-	},
+		plugins: [viteFastify({ spa: true }), tailwindcss(), tsconfigPaths()],
+		root: import.meta.dirname,
+	};
+
+	if (mode === "production") {
+		config.build = {
+			...config.build,
+			minify: "terser",
+			sourcemap: false,
+		};
+		return config;
+	}
+
+	return {
+		...config,
+		server: {
+			port: 3000,
+			strictPort: true,
+			open: true,
+		},
+		test: {
+			coverage: {
+				reporter: ["text", "json-summary", "json"],
+				reportOnFailure: true,
+			},
+		},
+	};
 });
