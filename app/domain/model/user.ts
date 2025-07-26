@@ -44,4 +44,8 @@ export class User {
 	static reconstruct(id: UserId, email: UserEmail): User {
 		return new User(id, email);
 	}
+
+	equals(other: User): boolean {
+		return this.id.equals(other.id) && this.email.equals(other.email);
+	}
 }
