@@ -6,9 +6,14 @@ services:
       target: production
       args:
         DATABASE_URL: ${DATABASE_URL}
+    ports:
+      - "3000:3000"
+      - "9464:9464"
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
+      - OTEL_SERVICE_NAME=fastify-app
+      - OTEL_METRICS_PORT=9464
     networks:
       - transcendence_net
     depends_on:
@@ -79,21 +84,33 @@ services:
     networks:
     - transcendence_net
 
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.61.0
+    command: ["--redis.addr=redis://redis:6379"]
+    ports:
+      - "9121:9121"
+    networks:
+      - transcendence_net
+
   grafana:
     image: grafana/grafana-enterprise
     container_name: grafana
-    ports:
-      - '4000:3000'
-    networks:
-      - transcendence_net
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASS}
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    ports:
+      - '4000:3000'
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - transcendence_net
 
 volumes:
   redis:
   prisma:
   prometheus-data:
+  grafana-data:
 
 networks:
   transcendence_net:
