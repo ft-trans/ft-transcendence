@@ -1,16 +1,17 @@
 import { resolve } from "node:path";
+
+import { FastifyOtelInstrumentation } from "@fastify/otel";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
-import Fastify from "fastify";
 
-// OpenTelemetry core
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
-import { FastifyOtelInstrumentation } from "@fastify/otel";
-import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
 import { metrics, trace } from "@opentelemetry/api";
+import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
+import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
+import { resourceFromAttributes } from "@opentelemetry/resources";
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
+
+import Fastify from "fastify";
 
 const serviceName = process.env.OTEL_SERVICE_NAME ?? "fastify-app";
 const metricsPort = Number(process.env.OTEL_METRICS_PORT ?? 9464);
