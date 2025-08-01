@@ -12,7 +12,9 @@ const user: User = {
 };
 
 const mockUserRepository: IUserRepository = {
+	create: vi.fn(),
 	findById: vi.fn(),
+	findByEmail: vi.fn(),
 };
 
 const mockRepository: IRepository = {

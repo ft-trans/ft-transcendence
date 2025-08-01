@@ -44,9 +44,13 @@ class AppError extends Error {
 }
 
 export class BadRequestError extends AppError {
-	constructor({ details }: { details?: Record<string, string> }) {
+	constructor({
+		userMessage,
+		details,
+	}: { userMessage?: string; details?: Record<string, string> }) {
 		super({
 			code: ErrorCode.BAD_REQUEST,
+			userMessage: userMessage,
 			details,
 		});
 		this.name = "BadRequestError";
@@ -81,7 +85,7 @@ export class NotFoundError extends AppError {
 }
 
 export class InternalServerError extends AppError {
-	constructor({ systemMessage }: { systemMessage?: string }) {
+	constructor({ systemMessage }: { systemMessage?: string } = {}) {
 		super({
 			code: ErrorCode.INTERNAL_SERVER_ERROR,
 			systemMessage,
