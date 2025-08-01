@@ -21,5 +21,10 @@
     "lazy": false,
     "noInterop": true
   },
+  "exclude": [
+    ".*\\.spec\\.ts$",
+    ".*\\.d\\.ts$",
+    ".*/infra/database/generated/.*"
+  ],
   "sourceMaps": "inline"
 }
