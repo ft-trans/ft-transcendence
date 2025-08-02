@@ -12,8 +12,8 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
-      - OTEL_SERVICE_NAME=fastify-app
-      - OTEL_METRICS_PORT=9464
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}
+      - OTEL_METRICS_PORT=${OTEL_METRICS_PORT}
     networks:
       - transcendence_net
     depends_on:
@@ -71,8 +71,8 @@ services:
       - '9090:9090'
     volumes:
       - 'prometheus-data:/prometheus'
-      - './prometheus.yml:/etc/prometheus/prometheus.yml'
-      - './alertmanager_rules.yml:/etc/prometheus/alertmanager_rules.yml'
+      - './deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+      - './deploy/prometheus/alertmanager_rules.yml:/etc/prometheus/alertmanager_rules.yml'
     networks:
       - transcendence_net
 
@@ -93,7 +93,7 @@ services:
       - transcendence_net
 
   grafana:
-    image: grafana/grafana-enterprise
+    image: grafana/grafana
     container_name: grafana
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}

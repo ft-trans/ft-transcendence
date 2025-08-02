@@ -4,43 +4,13 @@ import { FastifyOtelInstrumentation } from "@fastify/otel";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
 
-import { metrics, trace } from "@opentelemetry/api";
-import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
-import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
+import { initializeOtel, otelInstrumentation } from "./observability/otel.js";
+
+await initializeOtel();
 
 import Fastify from "fastify";
 
-const serviceName = process.env.OTEL_SERVICE_NAME ?? "fastify-app";
-const metricsPort = Number(process.env.OTEL_METRICS_PORT ?? 9464);
-
-const prometheusExporter = new PrometheusExporter(
-	{ port: metricsPort, endpoint: "/metrics" },
-	() =>
-		console.log(
-			`Prometheus metrics at http://localhost:${metricsPort}/metrics`,
-		),
-);
-
-const fastifyOtelInstrumentation = new FastifyOtelInstrumentation({
-	servername: serviceName,
-	ignorePaths: (route) => route.url.startsWith("/api/health"),
-});
-
-const otelSDK = new NodeSDK({
-	resource: resourceFromAttributes({ [ATTR_SERVICE_NAME]: serviceName }),
-	metricReader: prometheusExporter,
-	instrumentations: [fastifyOtelInstrumentation, new HttpInstrumentation()],
-});
-await otelSDK.start();
-
-fastifyOtelInstrumentation.setTracerProvider(trace.getTracerProvider());
-fastifyOtelInstrumentation.setMeterProvider(metrics.getMeterProvider());
-
 const app = Fastify({ logger: true });
-await app.register(fastifyOtelInstrumentation.plugin());
 
 app.get("/api/health", async (_req, _reply) => {
 	return { message: "OK" };
@@ -48,6 +18,8 @@ app.get("/api/health", async (_req, _reply) => {
 
 const start = async () => {
 	try {
+		await app.register(otelInstrumentation.plugin());
+
 		await app.register(FastifyVite, {
 			root: resolve(import.meta.dirname, ".."),
 			distDir: resolve(import.meta.dirname, ".."),
