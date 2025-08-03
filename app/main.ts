@@ -1,20 +1,26 @@
 import { resolve } from "node:path";
 
-import { FastifyOtelInstrumentation } from "@fastify/otel";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
 
 import { initializeOtel, otelInstrumentation } from "./observability/otel.js";
 
-await initializeOtel();
+import { PrismaClient } from './infra/database/generated/index.js';
 
 import Fastify from "fastify";
 
+await initializeOtel();
+
 const app = Fastify({ logger: true });
+const prisma = new PrismaClient();  
 
 app.get("/api/health", async (_req, _reply) => {
 	return { message: "OK" };
 });
+
+app.get('/metrics', async (_req, reply) => {
+	reply.type('text/plain').send(await prisma.$metrics.prometheus());
+})
 
 const start = async () => {
 	try {

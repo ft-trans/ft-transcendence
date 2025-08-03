@@ -5,6 +5,8 @@ import { resourceFromAttributes } from "@opentelemetry/resources";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { FastifyOtelInstrumentation } from "@fastify/otel";
+import { PrismaInstrumentation } from "@prisma/instrumentation";   
+
 
 const serviceName = process.env.OTEL_SERVICE_NAME ?? "fastify-app";
 const metricsPort = Number(process.env.OTEL_METRICS_PORT ?? 9464);
@@ -24,7 +26,7 @@ const fastifyOtelInstrumentation = new FastifyOtelInstrumentation({
 const otelSDK = new NodeSDK({
 	resource: resourceFromAttributes({ [ATTR_SERVICE_NAME]: serviceName }),
 	metricReader: prometheusExporter,
-	instrumentations: [fastifyOtelInstrumentation, new HttpInstrumentation()],
+	instrumentations: [fastifyOtelInstrumentation, new HttpInstrumentation(), new PrismaInstrumentation({middleware: true,}),],
 });
 
 export const initializeOtel = async () => {

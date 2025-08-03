@@ -36,6 +36,7 @@ services:
       target: production
     ports:
       - "80:80"
+      - "8080:8080"
     networks:
       - transcendence_net
     depends_on:
@@ -76,13 +77,25 @@ services:
     networks:
       - transcendence_net
 
-  node-exporter:
-    image: prom/node-exporter
-    container_name: node-exporter
+  # node-exporter:
+  #   image: prom/node-exporter
+  #   container_name: node-exporter
+  #   ports:
+  #     - 9100:9100
+  #   networks:
+  #     - transcendence_net
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter
+    command:
+      - "--nginx.scrape-uri=http://nginx:8080/stub_status"
     ports:
-    - 9100:9100
+      - "9113:9113"
+    depends_on:
+      nginx:
+        condition: service_started
     networks:
-    - transcendence_net
+      - transcendence_net
 
   redis-exporter:
     image: oliver006/redis_exporter:v1.61.0
@@ -103,6 +116,9 @@ services:
       - '4000:3000'
     volumes:
       - grafana-data:/var/lib/grafana
+      - './deploy/grafana/datasources:/etc/grafana/provisioning/datasources'
+      - './deploy/grafana/dashboard-settings:/etc/grafana/provisioning/dashboards'
+      - './deploy/grafana/dashboards:/var/lib/grafana/dashboards'
     networks:
       - transcendence_net
 
