@@ -24,7 +24,7 @@ export class RegisterUserUsecase {
 				});
 			}
 
-			const user = await repo.newUserRepository().create(newUser);
+			const user = await userRepo.create(newUser);
 			if (!user) {
 				throw new InternalServerError();
 			}
