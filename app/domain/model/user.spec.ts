@@ -70,4 +70,19 @@ describe("User", () => {
 		expect(user.id).toBe(userId);
 		expect(user.email).toBe(userEmail);
 	});
+
+	it("should correctly compare two User instances with equals method", () => {
+		const user1 = User.create(new UserEmail("test@example.com"));
+		const user2 = User.reconstruct(user1.id, user1.email);
+		const user3 = User.create(user1.email);
+		const user4 = User.reconstruct(
+			user1.id,
+			new UserEmail("another@example.com"),
+		);
+
+		expect(user1.equals(user2)).toBe(true);
+		expect(user1.equals(user3)).toBe(false);
+		expect(user2.equals(user3)).toBe(false);
+		expect(user1.equals(user4)).toBe(false);
+	});
 });
