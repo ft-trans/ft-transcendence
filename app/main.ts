@@ -15,7 +15,6 @@ const app = Fastify({ logger: true });
 
 const start = async () => {
 	try {
-
 		prisma = new PrismaClient();
 
 		app.get("/api/health", async (_req, _reply) => {
