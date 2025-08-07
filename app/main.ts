@@ -9,20 +9,18 @@ import { PrismaClient } from "./infra/database/generated/index.js";
 
 import { initializeOtel, otelInstrumentation } from "./observability/otel.js";
 
-let prisma: PrismaClient;
-
 const app = Fastify({ logger: true });
 
 const start = async () => {
 	try {
-		prisma = new PrismaClient();
+		const prisma = new PrismaClient();
 
 		app.get("/api/health", async (_req, _reply) => {
 			return { message: "OK" };
 		});
 
-		app.get("/metrics", async (_req, reply) => {
-			reply.type("text/plain").send(await prisma.$metrics.prometheus());
+		app.get("/metrics", async (_req, _reply) => {
+			_reply.type("text/plain").send(await prisma.$metrics.prometheus());
 		});
 
 		await initializeOtel();
@@ -47,8 +45,8 @@ const start = async () => {
 			url: redis_url,
 		});
 
-		app.get("/", (_req, reply) => {
-			return reply.html();
+		app.get("/", (_req, _reply) => {
+			return _reply.html();
 		});
 
 		await app.vite.ready();
