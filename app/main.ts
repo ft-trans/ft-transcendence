@@ -9,21 +9,25 @@ import { PrismaClient } from "./infra/database/generated/index.js";
 
 import { initializeOtel, otelInstrumentation } from "./observability/otel.js";
 
-await initializeOtel();
+let prisma: PrismaClient;
 
 const app = Fastify({ logger: true });
-const prisma = new PrismaClient();
-
-app.get("/api/health", async (_req, _reply) => {
-	return { message: "OK" };
-});
-
-app.get("/metrics", async (_req, reply) => {
-	reply.type("text/plain").send(await prisma.$metrics.prometheus());
-});
 
 const start = async () => {
 	try {
+
+		prisma = new PrismaClient();
+
+		app.get("/api/health", async (_req, _reply) => {
+			return { message: "OK" };
+		});
+
+		app.get("/metrics", async (_req, reply) => {
+			reply.type("text/plain").send(await prisma.$metrics.prometheus());
+		});
+
+		await initializeOtel();
+
 		await app.register(otelInstrumentation.plugin());
 
 		await app.register(FastifyVite, {
