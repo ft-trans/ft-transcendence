@@ -30,3 +30,6 @@ generated
 .env
 *.sqlite3
 coverage
+
+# TLS certificate
+deploy/shared/app_ca.crt
