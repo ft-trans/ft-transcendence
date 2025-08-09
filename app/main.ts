@@ -1,6 +1,9 @@
 import { resolve } from "node:path";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
+import { Transaction } from "@infra/database";
+import { PrismaClient } from "@infra/database/generated";
+import { authController } from "@presentation/controllers/auth_controller";
 import Fastify from "fastify";
 
 const app = Fastify({ logger: true });
@@ -29,7 +32,8 @@ const start = async () => {
 			url: redis_url,
 		});
 
-		// TODO: API のハンドラはこの下に記述する
+		const tx = new Transaction(new PrismaClient());
+		await app.register(authController(tx), { prefix: "/api" });
 
 		app.get("/*", (_req, reply) => {
 			return reply.html();
