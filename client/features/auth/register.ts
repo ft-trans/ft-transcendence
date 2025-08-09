@@ -1,7 +1,5 @@
-import { Button } from "client/components/button";
-import { Component } from "client/components/component";
-import { FormInput } from "client/components/form_input";
-import { Header } from "client/components/header";
+import { Button, Component, FormInput, Header } from "client/components";
+import { SectionTitle } from "client/components/section_title";
 
 export class Register extends Component {
 	render(): string {
@@ -9,9 +7,7 @@ export class Register extends Component {
       <div class="min-h-screen">
         ${new Header().render()}
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div class="text-center mt-10 mb-6">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">アカウントを作成</h2>
-          </div>
+          ${new SectionTitle().render({ text: "アカウントを作成" })}
           <div class="max-w-md mx-auto">
             <form id="register-form" class="space-y-6">
               ${new FormInput().render({

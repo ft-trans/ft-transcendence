@@ -1,5 +1,4 @@
-import { Component } from "client/components/component";
-import { Header } from "client/components/header";
+import { Component, Header } from "client/components";
 
 export class Home extends Component {
 	render(): string {

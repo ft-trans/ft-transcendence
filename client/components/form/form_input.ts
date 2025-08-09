@@ -1,4 +1,4 @@
-import { Component } from "./component";
+import { Component } from "../component";
 import { Input } from "./input";
 import { Label } from "./label";
 

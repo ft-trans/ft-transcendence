@@ -1,4 +1,4 @@
-import { Component } from "./component";
+import { Component } from "../component";
 
 type Props = {
 	color?: "blue" | "gray";
