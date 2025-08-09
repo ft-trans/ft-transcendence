@@ -1,12 +1,6 @@
 import { registerUserFormSchema } from "@shared/api/auth";
 import { ApiClient } from "client/api/api_client";
-import {
-	Button,
-	Component,
-	FormInput,
-	Header,
-	SectionTitle,
-} from "client/components";
+import { Button, Component, FormInput, SectionTitle } from "client/components";
 
 export class Register extends Component {
 	addEventListeners(): void {
@@ -31,29 +25,26 @@ export class Register extends Component {
 
 	render(): string {
 		return `
-      <div class="min-h-screen">
-        ${new Header().render()}
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          ${new SectionTitle().render({ text: "アカウントを作成" })}
-          <div class="max-w-md mx-auto">
-            <form id="register-form" novalidate class="space-y-6">
-              ${new FormInput().render({
-								id: "email",
-								name: "email",
-								type: "email",
-								autocomplete: "email",
-								labelText: "メールアドレス",
+      <div>
+        ${new SectionTitle().render({ text: "アカウントを作成" })}
+        <div class="max-w-md mx-auto">
+          <form id="register-form" novalidate class="space-y-6">
+            ${new FormInput().render({
+							id: "email",
+							name: "email",
+							type: "email",
+							autocomplete: "email",
+							labelText: "メールアドレス",
+						})}
+            <div class="flex justify-center">
+              ${new Button().render({
+								width: "full",
+								type: "submit",
+								text: "登録",
 							})}
-              <div class="flex justify-center">
-                ${new Button().render({
-									width: "full",
-									type: "submit",
-									text: "登録",
-								})}
-              </div>
-            </form>
-          </div>
-        </main>
+            </div>
+          </form>
+        </div>
       </div>
     `;
 	}

@@ -1,4 +1,5 @@
 import { pathToRegexp } from "path-to-regexp";
+import { Navigation } from "./components";
 import { Register } from "./features/auth";
 import { Home } from "./features/home";
 
@@ -8,11 +9,11 @@ export const router = async () => {
 	const routes = [
 		{
 			path: "/",
-			component: new Home(),
+			component: new Navigation(new Home()),
 		},
 		{
 			path: "/auth/register",
-			component: new Register(),
+			component: new Navigation(new Register()),
 		},
 	];
 
