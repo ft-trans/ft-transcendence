@@ -23,6 +23,7 @@ export const router = async () => {
 
 		if (match) {
 			container.innerHTML = route.component.render();
+			route.component.addEventListeners();
 			return;
 		}
 	}
