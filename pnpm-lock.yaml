@@ -26,6 +26,9 @@ importers:
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
+      path-to-regexp:
+        specifier: ^8.2.0
+        version: 8.2.0
       tailwindcss:
         specifier: ^4.1.10
         version: 4.1.10
