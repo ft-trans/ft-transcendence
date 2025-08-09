@@ -1,6 +1,5 @@
-import { App } from "./app";
+import { router } from "./router";
 
 document.addEventListener("DOMContentLoaded", () => {
-	const app = new App();
-	app.start();
+  router();
 });
