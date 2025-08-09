@@ -1,6 +1,17 @@
-import { registerUserFormSchema } from "@shared/api/auth";
+import {
+	type RegisterUserRequest,
+	type RegisterUserResponse,
+	registerUserFormSchema,
+} from "@shared/api/auth";
 import { ApiClient } from "client/api/api_client";
-import { Button, Component, FormInput, SectionTitle } from "client/components";
+import {
+	Button,
+	Component,
+	FloatingBanner,
+	FormInput,
+	SectionTitle,
+} from "client/components";
+import { annotateZodErrors } from "client/components/form/error";
 
 export class Register extends Component {
 	addEventListeners(): void {
@@ -10,15 +21,23 @@ export class Register extends Component {
 				e.preventDefault();
 				const formData = new FormData(form);
 				const rawData = {
-					user: {
-						email: formData.get("email"),
-					},
+					email: formData.get("email"),
 				};
 
-				// TODO: バリデーションエラーのハンドリング
 				const input = registerUserFormSchema.safeParse(rawData);
+				if (!input.success) {
+					annotateZodErrors(input.error);
+					new FloatingBanner({
+						message: "入力に誤りがあります",
+						type: "error",
+					}).show();
+					return;
+				}
 				// TODO: APIエラーのハンドリング
-				await new ApiClient().post("/api/auth/register", input.data);
+				await new ApiClient().post<RegisterUserRequest, RegisterUserResponse>(
+					"/api/auth/register",
+					{ user: { email: input.data.email } },
+				);
 			});
 		}
 	}
