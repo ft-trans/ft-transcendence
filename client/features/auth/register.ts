@@ -1,4 +1,5 @@
 import { registerUserFormSchema } from "@shared/api/auth";
+import { ApiClient } from "client/api/api_client";
 import {
 	Button,
 	Component,
@@ -20,8 +21,10 @@ export class Register extends Component {
 					},
 				};
 
+				// TODO: バリデーションエラーのハンドリング
 				const input = registerUserFormSchema.safeParse(rawData);
-				console.log("Register input:", input);
+				// TODO: APIエラーのハンドリング
+				await new ApiClient().post("/api/auth/register", input.data);
 			});
 		}
 	}
