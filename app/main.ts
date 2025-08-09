@@ -29,7 +29,9 @@ const start = async () => {
 			url: redis_url,
 		});
 
-		app.get("/", (_req, reply) => {
+		// TODO: API のハンドラはこの下に記述する
+
+		app.get("/*", (_req, reply) => {
 			return reply.html();
 		});
 

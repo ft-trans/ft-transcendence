@@ -1,5 +1,5 @@
-import { Button } from "./button";
 import { Component } from "./component";
+import { Link } from "./link";
 
 export class Header extends Component {
 	render(): string {
@@ -11,7 +11,7 @@ export class Header extends Component {
                 <a href="/" data-link class="hover:text-blue-600">ft_trans</a>
             </h1>
             <nav class="space-x-6">
-              ${new Button().render({ href: "/auth/register", text: "登録" })}
+              ${new Link().render({ href: "/auth/register", text: "登録" })}
             </nav>
           </div>
         </div>

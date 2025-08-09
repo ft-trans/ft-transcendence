@@ -41,7 +41,7 @@ export const router = async () => {
 
 export const navigateTo = (path: string): void => {
 	history.pushState(undefined, "", path);
-  router();
+	router();
 };
 
 document.addEventListener("DOMContentLoaded", () => {
