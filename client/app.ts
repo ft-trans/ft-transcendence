@@ -1,3 +1,4 @@
+import { Register } from "./features/auth";
 import { Home } from "./features/home";
 import { Router } from "./router";
 
@@ -16,6 +17,10 @@ export class App {
 				{
 					path: "/",
 					component: new Home(),
+				},
+				{
+					path: "/auth/register",
+					component: new Register(),
 				},
 			],
 		});
