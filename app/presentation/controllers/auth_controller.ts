@@ -1,4 +1,4 @@
-import { BadRequestError } from "@domain/error";
+import { ErrBadRequest } from "@domain/error";
 import {
 	type RegisterUserRequest,
 	registerUserFormSchema,
@@ -24,7 +24,7 @@ const onRegisterUser = (tx: ITransaction) => {
 		});
 		if (!input.success) {
 			const flattened = z.flattenError(input.error);
-			throw new BadRequestError({
+			throw new ErrBadRequest({
 				userMessage: "入力に誤りがあります",
 				details: {
 					email: flattened.fieldErrors.email?.join(", "),
