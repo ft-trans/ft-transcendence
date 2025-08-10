@@ -6,9 +6,14 @@ services:
       target: production
       args:
         DATABASE_URL: ${DATABASE_URL}
+    ports:
+      - "3000:3000"
+      - "9464:9464"
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME}
+      OTEL_METRICS_PORT: ${OTEL_METRICS_PORT}
     networks:
       - transcendence_net
     depends_on:
@@ -31,6 +36,7 @@ services:
       target: production
     ports:
       - "80:80"
+      - "8080:8080"
     networks:
       - transcendence_net
     depends_on:
@@ -59,9 +65,68 @@ services:
       timeout: 5s
       retries: 3
 
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - '9090:9090'
+    volumes:
+      - 'prometheus-data:/prometheus'
+      - './deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+      - './deploy/prometheus/alertmanager_rules.yml:/etc/prometheus/alertmanager_rules.yml'
+    networks:
+      - transcendence_net
+
+  # node-exporter:
+  #   image: prom/node-exporter
+  #   container_name: node-exporter
+  #   ports:
+  #     - 9100:9100
+  #   networks:
+  #     - transcendence_net
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter
+    command:
+      - "--nginx.scrape-uri=http://nginx:8080/stub_status"
+    ports:
+      - "9113:9113"
+    depends_on:
+      nginx:
+        condition: service_started
+    networks:
+      - transcendence_net
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.61.0
+    command: ["--redis.addr=redis://redis:6379"]
+    ports:
+      - "9121:9121"
+    networks:
+      - transcendence_net
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASS}
+      GF_AUTH_ANONYMOUS_ENABLED: false
+    ports:
+      - '4000:3000'
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - './deploy/grafana/datasources:/etc/grafana/provisioning/datasources'
+      - './deploy/grafana/dashboard-settings:/etc/grafana/provisioning/dashboards'
+      - './deploy/grafana/dashboards:/var/lib/grafana/dashboards'
+    networks:
+      - transcendence_net
+
 volumes:
   redis:
   prisma:
+  prometheus-data:
+  grafana-data:
 
 networks:
   transcendence_net:

@@ -1,16 +1,32 @@
 import { resolve } from "node:path";
+
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
+
 import Fastify from "fastify";
+
+import { PrismaClient } from "./infra/database/generated/index.js";
+
+import { initializeOtel, otelInstrumentation } from "./observability/otel.js";
 
 const app = Fastify({ logger: true });
 
-app.get("/api/health", async (_req, _reply) => {
-	return { message: "OK" };
-});
-
 const start = async () => {
 	try {
+		const prisma = new PrismaClient();
+
+		app.get("/api/health", async (_req, _reply) => {
+			return { message: "OK" };
+		});
+
+		app.get("/metrics", async (_req, _reply) => {
+			_reply.type("text/plain").send(await prisma.$metrics.prometheus());
+		});
+
+		await initializeOtel();
+
+		await app.register(otelInstrumentation.plugin());
+
 		await app.register(FastifyVite, {
 			root: resolve(import.meta.dirname, ".."),
 			distDir: resolve(import.meta.dirname, ".."),
@@ -29,8 +45,8 @@ const start = async () => {
 			url: redis_url,
 		});
 
-		app.get("/", (_req, reply) => {
-			return reply.html();
+		app.get("/", (_req, _reply) => {
+			return _reply.html();
 		});
 
 		await app.vite.ready();
