@@ -6,17 +6,26 @@ type Props = {
 };
 
 export class SectionTitle extends Component {
-	render({ text, align = "center" }: Props): string {
+	private readonly align: "left" | "center" | "right";
+	private readonly text: string;
+
+	constructor({ text, align = "center" }: Props) {
+		super();
+		this.text = text;
+		this.align = align;
+	}
+
+	render(): string {
 		const alignmentClass =
-			align === "left"
+			this.align === "left"
 				? "text-left"
-				: align === "right"
+				: this.align === "right"
 					? "text-right"
 					: "text-center";
 		return `
       <div class="${alignmentClass} mb-4 mt-2">
         <h2 class="text-4xl font-bold text-gray-900">
-          ${text}
+          ${this.text}
         </h2>
       </div>
     `;

@@ -45,22 +45,22 @@ export class Register extends Component {
 	render(): string {
 		return `
       <div>
-        ${new SectionTitle().render({ text: "アカウントを作成" })}
+        ${new SectionTitle({ text: "アカウントを作成" }).render()}
         <div class="max-w-md mx-auto">
           <form id="register-form" novalidate class="space-y-6">
-            ${new FormInput().render({
+            ${new FormInput({
 							id: "email",
 							name: "email",
 							type: "email",
 							autocomplete: "email",
 							labelText: "メールアドレス",
-						})}
+						}).render()}
             <div class="flex justify-center">
-              ${new Button().render({
+              ${new Button({
 								width: "full",
 								type: "submit",
 								text: "登録",
-							})}
+							}).render()}
             </div>
           </form>
         </div>

@@ -1,5 +1,5 @@
 export abstract class Component {
-	abstract render(props: unknown): string;
+	abstract render(): string;
 
 	addEventListeners(): void {}
 }

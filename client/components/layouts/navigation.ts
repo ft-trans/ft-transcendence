@@ -18,12 +18,12 @@ export class Navigation extends Component {
                   <a href="/" data-link class="hover:text-blue-600">ft_trans</a>
               </h1>
               <nav class="space-x-6">
-                ${new Link().render({ href: "/auth/register", text: "登録" })}
+                ${new Link({ href: "/auth/register", text: "登録" }).render()}
               </nav>
             </div>
           </div>
         </header>
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">${this.child.render(undefined)}</main>
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">${this.child.render()}</main>
       </div>
     `;
 	}

@@ -6,10 +6,19 @@ type Props = {
 };
 
 export class Label extends Component {
-	render({ forHTML, text }: Props): string {
+	private readonly forHTML: string;
+	private readonly text: string;
+
+	constructor({ forHTML, text }: Props) {
+		super();
+		this.forHTML = forHTML;
+		this.text = text;
+	}
+
+	render(): string {
 		return `
-      <label for="${forHTML}" class="block text-sm font-medium text-gray-700">
-        ${text}
+      <label for="${this.forHTML}" class="block text-sm font-medium text-gray-700">
+        ${this.text}
       </label>
     `;
 	}
