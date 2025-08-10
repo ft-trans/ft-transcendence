@@ -9,11 +9,11 @@ export const router = async () => {
 	const routes = [
 		{
 			path: "/",
-			component: new Navigation(new Home()),
+			component: new Navigation({ child: new Home() }),
 		},
 		{
 			path: "/auth/register",
-			component: new Navigation(new Register()),
+			component: new Navigation({ child: new Register() }),
 		},
 	];
 

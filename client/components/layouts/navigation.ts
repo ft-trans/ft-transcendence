@@ -1,9 +1,13 @@
 import { Component } from "../component";
 import { Link } from "../navigation";
 
+type Props = {
+	child: Component;
+};
+
 export class Navigation extends Component {
 	private readonly child: Component;
-	constructor(child: Component) {
+	constructor({ child }: Props) {
 		super();
 		this.child = child;
 	}
