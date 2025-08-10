@@ -1,7 +1,12 @@
-import type { RegisterUserRequest } from "@shared/api/auth";
+import { BadRequestError } from "@domain/error";
+import {
+	type RegisterUserRequest,
+	registerUserFormSchema,
+} from "@shared/api/auth";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
 import type { ITransaction } from "@usecase/transaction";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import z from "zod";
 
 export const authController = (tx: ITransaction) => {
 	return async (fastify: FastifyInstance) => {
@@ -14,9 +19,22 @@ const onRegisterUser = (tx: ITransaction) => {
 		req: FastifyRequest<{ Body: RegisterUserRequest }>,
 		reply: FastifyReply,
 	) => {
+		const input = registerUserFormSchema.safeParse({
+			email: req.body.user.email,
+		});
+		if (!input.success) {
+			const flattened = z.flattenError(input.error);
+			throw new BadRequestError({
+				userMessage: "入力に誤りがあります",
+				details: {
+					email: flattened.fieldErrors.email?.join(", "),
+				},
+			});
+		}
+
 		const usecase = new RegisterUserUsecase(tx);
 		const output = await usecase.execute({
-			email: req.body.user.email,
+			email: input.data.email,
 		});
 		reply.send({
 			user: {
