@@ -3,18 +3,17 @@ import {
 	type RegisterUserRequest,
 	registerUserFormSchema,
 } from "@shared/api/auth";
-import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
-import type { ITransaction } from "@usecase/transaction";
+import type { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import z from "zod";
 
-export const authController = (tx: ITransaction) => {
+export const authController = (registerUserUsecase: RegisterUserUsecase) => {
 	return async (fastify: FastifyInstance) => {
-		fastify.post("/auth/register", onRegisterUser(tx));
+		fastify.post("/auth/register", onRegisterUser(registerUserUsecase));
 	};
 };
 
-const onRegisterUser = (tx: ITransaction) => {
+const onRegisterUser = (usecase: RegisterUserUsecase) => {
 	return async (
 		req: FastifyRequest<{ Body: RegisterUserRequest }>,
 		reply: FastifyReply,
@@ -31,8 +30,6 @@ const onRegisterUser = (tx: ITransaction) => {
 				},
 			});
 		}
-
-		const usecase = new RegisterUserUsecase(tx);
 		const output = await usecase.execute({
 			email: input.data.email,
 		});
