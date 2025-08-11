@@ -45,7 +45,14 @@ export class User {
 		return new User(id, email);
 	}
 
-	equals(other: User): boolean {
-		return this.id.equals(other.id) && this.email.equals(other.email);
+	isModified(other: User): boolean {
+		if (!this.id.equals(other.id)) {
+			throw new BadRequestError({
+				details: {
+					UserId: "異なるユーザー同士の比較はできません",
+				},
+			});
+		}
+		return !this.email.equals(other.email);
 	}
 }

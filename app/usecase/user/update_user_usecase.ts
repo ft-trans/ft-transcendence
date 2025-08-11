@@ -1,6 +1,5 @@
 import { BadRequestError, NotFoundError } from "@domain/error";
 import { User, UserEmail, UserId } from "@domain/model";
-import { UserService } from "@domain/service";
 import type { ITransaction } from "@usecase/transaction";
 
 export type UpdateUserUsecaseInput = {
@@ -23,14 +22,14 @@ export class UpdateUserUsecase {
 			const email = new UserEmail(input.email);
 			const updatedUser = User.reconstruct(currentUser.id, email);
 
-			if (currentUser.equals(updatedUser)) {
+			if (!currentUser.isModified(updatedUser)) {
 				return currentUser;
 			}
 
-			const userService = new UserService(userRepo);
+			const existingUserByEmail = await userRepo.findByEmail(email);
 			if (
-				currentUser.email.value !== email.value &&
-				(await userService.exists(updatedUser))
+				existingUserByEmail &&
+				!existingUserByEmail.id.equals(currentUser.id)
 			) {
 				throw new BadRequestError({
 					userMessage: "メールアドレスはすでに使用されています",
