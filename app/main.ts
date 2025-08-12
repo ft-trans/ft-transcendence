@@ -14,31 +14,47 @@ import { initializeOtel, otelInstrumentation } from "./observability/otel.js";
 // const app = Fastify({ logger: true });
 
 const elasticPassword = process.env.ELASTIC_PASSWORD;
-console.log("ELASTIC_PASSWORD:", elasticPassword);
+if (!elasticPassword) {
+	console.error("[boot] ELASTIC_PASSWORD is missing");
+	process.exit(1);
+}
 
 const app = Fastify({
 	logger: {
-		level: "debug", // ログレベル（必要に応じて "info" などに）
+		level: "debug",
 		transport: {
-			target: "pino-elasticsearch",
-			options: {
-				index: "ft-transcendence-app",
-				node: "https://es01:9200", // Docker compose上のElasticsearch
-				esVersion: 8,
-				auth: {
-					username: "elastic",
-					password: elasticPassword,
+			targets: [
+				{
+					// 開発用
+					target: "pino/file",
+					level: "debug",
+					options: { destination: 1 }, // stdout
 				},
-				tls: {
-					ca: readFileSync("/app/certs/app_ca.crt"),
-					rejectUnauthorized: false,
+				{
+					// 本番用
+					target: "pino-elasticsearch",
+					level: "info",
+					options: {
+						index: "ft-transcendence-app",
+						node: "https://es01:9200", // Docker compose上のElasticsearch
+						esVersion: 8,
+						auth: {
+							username: "elastic",
+							password: elasticPassword,
+						},
+						tls: {
+							ca: readFileSync("/app/certs/app_ca.crt"),
+							rejectUnauthorized: false,
+						},
+					},
 				},
-			},
+			],
 		},
 	},
 });
 
 const start = async () => {
+	app.log.info("Testing logger to ES");
 	try {
 		const prisma = new PrismaClient();
 
