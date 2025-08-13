@@ -1,5 +1,5 @@
 import { isValid, ulid } from "ulid";
-import { BadRequestError } from "../error";
+import { BadRequestError, InternalServerError } from "../error";
 import { ValueObject } from "./value_object";
 
 export class UserId extends ValueObject<string, "UserId"> {
@@ -47,11 +47,7 @@ export class User {
 
 	isModified(other: User): boolean {
 		if (!this.id.equals(other.id)) {
-			throw new BadRequestError({
-				details: {
-					UserId: "異なるユーザー同士の比較はできません",
-				},
-			});
+			throw new InternalServerError();
 		}
 		return !this.email.equals(other.email);
 	}

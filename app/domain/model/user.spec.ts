@@ -82,12 +82,7 @@ describe("User", () => {
 
 		expect(user1.isModified(user2)).toBe(false);
 		expect(() => user1.isModified(user3)).toThrow(
-			expect.objectContaining({
-				name: "BadRequestError",
-				details: {
-					UserId: "異なるユーザー同士の比較はできません",
-				},
-			}),
+			expect.objectContaining({ name: "InternalServerError" }),
 		);
 		expect(user1.isModified(user4)).toBe(true);
 	});
