@@ -1,5 +1,5 @@
 import { isValid, ulid } from "ulid";
-import { BadRequestError } from "../error";
+import { BadRequestError, InternalServerError } from "../error";
 import { ValueObject } from "./value_object";
 
 export class UserId extends ValueObject<string, "UserId"> {
@@ -43,5 +43,12 @@ export class User {
 
 	static reconstruct(id: UserId, email: UserEmail): User {
 		return new User(id, email);
+	}
+
+	isModified(other: User): boolean {
+		if (!this.id.equals(other.id)) {
+			throw new InternalServerError();
+		}
+		return !this.email.equals(other.email);
 	}
 }

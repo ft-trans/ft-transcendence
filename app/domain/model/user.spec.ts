@@ -70,4 +70,20 @@ describe("User", () => {
 		expect(user.id).toBe(userId);
 		expect(user.email).toBe(userEmail);
 	});
+
+	it("should correctly compare two User instances with isModified method", () => {
+		const user1 = User.create(new UserEmail("test@example.com"));
+		const user2 = User.reconstruct(user1.id, user1.email);
+		const user3 = User.create(user1.email);
+		const user4 = User.reconstruct(
+			user1.id,
+			new UserEmail("another@example.com"),
+		);
+
+		expect(user1.isModified(user2)).toBe(false);
+		expect(() => user1.isModified(user3)).toThrow(
+			expect.objectContaining({ name: "InternalServerError" }),
+		);
+		expect(user1.isModified(user4)).toBe(true);
+	});
 });
