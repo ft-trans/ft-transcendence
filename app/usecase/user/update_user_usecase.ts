@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError } from "@domain/error";
+import { ErrBadRequest, ErrNotFound } from "@domain/error";
 import { User, UserEmail, UserId } from "@domain/model";
 import type { ITransaction } from "@usecase/transaction";
 
@@ -16,7 +16,7 @@ export class UpdateUserUsecase {
 			const userId = new UserId(input.id);
 			const currentUser = await userRepo.findById(userId);
 			if (!currentUser) {
-				throw new NotFoundError();
+				throw new ErrNotFound();
 			}
 
 			const email = new UserEmail(input.email);
@@ -31,8 +31,10 @@ export class UpdateUserUsecase {
 				existingUserByEmail &&
 				!existingUserByEmail.id.equals(currentUser.id)
 			) {
-				throw new BadRequestError({
-					userMessage: "メールアドレスはすでに使用されています",
+				throw new ErrBadRequest({
+					details: {
+						userEmail: "メールアドレスは既に使用されています",
+					},
 				});
 			}
 

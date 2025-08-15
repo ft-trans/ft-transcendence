@@ -1,4 +1,4 @@
-import { NotFoundError } from "@domain/error";
+import { ErrNotFound } from "@domain/error";
 import { User, UserEmail } from "@domain/model";
 import type { IRepository, IUserRepository } from "@domain/repository";
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -38,7 +38,7 @@ describe("FindUserUsecase", () => {
 
 		const usecase = new FindUserUsecase(mockRepository);
 
-		await expect(usecase.run(user.id)).rejects.toThrow(NotFoundError);
+		await expect(usecase.run(user.id)).rejects.toThrow(ErrNotFound);
 		expect(mockRepository.newUserRepository).toHaveBeenCalledOnce();
 		expect(mockUserRepo.findById).toHaveBeenCalledOnce();
 		expect(mockUserRepo.findById).toHaveBeenCalledWith(user.id);

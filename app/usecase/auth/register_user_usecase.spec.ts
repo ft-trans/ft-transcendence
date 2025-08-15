@@ -1,4 +1,4 @@
-import { BadRequestError } from "@domain/error";
+import { ErrBadRequest } from "@domain/error";
 import { User, UserEmail } from "@domain/model";
 import type { IUserRepository } from "@domain/repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -46,6 +46,6 @@ describe("RegisterUserUsecase", () => {
 		const usecase = new RegisterUserUsecase(mockTx);
 		const input = { email: "test@example.com" };
 
-		await expect(usecase.execute(input)).rejects.toThrow(BadRequestError);
+		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 	});
 });

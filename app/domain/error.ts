@@ -43,7 +43,7 @@ class AppError extends Error {
 	}
 }
 
-export class BadRequestError extends AppError {
+export class ErrBadRequest extends AppError {
 	constructor({
 		userMessage,
 		details,
@@ -57,7 +57,7 @@ export class BadRequestError extends AppError {
 	}
 }
 
-export class UnauthorizedError extends AppError {
+export class ErrUnauthorized extends AppError {
 	constructor() {
 		super({
 			code: ErrorCode.UNAUTHORIZED,
@@ -66,7 +66,7 @@ export class UnauthorizedError extends AppError {
 	}
 }
 
-export class ForbiddenError extends AppError {
+export class ErrForbidden extends AppError {
 	constructor() {
 		super({
 			code: ErrorCode.FORBIDDEN,
@@ -75,7 +75,7 @@ export class ForbiddenError extends AppError {
 	}
 }
 
-export class NotFoundError extends AppError {
+export class ErrNotFound extends AppError {
 	constructor() {
 		super({
 			code: ErrorCode.NOT_FOUND,
@@ -84,7 +84,7 @@ export class NotFoundError extends AppError {
 	}
 }
 
-export class InternalServerError extends AppError {
+export class ErrInternalServer extends AppError {
 	constructor({ systemMessage }: { systemMessage?: string } = {}) {
 		super({
 			code: ErrorCode.INTERNAL_SERVER_ERROR,
