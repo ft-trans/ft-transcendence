@@ -81,7 +81,7 @@ describe("UpdateUserUsecase", () => {
 		await expect(usecase.execute(input)).rejects.toThrowError(
 			new ErrBadRequest({
 				details: {
-					email: "メールアドレスは既に使用されています",
+					userEmail: "メールアドレスは既に使用されています",
 				},
 			}),
 		);

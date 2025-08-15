@@ -11,9 +11,8 @@ describe("UserId", () => {
 
 	it("should throw a BadRequestError for an invalid ULID", () => {
 		const invalidUlid = "invalid-ulid";
-		expect(() => new UserId(invalidUlid)).toThrow(
-			expect.objectContaining({
-				name: "BadRequestError",
+		expect(() => new UserId(invalidUlid)).toThrowError(
+			new ErrBadRequest({
 				details: {
 					userId: "ユーザーIDは有効なULIDである必要があります",
 				},

@@ -33,7 +33,7 @@ export class UpdateUserUsecase {
 			) {
 				throw new ErrBadRequest({
 					details: {
-						email: "メールアドレスは既に使用されています",
+						userEmail: "メールアドレスは既に使用されています",
 					},
 				});
 			}
