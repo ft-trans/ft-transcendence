@@ -15,7 +15,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - prisma:/app/prisma
+      - prisma:/app/dist/prisma
     # TODO 提出前にコメントアウトを外す
     # restart: always
     healthcheck:
