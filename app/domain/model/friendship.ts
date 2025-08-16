@@ -1,41 +1,44 @@
-import { User, UserId } from './user';
+import type { User, UserId } from "./user";
 
-export type FriendshipStatus = 'pending' | 'accepted' | 'blocked';
+export type FriendshipStatus = "pending" | "accepted" | "blocked";
 
 export class Friendship {
-  constructor(
-    public readonly requesterId: UserId,
-    public readonly receiverId: UserId,
-    public status: FriendshipStatus,
-    public readonly createdAt: Date,
-    public updatedAt: Date,
-  ) {}
+	status: FriendshipStatus;
+	updatedAt: Date;
 
-  public static create(
-    requester: User,
-    receiver: User,
-  ): Friendship {
-    if (requester.id === receiver.id) {
-      throw new Error('Cannot create a friendship with oneself.');
-    }
-    return new Friendship(
-      requester.id,
-      receiver.id,
-      'pending',
-      new Date(),
-      new Date(),
-    );
-  }
+	constructor(
+		readonly requesterId: UserId,
+		readonly receiverId: UserId,
+		status: FriendshipStatus,
+		readonly createdAt: Date,
+		updatedAt: Date,
+	) {
+		this.status = status;
+		this.updatedAt = updatedAt;
+	}
 
-  public accept(): void {
-    if (this.status !== 'pending') {
-      throw new Error('Cannot accept a friendship that is not pending.');
-    }
-    this.status = 'accepted';
-    this.updatedAt = new Date();
-  }
-  
-  public isAccepted(): boolean {
-      return this.status === 'accepted';
-  }
+	static create(requester: User, receiver: User): Friendship {
+		if (requester.id.equals(receiver.id)) {
+			throw new Error("Cannot create a friendship with oneself.");
+		}
+		return new Friendship(
+			requester.id,
+			receiver.id,
+			"pending",
+			new Date(),
+			new Date(),
+		);
+	}
+
+	accept(): void {
+		if (this.status !== "pending") {
+			throw new Error("Cannot accept a friendship that is not pending.");
+		}
+		this.status = "accepted";
+		this.updatedAt = new Date();
+	}
+
+	isAccepted(): boolean {
+		return this.status === "accepted";
+	}
 }

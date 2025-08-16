@@ -1,29 +1,42 @@
 import { ulid } from "ulid";
-import { User } from './user';
+import type { User } from "./user";
 
-export type MatchStatus = 'in_progress' | 'completed';
-export type GameType = 'Pong';
+export type MatchStatus = "in_progress" | "completed";
+export type GameType = "Pong";
 
 export class Match {
-  constructor(
-    public readonly id: string,
-    public readonly participants: User[],
-    public status: MatchStatus,
-    public readonly gameType: GameType,
-    public readonly createdAt: Date,
-    public updatedAt: Date,
-  ) {}
+	status: MatchStatus;
+	updatedAt: Date;
 
-  public static create(participants: User[], gameType: GameType = 'Pong'): Match {
-    if (participants.length < 2) {
-        throw new Error('A match requires at least 2 participants.');
-    }
-    const id = ulid();
-    return new Match(id, participants, 'in_progress', gameType, new Date(), new Date());
-  }
+	constructor(
+		readonly id: string,
+		readonly participants: User[],
+		status: MatchStatus,
+		readonly gameType: GameType,
+		readonly createdAt: Date,
+		updatedAt: Date,
+	) {
+		this.status = status;
+		this.updatedAt = updatedAt;
+	}
 
-  public complete(): void {
-    this.status = 'completed';
-    this.updatedAt = new Date();
-  }
+	static create(participants: User[], gameType: GameType = "Pong"): Match {
+		if (participants.length < 2) {
+			throw new Error("A match requires at least 2 participants.");
+		}
+		const id = ulid();
+		return new Match(
+			id,
+			participants,
+			"in_progress",
+			gameType,
+			new Date(),
+			new Date(),
+		);
+	}
+
+	complete(): void {
+		this.status = "completed";
+		this.updatedAt = new Date();
+	}
 }

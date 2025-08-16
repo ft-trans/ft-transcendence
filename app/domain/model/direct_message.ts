@@ -1,29 +1,29 @@
 import { ulid } from "ulid";
-import { User } from './user';
+import type { User } from "./user";
 
 export class DirectMessage {
-  constructor(
-    public readonly id: string,
-    public readonly sender: User,
-    public readonly receiver: User,
-    public readonly content: string,
-    public isRead: boolean,
-    public readonly sentAt: Date,
-  ) {}
+	isRead: boolean;
 
-   public static create(
-    sender: User,
-    receiver: User,
-    content: string,
-   ): DirectMessage {
-     if (sender.id === receiver.id) {
-       throw new Error('Cannot send a message to oneself.');
-     }
-     const id = ulid();
-     return new DirectMessage(id, sender, receiver, content, false, new Date());
-   }
+	constructor(
+		readonly id: string,
+		readonly sender: User,
+		readonly receiver: User,
+		readonly content: string,
+		isRead: boolean,
+		readonly sentAt: Date,
+	) {
+		this.isRead = isRead;
+	}
 
-   public markAsRead(): void {
-       this.isRead = true;
-   }
+	static create(sender: User, receiver: User, content: string): DirectMessage {
+		if (sender.id.equals(receiver.id)) {
+			throw new Error("Cannot send a message to oneself.");
+		}
+		const id = ulid();
+		return new DirectMessage(id, sender, receiver, content, false, new Date());
+	}
+
+	markAsRead(): void {
+		this.isRead = true;
+	}
 }
