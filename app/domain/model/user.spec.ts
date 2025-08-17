@@ -1,3 +1,4 @@
+import { ErrBadRequest, ErrInternalServer } from "@domain/error";
 import { ulid } from "ulid";
 import { describe, expect, it } from "vitest";
 import { User, UserEmail, UserId } from "./user";
@@ -10,9 +11,8 @@ describe("UserId", () => {
 
 	it("should throw a BadRequestError for an invalid ULID", () => {
 		const invalidUlid = "invalid-ulid";
-		expect(() => new UserId(invalidUlid)).toThrow(
-			expect.objectContaining({
-				name: "BadRequestError",
+		expect(() => new UserId(invalidUlid)).toThrowError(
+			new ErrBadRequest({
 				details: {
 					userId: "ユーザーIDは有効なULIDである必要があります",
 				},
@@ -31,9 +31,8 @@ describe("UserEmail", () => {
 	it("should throw a BadRequestError for an invalid email", () => {
 		const invalidEmails = ["invalid-email", "test@", "@example.com", " "];
 		for (const invalidEmail of invalidEmails) {
-			expect(() => new UserEmail(invalidEmail)).toThrow(
-				expect.objectContaining({
-					name: "BadRequestError",
+			expect(() => new UserEmail(invalidEmail)).toThrowError(
+				new ErrBadRequest({
 					details: {
 						userEmail: "メールアドレスの形式が正しくありません",
 					},
@@ -81,9 +80,7 @@ describe("User", () => {
 		);
 
 		expect(user1.isModified(user2)).toBe(false);
-		expect(() => user1.isModified(user3)).toThrow(
-			expect.objectContaining({ name: "InternalServerError" }),
-		);
+		expect(() => user1.isModified(user3)).toThrowError(new ErrInternalServer());
 		expect(user1.isModified(user4)).toBe(true);
 	});
 });

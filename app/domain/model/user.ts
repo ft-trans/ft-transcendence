@@ -1,11 +1,11 @@
 import { isValid, ulid } from "ulid";
-import { BadRequestError, InternalServerError } from "../error";
+import { ErrBadRequest, ErrInternalServer } from "../error";
 import { ValueObject } from "./value_object";
 
 export class UserId extends ValueObject<string, "UserId"> {
 	protected validate(value: string): void {
 		if (!isValid(value)) {
-			throw new BadRequestError({
+			throw new ErrBadRequest({
 				details: {
 					userId: "ユーザーIDは有効なULIDである必要があります",
 				},
@@ -21,7 +21,7 @@ export class UserEmail extends ValueObject<string, "UserEmail"> {
 
 	validate(value: string) {
 		if (!UserEmail.PATTERN.test(value)) {
-			throw new BadRequestError({
+			throw new ErrBadRequest({
 				details: {
 					userEmail: "メールアドレスの形式が正しくありません",
 				},
@@ -47,7 +47,7 @@ export class User {
 
 	isModified(other: User): boolean {
 		if (!this.id.equals(other.id)) {
-			throw new InternalServerError();
+			throw new ErrInternalServer();
 		}
 		return !this.email.equals(other.email);
 	}

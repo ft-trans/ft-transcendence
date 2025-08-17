@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError } from "@domain/error";
+import { ErrBadRequest, ErrNotFound } from "@domain/error";
 import { User, UserEmail } from "@domain/model";
 import type { IUserRepository } from "@domain/repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -78,7 +78,13 @@ describe("UpdateUserUsecase", () => {
 		const usecase = new UpdateUserUsecase(mockTx);
 		const input = { id: currentUser.id.value, email: existingUser.email.value };
 
-		await expect(usecase.execute(input)).rejects.toThrow(BadRequestError);
+		await expect(usecase.execute(input)).rejects.toThrowError(
+			new ErrBadRequest({
+				details: {
+					userEmail: "メールアドレスは既に使用されています",
+				},
+			}),
+		);
 		expect(mockTx.exec).toHaveBeenCalledOnce();
 	});
 
@@ -97,7 +103,9 @@ describe("UpdateUserUsecase", () => {
 		const usecase = new UpdateUserUsecase(mockTx);
 		const input = { id: ulid(), email: "edit@example.com" };
 
-		await expect(usecase.execute(input)).rejects.toThrow(NotFoundError);
+		await expect(usecase.execute(input)).rejects.toThrowError(
+			new ErrNotFound(),
+		);
 		expect(mockTx.exec).toHaveBeenCalledOnce();
 	});
 });

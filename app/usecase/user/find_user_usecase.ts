@@ -1,4 +1,4 @@
-import { NotFoundError } from "@domain/error";
+import { ErrNotFound } from "@domain/error";
 import type { User, UserId } from "@domain/model";
 import type { IRepository } from "@domain/repository";
 
@@ -8,7 +8,7 @@ export class FindUserUsecase {
 	async run(userId: UserId): Promise<User> {
 		const user = await this.repo.newUserRepository().findById(userId);
 		if (!user) {
-			throw new NotFoundError();
+			throw new ErrNotFound();
 		}
 		return user;
 	}

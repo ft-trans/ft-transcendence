@@ -1,6 +1,10 @@
 import { resolve } from "node:path";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
+import { Transaction } from "@infra/database";
+import { PrismaClient } from "@infra/database/generated";
+import { authController } from "@presentation/controllers/auth_controller";
+import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
 import Fastify from "fastify";
 
 const app = Fastify({ logger: true });
@@ -29,7 +33,12 @@ const start = async () => {
 			url: redis_url,
 		});
 
-		app.get("/", (_req, reply) => {
+		const tx = new Transaction(new PrismaClient());
+
+		const registerUserUsecase = new RegisterUserUsecase(tx);
+		await app.register(authController(registerUserUsecase), { prefix: "/api" });
+
+		app.get("/*", (_req, reply) => {
 			return reply.html();
 		});
 
