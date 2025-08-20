@@ -2,10 +2,13 @@ import { resolve } from "node:path";
 
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
-
+import { Transaction } from "@infra/database";
+import { PrismaClient } from "@infra/database/generated";
+import { authController } from "@presentation/controllers/auth_controller";
+import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
 import Fastify from "fastify";
 
-import { PrismaClient } from "./infra/database/generated/index.js";
+// import { PrismaClient } from "./infra/database/generated/index.js";
 
 import { initializeOtel, otelInstrumentation } from "./observability/otel.js";
 
@@ -45,8 +48,13 @@ const start = async () => {
 			url: redis_url,
 		});
 
-		app.get("/", (_req, _reply) => {
-			return _reply.html();
+		const tx = new Transaction(new PrismaClient());
+
+		const registerUserUsecase = new RegisterUserUsecase(tx);
+		await app.register(authController(registerUserUsecase), { prefix: "/api" });
+
+		app.get("/*", (_req, reply) => {
+			return reply.html();
 		});
 
 		await app.vite.ready();

@@ -43,9 +43,12 @@
 		"@prisma/client": "6.10.1",
 		"@prisma/instrumentation": "^6.13.0",
 		"@tailwindcss/vite": "^4.1.10",
+		"axios": "^1.11.0",
 		"fastify": "^5.4.0",
 		"lodash-es": "^4.17.21",
+		"path-to-regexp": "^8.2.0",
 		"tailwindcss": "^4.1.10",
-		"ulid": "^3.0.1"
+		"ulid": "^3.0.1",
+		"zod": "^4.0.16"
 	}
 }
