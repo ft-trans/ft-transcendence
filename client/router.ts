@@ -2,6 +2,7 @@ import { pathToRegexp } from "path-to-regexp";
 import { Navigation } from "./components";
 import { Register } from "./features/auth";
 import { Home } from "./features/home";
+import { UpdateUser } from "./features/users";
 
 export const router = async () => {
 	// biome-ignore lint/style/noNonNullAssertion: app container は必ず存在する
@@ -14,6 +15,10 @@ export const router = async () => {
 		{
 			path: "/auth/register",
 			component: new Navigation({ child: new Register() }),
+		},
+		{
+			path: "/users/me",
+			component: new Navigation({ child: new UpdateUser() }),
 		},
 	];
 

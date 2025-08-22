@@ -14,6 +14,10 @@ setup.env:
 db.migrate:
 	pnpm prisma migrate dev
 
+.PHONY: db.studio
+db.studio:
+	pnpm prisma studio
+
 .PHONY: run
 run:
 	pnpm run dev
