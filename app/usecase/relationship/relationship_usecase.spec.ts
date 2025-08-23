@@ -1,6 +1,8 @@
-import { BadRequestError, ForbiddenError, NotFoundError } from "@domain/error";
+// ==> app/usecase/relationship/relationship_usecase.spec.ts <==
+import { ErrBadRequest, ErrForbidden, ErrNotFound } from "@domain/error";
 import { Friendship } from "@domain/model/friendship";
 import { User, UserEmail } from "@domain/model/user";
+import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -17,12 +19,14 @@ import { UnblockUserUsecase } from "./unblock_user_usecase";
 // --- Common Mocks & Setup ---
 const userRepo = mock<IUserRepository>();
 const friendshipRepo = mock<IFriendshipRepository>();
+const directMessageRepo = mock<IDirectMessageRepository>();
 const tx = mock<ITransaction>();
 
 // トランザクションのモック実装
 const mockRepos = {
 	newUserRepository: () => userRepo,
 	newFriendshipRepository: () => friendshipRepo,
+	newDirectMessageRepository: () => directMessageRepo,
 };
 tx.exec.mockImplementation(async (callback) => callback(mockRepos));
 
@@ -71,7 +75,7 @@ describe("SendFriendRequestUsecase", () => {
 				requesterId: requester.id.value,
 				receiverId: receiver.id.value,
 			}),
-		).rejects.toThrow(BadRequestError);
+		).rejects.toThrow(ErrBadRequest);
 	});
 
 	it("should throw BadRequestError when sending a request to oneself", async () => {
@@ -80,7 +84,7 @@ describe("SendFriendRequestUsecase", () => {
 				requesterId: requester.id.value,
 				receiverId: requester.id.value,
 			}),
-		).rejects.toThrow(BadRequestError);
+		).rejects.toThrow(ErrBadRequest);
 	});
 
 	it("should throw NotFoundError if receiver does not exist", async () => {
@@ -92,7 +96,7 @@ describe("SendFriendRequestUsecase", () => {
 				requesterId: requester.id.value,
 				receiverId: ulid(),
 			}),
-		).rejects.toThrow(NotFoundError);
+		).rejects.toThrow(ErrNotFound);
 	});
 });
 
@@ -140,7 +144,7 @@ describe("RespondToFriendRequestUsecase", () => {
 				requesterId: requester.id.value,
 				response: "accept",
 			}),
-		).rejects.toThrow(NotFoundError);
+		).rejects.toThrow(ErrNotFound);
 	});
 
 	it("should throw ForbiddenError if the request is not pending", async () => {
@@ -154,7 +158,7 @@ describe("RespondToFriendRequestUsecase", () => {
 				requesterId: requester.id.value,
 				response: "accept",
 			}),
-		).rejects.toThrow(ForbiddenError);
+		).rejects.toThrow(ErrForbidden);
 	});
 
 	it("should throw ForbiddenError if a user other than the receiver tries to respond", async () => {
@@ -167,7 +171,7 @@ describe("RespondToFriendRequestUsecase", () => {
 				requesterId: requester.id.value,
 				response: "accept",
 			}),
-		).rejects.toThrow(ForbiddenError);
+		).rejects.toThrow(ErrForbidden);
 	});
 });
 
@@ -197,7 +201,7 @@ describe("GetFriendsUsecase", () => {
 
 	it("should throw NotFoundError if the user does not exist", async () => {
 		userRepo.findById.mockResolvedValue(undefined);
-		await expect(usecase.execute(ulid())).rejects.toThrow(NotFoundError);
+		await expect(usecase.execute(ulid())).rejects.toThrow(ErrNotFound);
 	});
 });
 
@@ -223,7 +227,7 @@ describe("RemoveFriendUsecase", () => {
 		friendshipRepo.findByUserIds.mockResolvedValue(null);
 		await expect(
 			usecase.execute({ userId: user.id.value, friendId: friend.id.value }),
-		).rejects.toThrow(NotFoundError);
+		).rejects.toThrow(ErrNotFound);
 	});
 
 	it("should throw NotFoundError if the friendship is pending, not accepted", async () => {
@@ -231,7 +235,7 @@ describe("RemoveFriendUsecase", () => {
 		friendshipRepo.findByUserIds.mockResolvedValue(friendship);
 		await expect(
 			usecase.execute({ userId: user.id.value, friendId: friend.id.value }),
-		).rejects.toThrow(NotFoundError);
+		).rejects.toThrow(ErrNotFound);
 	});
 });
 
@@ -298,7 +302,7 @@ describe("BlockUserUsecase", () => {
 				blockerId: blocker.id.value,
 				blockedId: blocker.id.value,
 			}),
-		).rejects.toThrow(BadRequestError);
+		).rejects.toThrow(ErrBadRequest);
 	});
 });
 
@@ -328,7 +332,7 @@ describe("UnblockUserUsecase", () => {
 				blockerId: blocker.id.value,
 				blockedId: blocked.id.value,
 			}),
-		).rejects.toThrow(NotFoundError);
+		).rejects.toThrow(ErrNotFound);
 	});
 
 	it("should throw NotFoundError if the relationship is not 'blocked'", async () => {
@@ -341,7 +345,7 @@ describe("UnblockUserUsecase", () => {
 				blockerId: blocker.id.value,
 				blockedId: blocked.id.value,
 			}),
-		).rejects.toThrow(NotFoundError);
+		).rejects.toThrow(ErrNotFound);
 	});
 
 	it("should throw NotFoundError if a user other than the blocker tries to unblock", async () => {
@@ -354,6 +358,6 @@ describe("UnblockUserUsecase", () => {
 				blockerId: otherUser.id.value, // Wrong user
 				blockedId: blocked.id.value,
 			}),
-		).rejects.toThrow(NotFoundError);
+		).rejects.toThrow(ErrNotFound);
 	});
 });

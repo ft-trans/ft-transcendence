@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError } from "@domain/error";
+import { ErrBadRequest, ErrNotFound } from "@domain/error";
 import { Friendship } from "@domain/model/friendship";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
@@ -16,7 +16,7 @@ export class BlockUserUsecase {
 		const blockedId = new UserId(input.blockedId);
 
 		if (blockerId.equals(blockedId)) {
-			throw new BadRequestError({ userMessage: "Cannot block oneself." });
+			throw new ErrBadRequest({ userMessage: "Cannot block oneself." });
 		}
 
 		await this.transaction.exec(async (repo) => {
@@ -29,7 +29,7 @@ export class BlockUserUsecase {
 			]);
 
 			if (!blocker || !blocked) {
-				throw new NotFoundError();
+				throw new ErrNotFound();
 			}
 
 			let friendship = await friendshipRepository.findByUserIds(

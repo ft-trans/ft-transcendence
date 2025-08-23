@@ -1,4 +1,4 @@
-import { ForbiddenError, NotFoundError } from "@domain/error";
+import { ErrForbidden, ErrNotFound } from "@domain/error";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
 
@@ -23,7 +23,7 @@ export class RespondToFriendRequestUsecase {
 			);
 
 			if (!friendship) {
-				throw new NotFoundError();
+				throw new ErrNotFound();
 			}
 
 			// Ensure the request is pending and the correct user is responding
@@ -31,7 +31,7 @@ export class RespondToFriendRequestUsecase {
 				friendship.status !== "pending" ||
 				!friendship.receiverId.equals(receiverId)
 			) {
-				throw new ForbiddenError();
+				throw new ErrForbidden();
 			}
 
 			if (input.response === "accept") {

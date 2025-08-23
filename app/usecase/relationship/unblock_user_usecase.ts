@@ -1,4 +1,4 @@
-import { NotFoundError } from "@domain/error";
+import { ErrNotFound } from "@domain/error";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
 
@@ -27,7 +27,7 @@ export class UnblockUserUsecase {
 				friendship.status !== "blocked" ||
 				!friendship.requesterId.equals(blockerId)
 			) {
-				throw new NotFoundError();
+				throw new ErrNotFound();
 			}
 
 			// Unblocking removes the relationship entirely

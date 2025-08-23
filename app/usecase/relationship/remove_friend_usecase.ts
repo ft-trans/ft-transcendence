@@ -1,4 +1,4 @@
-import { NotFoundError } from "@domain/error";
+import { ErrNotFound } from "@domain/error";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
 
@@ -22,7 +22,7 @@ export class RemoveFriendUsecase {
 			);
 
 			if (!friendship || !friendship.isAccepted()) {
-				throw new NotFoundError();
+				throw new ErrNotFound();
 			}
 
 			await friendshipRepository.delete(friendship);

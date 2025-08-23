@@ -1,7 +1,7 @@
 import { ulid } from "ulid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
-import { NotFoundError } from "../../domain/error";
+import { ErrNotFound } from "../../domain/error";
 import { User, UserEmail, UserId } from "../../domain/model/user";
 import type { IUserRepository } from "../../domain/repository/user_repository";
 import type { MatchmakingService } from "../../domain/service/matchmaking_service";
@@ -30,12 +30,12 @@ describe("JoinMatchmakingUseCase", () => {
 		expect(matchmakingService.join).toHaveBeenCalledWith(user);
 	});
 
-	it("should throw NotFoundError if user is not found", async () => {
+	it("should throw ErrNotFound if user is not found", async () => {
 		const userIdValue = ulid();
 		const userId = new UserId(userIdValue);
 		userRepository.findById.mockResolvedValue(undefined);
 
-		await expect(useCase.execute(userIdValue)).rejects.toThrow(NotFoundError);
+		await expect(useCase.execute(userIdValue)).rejects.toThrow(ErrNotFound);
 		expect(userRepository.findById).toHaveBeenCalledWith(userId);
 	});
 });

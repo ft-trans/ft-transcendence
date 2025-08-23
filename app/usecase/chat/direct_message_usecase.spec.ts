@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError } from "@domain/error";
+import { ErrBadRequest, ErrNotFound } from "@domain/error";
 import { DirectMessage } from "@domain/model/direct_message";
 import { User, UserEmail } from "@domain/model/user";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
@@ -54,25 +54,25 @@ describe("SendDirectMessageUsecase", () => {
 		expect(message.sender.id.equals(sender.id)).toBe(true);
 	});
 
-	it("should throw BadRequestError when sending to oneself", async () => {
+	it("should throw ErrBadRequest when sending to oneself", async () => {
 		const input = {
 			senderId: sender.id.value,
 			receiverId: sender.id.value,
 			content: "Hello me!",
 		};
-		await expect(usecase.execute(input)).rejects.toThrow(BadRequestError);
+		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 	});
 
-	it("should throw BadRequestError for empty content", async () => {
+	it("should throw ErrBadRequest for empty content", async () => {
 		const input = {
 			senderId: sender.id.value,
 			receiverId: receiver.id.value,
 			content: "  ",
 		};
-		await expect(usecase.execute(input)).rejects.toThrow(BadRequestError);
+		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 	});
 
-	it("should throw NotFoundError if sender does not exist", async () => {
+	it("should throw ErrNotFound if sender does not exist", async () => {
 		userRepo.findById
 			.mockResolvedValueOnce(undefined)
 			.mockResolvedValueOnce(receiver);
@@ -81,7 +81,7 @@ describe("SendDirectMessageUsecase", () => {
 			receiverId: receiver.id.value,
 			content: "Hello!",
 		};
-		await expect(usecase.execute(input)).rejects.toThrow(NotFoundError);
+		await expect(usecase.execute(input)).rejects.toThrow(ErrNotFound);
 	});
 });
 

@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError } from "@domain/error";
+import { ErrBadRequest, ErrNotFound } from "@domain/error";
 import { Friendship } from "@domain/model/friendship";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
@@ -16,7 +16,7 @@ export class SendFriendRequestUsecase {
 		const receiverId = new UserId(input.receiverId);
 
 		if (requesterId.equals(receiverId)) {
-			throw new BadRequestError({
+			throw new ErrBadRequest({
 				userMessage: "Cannot send a friend request to oneself.",
 			});
 		}
@@ -31,7 +31,7 @@ export class SendFriendRequestUsecase {
 			]);
 
 			if (!requester || !receiver) {
-				throw new NotFoundError();
+				throw new ErrNotFound();
 			}
 
 			const existingFriendship = await friendshipRepository.findByUserIds(
@@ -40,7 +40,7 @@ export class SendFriendRequestUsecase {
 			);
 
 			if (existingFriendship) {
-				throw new BadRequestError({
+				throw new ErrBadRequest({
 					userMessage: "Friendship already exists or is pending.",
 				});
 			}

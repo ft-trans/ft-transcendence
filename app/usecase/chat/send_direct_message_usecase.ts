@@ -1,4 +1,4 @@
-import { BadRequestError, ForbiddenError, NotFoundError } from "@domain/error";
+import { ErrBadRequest, ErrForbidden, ErrNotFound } from "@domain/error";
 import { DirectMessage } from "@domain/model/direct_message";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
@@ -17,13 +17,13 @@ export class SendDirectMessageUsecase {
 		const receiverId = new UserId(input.receiverId);
 
 		if (senderId.equals(receiverId)) {
-			throw new BadRequestError({
+			throw new ErrBadRequest({
 				userMessage: "Cannot send a message to oneself.",
 			});
 		}
 
 		if (!input.content?.trim()) {
-			throw new BadRequestError({
+			throw new ErrBadRequest({
 				userMessage: "Message content cannot be empty.",
 			});
 		}
@@ -38,7 +38,7 @@ export class SendDirectMessageUsecase {
 			]);
 
 			if (!sender || !receiver) {
-				throw new NotFoundError();
+				throw new ErrNotFound();
 			}
 
 			const friendshipRepo = repo.newFriendshipRepository();
@@ -47,7 +47,7 @@ export class SendDirectMessageUsecase {
 				receiverId.value,
 			);
 			if (block?.status === "blocked") {
-				throw new ForbiddenError();
+				throw new ErrForbidden();
 			}
 
 			const message = DirectMessage.create(sender, receiver, input.content);

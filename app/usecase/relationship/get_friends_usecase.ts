@@ -1,4 +1,4 @@
-import { NotFoundError } from "@domain/error";
+import { ErrNotFound } from "@domain/error";
 import type { User } from "@domain/model/user";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
@@ -15,7 +15,7 @@ export class GetFriendsUsecase {
 
 			const user = await userRepository.findById(userId);
 			if (!user) {
-				throw new NotFoundError();
+				throw new ErrNotFound();
 			}
 
 			return friendshipRepository.findFriendsByUserId(userId.value);
