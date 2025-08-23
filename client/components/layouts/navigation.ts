@@ -23,7 +23,7 @@ export class Navigation extends Component {
               </h1>
               <nav class="space-x-6">
                 ${new Link({ href: "/auth/register", text: "登録" }).render()}
-                ${new Link({ href: "/users/me", text: "変更" }).render()}
+                ${new Link({ href: "/profile/edit", text: "変更" }).render()}
               </nav>
             </div>
           </div>

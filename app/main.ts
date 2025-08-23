@@ -4,7 +4,7 @@ import FastifyVite from "@fastify/vite";
 import { Transaction } from "@infra/database";
 import { PrismaClient } from "@infra/database/generated";
 import { authController } from "@presentation/controllers/auth_controller";
-import { usersController } from "@presentation/controllers/users_controller";
+import { profileController } from "@presentation/controllers/profile_controller";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import Fastify from "fastify";
@@ -40,7 +40,9 @@ const start = async () => {
 		const registerUserUsecase = new RegisterUserUsecase(tx);
 		await app.register(authController(registerUserUsecase), { prefix: "/api" });
 		const updateUserUsecase = new UpdateUserUsecase(tx);
-		await app.register(usersController(updateUserUsecase), { prefix: "/api" });
+		await app.register(profileController(updateUserUsecase), {
+			prefix: "/api",
+		});
 
 		app.get("/*", (_req, reply) => {
 			return reply.html();

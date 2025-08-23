@@ -1,8 +1,8 @@
 import {
-	type UpdateUserRequest,
-	type UpdateUserResponse,
-	updateUserFormSchema,
-} from "@shared/api/users";
+	type UpdateProfileRequest,
+	type UpdateProfileResponse,
+	updateProfileFormSchema,
+} from "@shared/api/profile";
 import { ApiClient } from "client/api/api_client";
 import {
 	Button,
@@ -13,9 +13,9 @@ import {
 } from "client/components";
 import { annotateZodErrors } from "client/components/form/error";
 
-export class UpdateUser extends Component {
+export class EditProfile extends Component {
 	addEventListeners(): void {
-		const form = document.getElementById("update-user-form");
+		const form = document.getElementById("profile-form");
 		if (form && form instanceof HTMLFormElement) {
 			form.addEventListener("submit", async (e) => {
 				e.preventDefault();
@@ -24,7 +24,7 @@ export class UpdateUser extends Component {
 					email: formData.get("email"),
 				};
 
-				const input = updateUserFormSchema.safeParse(rawData);
+				const input = updateProfileFormSchema.safeParse(rawData);
 				if (!input.success) {
 					annotateZodErrors(input.error);
 					new FloatingBanner({
@@ -34,8 +34,8 @@ export class UpdateUser extends Component {
 					return;
 				}
 				// TODO: APIエラーのハンドリング
-				await new ApiClient().put<UpdateUserRequest, UpdateUserResponse>(
-					"/api/users/me",
+				await new ApiClient().put<UpdateProfileRequest, UpdateProfileResponse>(
+					"/api/profile",
 					{ user: { email: input.data.email } },
 				);
 			});
@@ -47,7 +47,7 @@ export class UpdateUser extends Component {
 <div>
     ${new SectionTitle({ text: "アカウントを編集" }).render()}
     <div class="max-w-md mx-auto">
-        <form id="update-user-form" novalidate class="space-y-6">
+        <form id="profile-form" novalidate class="space-y-6">
             ${new FormInput({
 							id: "email",
 							name: "email",

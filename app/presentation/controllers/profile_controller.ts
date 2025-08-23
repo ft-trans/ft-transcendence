@@ -1,24 +1,24 @@
 import { ErrBadRequest } from "@domain/error";
 import {
-	type UpdateUserRequest,
-	updateUserFormSchema,
-} from "@shared/api/users";
+	type UpdateProfileRequest,
+	updateProfileFormSchema,
+} from "@shared/api/profile";
 import type { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import z from "zod";
 
-export const usersController = (updateUserUsecase: UpdateUserUsecase) => {
+export const profileController = (updateUserUsecase: UpdateUserUsecase) => {
 	return async (fastify: FastifyInstance) => {
-		fastify.put("/users/me", onUpdateUser(updateUserUsecase));
+		fastify.put("/profile", onUpdateProfile(updateUserUsecase));
 	};
 };
 
-const onUpdateUser = (usecase: UpdateUserUsecase) => {
+const onUpdateProfile = (usecase: UpdateUserUsecase) => {
 	return async (
-		req: FastifyRequest<{ Body: UpdateUserRequest }>,
+		req: FastifyRequest<{ Body: UpdateProfileRequest }>,
 		reply: FastifyReply,
 	) => {
-		const input = updateUserFormSchema.safeParse({
+		const input = updateProfileFormSchema.safeParse({
 			email: req.body.user.email,
 		});
 		if (!input.success) {

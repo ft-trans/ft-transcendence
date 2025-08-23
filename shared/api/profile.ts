@@ -1,16 +1,16 @@
 import { z } from "zod";
 
-export const updateUserFormSchema = z.object({
+export const updateProfileFormSchema = z.object({
 	email: z.email("有効なメールアドレスを入力してください"),
 });
 
-export type UpdateUserRequest = {
+export type UpdateProfileRequest = {
 	user: {
 		email: string;
 	};
 };
 
-export type UpdateUserResponse = {
+export type UpdateProfileResponse = {
 	user: {
 		id: string;
 		email: string;
