@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { ErrBadRequest, ErrNotFound } from "@domain/error";
+=======
+import { BadRequestError, NotFoundError } from "@domain/error";
+>>>>>>> 81e95bd62da8aa82a9fc1f55cc9c1fe4f9c38f2a
 import { DirectMessage } from "@domain/model/direct_message";
 import { User, UserEmail } from "@domain/model/user";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
@@ -54,25 +58,43 @@ describe("SendDirectMessageUsecase", () => {
 		expect(message.sender.id.equals(sender.id)).toBe(true);
 	});
 
+<<<<<<< HEAD
 	it("should throw ErrBadRequest when sending to oneself", async () => {
+=======
+	it("should throw BadRequestError when sending to oneself", async () => {
+>>>>>>> 81e95bd62da8aa82a9fc1f55cc9c1fe4f9c38f2a
 		const input = {
 			senderId: sender.id.value,
 			receiverId: sender.id.value,
 			content: "Hello me!",
 		};
+<<<<<<< HEAD
 		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 	});
 
 	it("should throw ErrBadRequest for empty content", async () => {
+=======
+		await expect(usecase.execute(input)).rejects.toThrow(BadRequestError);
+	});
+
+	it("should throw BadRequestError for empty content", async () => {
+>>>>>>> 81e95bd62da8aa82a9fc1f55cc9c1fe4f9c38f2a
 		const input = {
 			senderId: sender.id.value,
 			receiverId: receiver.id.value,
 			content: "  ",
 		};
+<<<<<<< HEAD
 		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 	});
 
 	it("should throw ErrNotFound if sender does not exist", async () => {
+=======
+		await expect(usecase.execute(input)).rejects.toThrow(BadRequestError);
+	});
+
+	it("should throw NotFoundError if sender does not exist", async () => {
+>>>>>>> 81e95bd62da8aa82a9fc1f55cc9c1fe4f9c38f2a
 		userRepo.findById
 			.mockResolvedValueOnce(undefined)
 			.mockResolvedValueOnce(receiver);
@@ -81,7 +103,11 @@ describe("SendDirectMessageUsecase", () => {
 			receiverId: receiver.id.value,
 			content: "Hello!",
 		};
+<<<<<<< HEAD
 		await expect(usecase.execute(input)).rejects.toThrow(ErrNotFound);
+=======
+		await expect(usecase.execute(input)).rejects.toThrow(NotFoundError);
+>>>>>>> 81e95bd62da8aa82a9fc1f55cc9c1fe4f9c38f2a
 	});
 });
 
