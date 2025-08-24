@@ -140,9 +140,7 @@ describe("GetDirectMessagesUsecase", () => {
 	});
 
 	it("should return a list of messages between two users", async () => {
-		userRepo.findById
-			.mockResolvedValueOnce(user1)
-			.mockResolvedValueOnce(user2);
+		userRepo.findById.mockResolvedValueOnce(user1).mockResolvedValueOnce(user2);
 		const messages = [
 			DirectMessage.create(user1, user2, "Hi"),
 			DirectMessage.create(user2, user1, "Hello back"),
@@ -162,9 +160,7 @@ describe("GetDirectMessagesUsecase", () => {
 	});
 
 	it("should return an empty array if there are no messages", async () => {
-		userRepo.findById
-			.mockResolvedValueOnce(user1)
-			.mockResolvedValueOnce(user2);
+		userRepo.findById.mockResolvedValueOnce(user1).mockResolvedValueOnce(user2);
 		messageRepo.findMessagesBetweenUsers.mockResolvedValue([]);
 
 		const result = await usecase.execute({
