@@ -29,6 +29,13 @@ export default defineConfig(({ mode }: { mode: string }) => {
 			port: 3000,
 			strictPort: true,
 			open: true,
+			// To avoid conflicts between fasitify-vite and fastify-websocket
+			// https://github.com/fastify/fastify-vite/issues/129
+			hmr: {
+				server: false,
+				port: 5173,
+				clientPort: 5173,
+			},
 		},
 		test: {
 			coverage: {
