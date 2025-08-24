@@ -29,13 +29,13 @@ export class MatchmakingService {
 		const matchedUsers = await this.matchmakingQueue.findMatch();
 
 		if (matchedUsers) {
-			let newMatch: Match | null = null;
-			await this.transaction.exec(async () => {
+			const newMatch: Match | null = await this.transaction.exec(async () => {
 				const match = Match.create(matchedUsers);
-				newMatch = await this.matchRepository.save(match);
+				const savedMatch = await this.matchRepository.save(match);
 				// キューからマッチしたユーザーを削除
 				await this.matchmakingQueue.remove(matchedUsers[0].id.value);
 				await this.matchmakingQueue.remove(matchedUsers[1].id.value);
+				return savedMatch;
 			});
 			// WebSocketなどでマッチング成功を通知する
 			return newMatch;
