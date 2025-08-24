@@ -104,7 +104,7 @@ export class FriendshipRepository implements IFriendshipRepository {
 		return pending.map(toFriendshipDomain);
 	}
 
-    async delete(friendship: Friendship): Promise<void> {
+	async delete(friendship: Friendship): Promise<void> {
 		await this.client.friendship.delete({
 			where: {
 				requesterId_receiverId: {
