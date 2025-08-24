@@ -10,6 +10,7 @@
 		"build": "vite build && swc ./app/ -d dist",
 		"build:production": "vite build --mode production && swc ./app/ -d dist",
 		"dev": "node --import @swc-node/register/esm-register --env-file=.env ./app/main.ts --dev",
+		"dev:tsx": "tsx watch --tsconfig ./tsconfig.app.json --env-file=.env ./app/main.ts --dev",
 		"test": "vitest --run",
 		"test:watch": "vitest",
 		"test:coverage": "vitest run --coverage"
@@ -22,6 +23,7 @@
 		"@types/node": "^24.0.3",
 		"@vitest/coverage-v8": "3.2.4",
 		"prisma": "^6.10.1",
+		"tsx": "^4.20.4",
 		"typescript": "~5.8.3",
 		"vite": "^6.3.5",
 		"vite-tsconfig-paths": "^5.1.4",
