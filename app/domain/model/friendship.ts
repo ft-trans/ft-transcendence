@@ -35,9 +35,7 @@ export class Friendship {
 
 	accept(): void {
 		if (this.status !== "pending") {
-			throw new ErrForbidden({
-				userMessage: "Cannot accept a friendship that is not pending.",
-			});
+			throw new ErrForbidden();
 		}
 		this.status = "accepted";
 		this.updatedAt = new Date();
