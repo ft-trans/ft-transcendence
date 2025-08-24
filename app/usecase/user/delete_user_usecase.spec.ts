@@ -1,6 +1,11 @@
+// ==> app/usecase/user/delete_user_usecase.spec.ts <==
 import { ErrNotFound } from "@domain/error";
 import { User, UserEmail } from "@domain/model";
-import type { IUserRepository } from "@domain/repository";
+import type {
+	IDirectMessageRepository,
+	IFriendshipRepository,
+	IUserRepository,
+} from "@domain/repository";
 import type { ITransaction } from "@usecase/transaction";
 import { ulid } from "ulid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -22,6 +27,8 @@ describe("DeleteUserUsecase", () => {
 		mockTx.exec.mockImplementation(async (callback) => {
 			const repo = {
 				newUserRepository: () => mockUserRepo,
+				newFriendshipRepository: () => mock<IFriendshipRepository>(),
+				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
 			};
 			return callback(repo);
 		});
@@ -43,6 +50,8 @@ describe("DeleteUserUsecase", () => {
 		mockTx.exec.mockImplementation(async (callback) => {
 			const repo = {
 				newUserRepository: () => mockUserRepo,
+				newFriendshipRepository: () => mock<IFriendshipRepository>(),
+				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
 			};
 			return callback(repo);
 		});
