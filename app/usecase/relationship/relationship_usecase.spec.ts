@@ -98,6 +98,38 @@ describe("SendFriendRequestUsecase", () => {
 			}),
 		).rejects.toThrow(ErrNotFound);
 	});
+
+	it("should throw ForbiddenError if requester is blocked by receiver", async () => {
+		const friendship = Friendship.create(receiver, requester);
+		friendship.status = "blocked";
+		userRepo.findById
+			.mockResolvedValueOnce(requester)
+			.mockResolvedValueOnce(receiver);
+		friendshipRepo.findByUserIds.mockResolvedValue(friendship);
+
+		await expect(
+			usecase.execute({
+				requesterId: requester.id.value,
+				receiverId: receiver.id.value,
+			}),
+		).rejects.toThrow(ErrForbidden);
+	});
+
+	it("should throw ForbiddenError if receiver is blocked by requester", async () => {
+		const friendship = Friendship.create(requester, receiver);
+		friendship.status = "blocked";
+		userRepo.findById
+			.mockResolvedValueOnce(requester)
+			.mockResolvedValueOnce(receiver);
+		friendshipRepo.findByUserIds.mockResolvedValue(friendship);
+
+		await expect(
+			usecase.execute({
+				requesterId: requester.id.value,
+				receiverId: receiver.id.value,
+			}),
+		).rejects.toThrow(ErrForbidden);
+	});
 });
 
 describe("RespondToFriendRequestUsecase", () => {
@@ -303,6 +335,18 @@ describe("BlockUserUsecase", () => {
 				blockedId: blocker.id.value,
 			}),
 		).rejects.toThrow(ErrBadRequest);
+	});
+
+	it("should throw NotFoundError if blocked user does not exist", async () => {
+		userRepo.findById
+			.mockResolvedValueOnce(blocker)
+			.mockResolvedValueOnce(undefined);
+		await expect(
+			usecase.execute({
+				blockerId: blocker.id.value,
+				blockedId: ulid(),
+			}),
+		).rejects.toThrow(ErrNotFound);
 	});
 });
 

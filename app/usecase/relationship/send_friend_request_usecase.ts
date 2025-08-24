@@ -1,4 +1,4 @@
-import { ErrBadRequest, ErrNotFound } from "@domain/error";
+import { ErrBadRequest, ErrForbidden, ErrNotFound } from "@domain/error";
 import { Friendship } from "@domain/model/friendship";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
@@ -40,6 +40,9 @@ export class SendFriendRequestUsecase {
 			);
 
 			if (existingFriendship) {
+				if (existingFriendship.status === "blocked") {
+					throw new ErrForbidden();
+				}
 				throw new ErrBadRequest({
 					userMessage: "Friendship already exists or is pending.",
 				});

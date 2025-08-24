@@ -1,5 +1,6 @@
-import { ErrBadRequest, ErrNotFound } from "@domain/error";
+import { ErrBadRequest, ErrForbidden, ErrNotFound } from "@domain/error";
 import { DirectMessage } from "@domain/model/direct_message";
+import { Friendship } from "@domain/model/friendship";
 import { User, UserEmail } from "@domain/model/user";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
@@ -83,6 +84,50 @@ describe("SendDirectMessageUsecase", () => {
 		};
 		await expect(usecase.execute(input)).rejects.toThrow(ErrNotFound);
 	});
+
+	it("should throw ErrNotFound if receiver does not exist", async () => {
+		userRepo.findById
+			.mockResolvedValueOnce(sender)
+			.mockResolvedValueOnce(undefined);
+		const input = {
+			senderId: sender.id.value,
+			receiverId: ulid(),
+			content: "Hello!",
+		};
+		await expect(usecase.execute(input)).rejects.toThrow(ErrNotFound);
+	});
+
+	it("should throw ErrForbidden if sender is blocked by receiver", async () => {
+		const friendship = Friendship.create(receiver, sender);
+		friendship.status = "blocked";
+		userRepo.findById
+			.mockResolvedValueOnce(sender)
+			.mockResolvedValueOnce(receiver);
+		friendshipRepo.findByUserIds.mockResolvedValue(friendship);
+
+		const input = {
+			senderId: sender.id.value,
+			receiverId: receiver.id.value,
+			content: "Hello!",
+		};
+		await expect(usecase.execute(input)).rejects.toThrow(ErrForbidden);
+	});
+
+	it("should throw ErrForbidden if receiver is blocked by sender", async () => {
+		const friendship = Friendship.create(sender, receiver);
+		friendship.status = "blocked";
+		userRepo.findById
+			.mockResolvedValueOnce(sender)
+			.mockResolvedValueOnce(receiver);
+		friendshipRepo.findByUserIds.mockResolvedValue(friendship);
+
+		const input = {
+			senderId: sender.id.value,
+			receiverId: receiver.id.value,
+			content: "Hello!",
+		};
+		await expect(usecase.execute(input)).rejects.toThrow(ErrForbidden);
+	});
 });
 
 describe("GetDirectMessagesUsecase", () => {
@@ -90,7 +135,14 @@ describe("GetDirectMessagesUsecase", () => {
 	const user1 = User.create(new UserEmail("user1@test.com"));
 	const user2 = User.create(new UserEmail("user2@test.com"));
 
+	beforeEach(() => {
+		userRepo.findById.mockReset();
+	});
+
 	it("should return a list of messages between two users", async () => {
+		userRepo.findById
+			.mockResolvedValueOnce(user1)
+			.mockResolvedValueOnce(user2);
 		const messages = [
 			DirectMessage.create(user1, user2, "Hi"),
 			DirectMessage.create(user2, user1, "Hello back"),
@@ -110,6 +162,9 @@ describe("GetDirectMessagesUsecase", () => {
 	});
 
 	it("should return an empty array if there are no messages", async () => {
+		userRepo.findById
+			.mockResolvedValueOnce(user1)
+			.mockResolvedValueOnce(user2);
 		messageRepo.findMessagesBetweenUsers.mockResolvedValue([]);
 
 		const result = await usecase.execute({
@@ -118,5 +173,29 @@ describe("GetDirectMessagesUsecase", () => {
 		});
 
 		expect(result).toHaveLength(0);
+	});
+
+	it("should throw ErrNotFound if userId does not exist", async () => {
+		userRepo.findById
+			.mockResolvedValueOnce(undefined)
+			.mockResolvedValueOnce(user2);
+		await expect(
+			usecase.execute({
+				userId: ulid(),
+				correspondentId: user2.id.value,
+			}),
+		).rejects.toThrow(ErrNotFound);
+	});
+
+	it("should throw ErrNotFound if correspondentId does not exist", async () => {
+		userRepo.findById
+			.mockResolvedValueOnce(user1)
+			.mockResolvedValueOnce(undefined);
+		await expect(
+			usecase.execute({
+				userId: user1.id.value,
+				correspondentId: ulid(),
+			}),
+		).rejects.toThrow(ErrNotFound);
 	});
 });
