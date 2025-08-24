@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
+import websocket from "@fastify/websocket";
 import { Transaction } from "@infra/database";
 import { PrismaClient } from "@infra/database/generated";
 import { authController } from "@presentation/controllers/auth_controller";
@@ -35,6 +36,7 @@ const start = async () => {
 		await app.register(FastifyRedis, {
 			url: redis_url,
 		});
+		await app.register(websocket);
 
 		const tx = new Transaction(new PrismaClient());
 
