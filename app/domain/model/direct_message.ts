@@ -1,4 +1,5 @@
 import { ulid } from "ulid";
+import { ErrBadRequest } from "../error";
 import type { User } from "./user";
 
 export class DirectMessage {
@@ -17,7 +18,9 @@ export class DirectMessage {
 
 	static create(sender: User, receiver: User, content: string): DirectMessage {
 		if (sender.id.equals(receiver.id)) {
-			throw new Error("Cannot send a message to oneself.");
+			throw new ErrBadRequest({
+				userMessage: "Cannot send a message to oneself.",
+			});
 		}
 		const id = ulid();
 		return new DirectMessage(id, sender, receiver, content, false, new Date());

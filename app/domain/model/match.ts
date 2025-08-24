@@ -1,4 +1,5 @@
 import { ulid } from "ulid";
+import { ErrBadRequest } from "../error";
 import type { User } from "./user";
 
 export type MatchStatus = "in_progress" | "completed";
@@ -22,7 +23,9 @@ export class Match {
 
 	static create(participants: User[], gameType: GameType = "Pong"): Match {
 		if (participants.length < 2) {
-			throw new Error("A match requires at least 2 participants.");
+			throw new ErrBadRequest({
+				userMessage: "A match requires at least 2 participants.",
+			});
 		}
 		const id = ulid();
 		return new Match(

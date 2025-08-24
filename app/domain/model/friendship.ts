@@ -1,3 +1,4 @@
+import { ErrBadRequest, ErrForbidden } from "../error";
 import type { User, UserId } from "./user";
 
 export type FriendshipStatus = "pending" | "accepted" | "blocked";
@@ -19,7 +20,9 @@ export class Friendship {
 
 	static create(requester: User, receiver: User): Friendship {
 		if (requester.id.equals(receiver.id)) {
-			throw new Error("Cannot create a friendship with oneself.");
+			throw new ErrBadRequest({
+				userMessage: "Cannot create a friendship with oneself.",
+			});
 		}
 		return new Friendship(
 			requester.id,
@@ -32,7 +35,9 @@ export class Friendship {
 
 	accept(): void {
 		if (this.status !== "pending") {
-			throw new Error("Cannot accept a friendship that is not pending.");
+			throw new ErrForbidden({
+				userMessage: "Cannot accept a friendship that is not pending.",
+			});
 		}
 		this.status = "accepted";
 		this.updatedAt = new Date();

@@ -1,4 +1,5 @@
 import type { ITransaction } from "../../usecase/transaction";
+import { ErrBadRequest } from "../error";
 import { Match } from "../model/match";
 import type { User } from "../model/user";
 import type { IMatchRepository } from "../repository/match_repository";
@@ -21,7 +22,7 @@ export class MatchmakingService {
 		const existingMatch =
 			await this.matchRepository.findInProgressMatchByUserId(user.id.value);
 		if (existingMatch) {
-			throw new Error("User is already in a match.");
+			throw new ErrBadRequest({ userMessage: "User is already in a match." });
 		}
 
 		await this.matchmakingQueue.add(user);
