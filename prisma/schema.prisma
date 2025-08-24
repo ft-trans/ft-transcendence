@@ -13,7 +13,7 @@ datasource db {
 
 model User {
   id            String    @id
-  email         String?   @unique
+  email         String    @unique
   status        String    @default("offline") // "online" or "offline"
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
