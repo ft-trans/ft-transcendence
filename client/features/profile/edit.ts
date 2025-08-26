@@ -40,6 +40,16 @@ export class EditProfile extends Component {
 				);
 			});
 		}
+
+		const deleteButton = document.getElementById("delete-button");
+		if (deleteButton && deleteButton instanceof HTMLButtonElement) {
+			deleteButton.addEventListener("click", async () => {
+				if (confirm("本当に退会しますか？この操作は取り消せません。")) {
+					// TODO: APIエラーのハンドリング
+					await new ApiClient().delete("/api/profile");
+				}
+			});
+		}
 	}
 
 	render(): string {
@@ -63,7 +73,16 @@ export class EditProfile extends Component {
 								}).render()}
             </div>
         </form>
-    </div>
+		<div class="flex justify-center mt-20">
+			${new Button({
+				id: "delete-button",
+				width: "full",
+				type: "button",
+				color: "red",
+				text: "退会",
+			}).render()}
+		</div>
+	</div>
 </div>
 `;
 	}

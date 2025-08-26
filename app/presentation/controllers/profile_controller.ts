@@ -3,13 +3,18 @@ import {
 	type UpdateProfileRequest,
 	updateProfileFormSchema,
 } from "@shared/api/profile";
+import type { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import type { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import z from "zod";
 
-export const profileController = (updateUserUsecase: UpdateUserUsecase) => {
+export const profileController = (
+	updateUserUsecase: UpdateUserUsecase,
+	deleteUserUsecase: DeleteUserUsecase,
+) => {
 	return async (fastify: FastifyInstance) => {
 		fastify.put("/profile", onUpdateProfile(updateUserUsecase));
+		fastify.delete("/profile", onDeleteProfile(deleteUserUsecase));
 	};
 };
 
@@ -39,6 +44,23 @@ const onUpdateProfile = (usecase: UpdateUserUsecase) => {
 			id: userId,
 			email: input.data.email,
 		});
+		reply.send({
+			user: {
+				id: output.id,
+				email: output.email,
+			},
+		});
+	};
+};
+
+const onDeleteProfile = (usecase: DeleteUserUsecase) => {
+	return async (_req: FastifyRequest, reply: FastifyReply) => {
+		// TODO: セッションからuserIdを取得する
+		// **********************************************************
+		const userId = "01K24DQMEY074R1XNH3BKR3J17"; // 仮のユーザーID
+		// **********************************************************
+
+		const output = await usecase.execute({ id: userId });
 		reply.send({
 			user: {
 				id: output.id,
