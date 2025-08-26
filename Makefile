@@ -22,6 +22,10 @@ db.studio:
 run:
 	pnpm run dev
 
+.PHONY: run.tsx
+run.tsx:
+	pnpm run dev:tsx
+
 .PHONY: up
 up: docker.up
 
