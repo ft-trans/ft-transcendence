@@ -1,7 +1,7 @@
+import type { PongGameStatePayload } from "@shared/api/pong";
 import { isValid } from "ulid";
 import { ErrBadRequest } from "../error";
 import { ValueObject } from "./value_object";
-
 export class MatchId extends ValueObject<string, "MatchId"> {
 	protected validate(value: string): void {
 		if (!isValid(value)) {
@@ -21,8 +21,20 @@ export class Ball {
 		readonly vx: number,
 		readonly vy: number,
 	) {}
+}
 
-	static reconstruct(data: { x: number; y: number; vx: number; vy: number }) {
-		return new Ball(data.x, data.y, data.vx, data.vy);
+export class PongGameState {
+	constructor(
+		readonly ball: Ball,
+		// readonly paddles: { player1: Paddle; player2: Paddle },
+		// readonly score: { player1: number; player2: number },
+	) {}
+
+	toPayload(): PongGameStatePayload {
+		return {
+			ball: this.ball,
+			// paddles: this.paddles,
+			// score: this.score,
+		};
 	}
 }
