@@ -6,16 +6,20 @@ export class BallRepository implements IBallRepository {
 	constructor(private readonly client: Client) {}
 
 	async set(matchId: MatchId, ball: Ball): Promise<Ball> {
-		this.client.set(`match:${matchId}:ball`, JSON.stringify(ball));
+		this.client.set(this.ballKey(matchId), JSON.stringify(ball));
 		return ball;
 	}
 
 	async get(matchId: MatchId): Promise<Ball | undefined> {
-		const data = await this.client.get(`match:${matchId}:ball`);
+		const data = await this.client.get(this.ballKey(matchId));
 		return data ? JSON.parse(data) : undefined;
 	}
 
 	async delete(matchId: MatchId): Promise<void> {
-		this.client.del(`match:${matchId}:ball`);
+		this.client.del(this.ballKey(matchId));
+	}
+
+	private ballKey(matchId: MatchId): string {
+		return `match:${matchId.value}:ball`;
 	}
 }
