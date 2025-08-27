@@ -1,13 +1,13 @@
 // import { ErrBadRequest } from "@domain/error";
 
+import type { CalcPongStateUsecase } from "@usecase/pong/calc_pong_state_usecase";
 import type { EndPongUsecase } from "@usecase/pong/end_pong_usecase";
-import type { GetPongStateUsecase } from "@usecase/pong/get_pong_state_usecase";
 import type { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import WebSocket from "ws";
 
 export const pongController = (
-	getPongStateUsecase: GetPongStateUsecase,
+	getPongStateUsecase: CalcPongStateUsecase,
 	startPongUsecase: StartPongUsecase,
 	endPongUsecase: EndPongUsecase,
 ) => {
@@ -23,7 +23,7 @@ export const pongController = (
 const connectedClients = new Map<string, Set<WebSocket>>();
 
 const onLoad = (
-	getPongStateUsecase: GetPongStateUsecase,
+	getPongStateUsecase: CalcPongStateUsecase,
 	startPongUsecase: StartPongUsecase,
 	endPongUsecase: EndPongUsecase,
 ) => {
@@ -42,6 +42,24 @@ const onLoad = (
 		}
 	};
 
+	const sendPongGameState = (matchId: string, clients: Set<WebSocket>) => {
+		getPongStateUsecase.execute({ matchId }).then((state) => {
+			clients.forEach((client: WebSocket) => {
+				if (client.readyState === WebSocket.OPEN) {
+					client.send(
+						JSON.stringify({
+							event: "gameState",
+							matchId: matchId,
+							payload: state.toPayload(),
+						}),
+					);
+				} else {
+					deleteClient(matchId, client);
+				}
+			});
+		});
+	};
+
 	return (
 		socket: WebSocket,
 		req: FastifyRequest<{ Params: { match_id: string } }>,
@@ -51,7 +69,6 @@ const onLoad = (
 		socket.onmessage = (event: WebSocket.MessageEvent) => {
 			const message = event.data;
 			if (message.toString() === "start") {
-				console.log("---------Starting Pong game:", req.params.match_id);
 				startPongUsecase.execute({ matchId: req.params.match_id });
 			}
 		};
@@ -66,20 +83,7 @@ const onLoad = (
 
 		setInterval(() => {
 			connectedClients.forEach((clients: Set<WebSocket>, matchId: string) => {
-				getPongStateUsecase.execute({ matchId }).then((state) => {
-					clients.forEach((client: WebSocket) => {
-						if (client.readyState === WebSocket.OPEN) {
-							client.send(
-								JSON.stringify({
-									event: "gameState",
-									payload: state.toPayload(),
-								}),
-							);
-						} else {
-							deleteClient(matchId, client);
-						}
-					});
-				});
+				sendPongGameState(matchId, clients);
 			});
 		}, 1000 / 60); // 60 FPS
 	};

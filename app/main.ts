@@ -9,8 +9,8 @@ import { authController } from "@presentation/controllers/auth_controller";
 import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
+import { CalcPongStateUsecase } from "@usecase/pong/calc_pong_state_usecase";
 import { EndPongUsecase } from "@usecase/pong/end_pong_usecase";
-import { GetPongStateUsecase } from "@usecase/pong/get_pong_state_usecase";
 import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
@@ -56,11 +56,11 @@ const start = async () => {
 				prefix: "/api",
 			},
 		);
-		const getPongStateUsecase = new GetPongStateUsecase(kvsRepo);
+		const calcPongStateUsecase = new CalcPongStateUsecase(kvsRepo);
 		const startPongUsecase = new StartPongUsecase(kvsRepo);
 		const endPongUsecase = new EndPongUsecase(kvsRepo);
 		app.register(
-			pongController(getPongStateUsecase, startPongUsecase, endPongUsecase),
+			pongController(calcPongStateUsecase, startPongUsecase, endPongUsecase),
 			{
 				prefix: "/ws",
 			},

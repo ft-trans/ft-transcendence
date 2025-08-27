@@ -21,18 +21,9 @@ export class MatchesPong extends Component {
 		const url = new URL(window.location.href);
 		const matchId = url.pathname.split("/").pop() || "";
 
-		const socket = new WebSocket(
-			`ws://localhost:3000/ws/pong/matches/${matchId}`,
-		);
+		const socket = new WebSocket(`/ws/pong/matches/${matchId}`);
 
 		socket.onmessage = (event) => {
-			console.log("Received message:", event);
-			// 受信したメッセージを表示;
-			const pongCourt2 = document.getElementById("pong-court2");
-			console.log("pongCourt:", pongCourt2);
-			if (pongCourt2) {
-				pongCourt2.innerHTML = `<div>${event.data}</div>`;
-			}
 			const state: PongGameStateResponse = JSON.parse(event.data);
 			this.pongGame.draw(state);
 		};
@@ -50,8 +41,6 @@ export class MatchesPong extends Component {
     ${new SectionTitle({ text: "Pong!!" }).render()}
     <div id="pong-court" class="flex justify-center items-center">
     </div>
-	<div id="pong-court2" class="mt-4">
-	</div>
 </div>
 `;
 	}
