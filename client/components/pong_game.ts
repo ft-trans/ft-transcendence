@@ -1,10 +1,10 @@
-import type { PongGameState } from "@shared/api/pong";
+import { PongField, type PongGameStateResponse } from "@shared/api/pong";
 
 export class PongGame {
 	private readonly canvas: HTMLCanvasElement;
 	private readonly context: CanvasRenderingContext2D;
-	readonly width = 600;
-	readonly height = 400;
+	readonly width = PongField.width;
+	readonly height = PongField.height;
 
 	constructor() {
 		this.canvas = document.createElement("canvas");
@@ -22,7 +22,7 @@ export class PongGame {
 		this.drawField();
 	}
 
-	draw(gameState: PongGameState) {
+	draw(gameState: PongGameStateResponse) {
 		this.drawField();
 		this.drawBall(gameState.payload.ball.x, gameState.payload.ball.y);
 	}
