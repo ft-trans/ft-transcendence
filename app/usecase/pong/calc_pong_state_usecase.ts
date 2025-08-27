@@ -3,14 +3,14 @@ import { Ball, MatchId, PongGameState } from "@domain/model/pong";
 import type { IKVSRepository } from "@domain/repository";
 import { PongField } from "@shared/api/pong";
 
-export type GetPongStateUsecaseInput = {
+export type CalcPongStateUsecaseInput = {
 	matchId: string;
 };
 
-export class GetPongStateUsecase {
+export class CalcPongStateUsecase {
 	constructor(private readonly repo: IKVSRepository) {}
 
-	async execute(input: GetPongStateUsecaseInput): Promise<PongGameState> {
+	async execute(input: CalcPongStateUsecaseInput): Promise<PongGameState> {
 		const matchId = new MatchId(input.matchId);
 
 		const ball = await this.repo.newBallRepository().get(matchId);
