@@ -1,4 +1,4 @@
-import type { MatchId } from "@domain/model";
+import { MatchId } from "@domain/model";
 import type { CalcPongStateUsecase } from "@usecase/pong/calc_pong_state_usecase";
 import type { EndPongUsecase } from "@usecase/pong/end_pong_usecase";
 import type { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
@@ -7,7 +7,7 @@ import fp from "fastify-plugin";
 import WebSocket from "ws";
 
 export class PongGameServer {
-	private readonly connectedClients = new Map<MatchId, Set<WebSocket>>();
+	private readonly connectedClients = new Map<string, Set<WebSocket>>();
 	private intervalId: NodeJS.Timeout | undefined = undefined;
 
 	constructor(
@@ -17,17 +17,17 @@ export class PongGameServer {
 	) {}
 
 	addClient(matchId: MatchId, socket: WebSocket) {
-		if (!this.connectedClients.has(matchId)) {
-			this.connectedClients.set(matchId, new Set<WebSocket>());
+		if (!this.connectedClients.has(matchId.value)) {
+			this.connectedClients.set(matchId.value, new Set<WebSocket>());
 			this.startPongUsecase.execute({ matchId: matchId.value });
 		}
-		this.connectedClients.get(matchId)?.add(socket);
+		this.connectedClients.get(matchId.value)?.add(socket);
 	}
 
 	deleteClient(matchId: MatchId, socket: WebSocket) {
-		this.connectedClients.get(matchId)?.delete(socket);
-		if (this.connectedClients.get(matchId)?.size === 0) {
-			this.connectedClients.delete(matchId);
+		this.connectedClients.get(matchId.value)?.delete(socket);
+		if (this.connectedClients.get(matchId.value)?.size === 0) {
+			this.connectedClients.delete(matchId.value);
 			this.endPongUsecase.execute({ matchId: matchId.value });
 		}
 	}
@@ -39,8 +39,8 @@ export class PongGameServer {
 
 		this.intervalId = setInterval(() => {
 			this.connectedClients.forEach(
-				(clients: Set<WebSocket>, matchId: MatchId) => {
-					this.sendPongGameState(matchId, clients);
+				(clients: Set<WebSocket>, matchId: string) => {
+					this.sendPongGameState(new MatchId(matchId), clients);
 				},
 			);
 		}, 1000 / 60); // 60 FPS
