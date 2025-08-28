@@ -113,3 +113,9 @@ export default fp(pongGameServerPlugin, {
 	name: "pong-game-server",
 	fastify: "5.x",
 });
+
+declare module "fastify" {
+	interface FastifyInstance {
+		pongGameServer: PongGameServer;
+	}
+}
