@@ -1,4 +1,4 @@
-import type { IBallRepository } from "./pong_repository";
+import type { IBallRepository } from "./ball_repository";
 import type { IUserRepository } from "./user_repository";
 
 export interface IRepository {

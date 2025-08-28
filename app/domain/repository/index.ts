@@ -1,3 +1,3 @@
-export * from "./pong_repository";
+export * from "./ball_repository";
 export * from "./repository";
 export * from "./user_repository";
