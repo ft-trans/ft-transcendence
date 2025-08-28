@@ -1,3 +1,4 @@
+import type { MatchId } from "@domain/model";
 import type { CalcPongStateUsecase } from "@usecase/pong/calc_pong_state_usecase";
 import type { EndPongUsecase } from "@usecase/pong/end_pong_usecase";
 import type { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
@@ -6,30 +7,28 @@ import fp from "fastify-plugin";
 import WebSocket from "ws";
 
 export class PongGameServer {
-	private readonly connectedClients = new Map<string, Set<WebSocket>>();
-	private intervalId: NodeJS.Timeout | undefined;
+	private readonly connectedClients = new Map<MatchId, Set<WebSocket>>();
+	private intervalId: NodeJS.Timeout | undefined = undefined;
 
 	constructor(
 		private readonly getPongStateUsecase: CalcPongStateUsecase,
 		private readonly startPongUsecase: StartPongUsecase,
 		private readonly endPongUsecase: EndPongUsecase,
-	) {
-		this.intervalId = undefined;
-	}
+	) {}
 
-	addClient(matchId: string, socket: WebSocket) {
+	addClient(matchId: MatchId, socket: WebSocket) {
 		if (!this.connectedClients.has(matchId)) {
 			this.connectedClients.set(matchId, new Set<WebSocket>());
-			this.startPongUsecase.execute({ matchId });
+			this.startPongUsecase.execute({ matchId: matchId.value });
 		}
 		this.connectedClients.get(matchId)?.add(socket);
 	}
 
-	deleteClient(matchId: string, socket: WebSocket) {
+	deleteClient(matchId: MatchId, socket: WebSocket) {
 		this.connectedClients.get(matchId)?.delete(socket);
 		if (this.connectedClients.get(matchId)?.size === 0) {
 			this.connectedClients.delete(matchId);
-			this.endPongUsecase.execute({ matchId });
+			this.endPongUsecase.execute({ matchId: matchId.value });
 		}
 	}
 
@@ -40,7 +39,7 @@ export class PongGameServer {
 
 		this.intervalId = setInterval(() => {
 			this.connectedClients.forEach(
-				(clients: Set<WebSocket>, matchId: string) => {
+				(clients: Set<WebSocket>, matchId: MatchId) => {
 					this.sendPongGameState(matchId, clients);
 				},
 			);
@@ -54,26 +53,28 @@ export class PongGameServer {
 		}
 	}
 
-	startMatch(matchId: string) {
-		this.startPongUsecase.execute({ matchId });
+	startMatch(matchId: MatchId) {
+		this.startPongUsecase.execute({ matchId: matchId.value });
 	}
 
-	private sendPongGameState(matchId: string, clients: Set<WebSocket>) {
-		this.getPongStateUsecase.execute({ matchId }).then((state) => {
-			clients.forEach((client: WebSocket) => {
-				if (client.readyState === WebSocket.OPEN) {
-					client.send(
-						JSON.stringify({
-							event: "gameState",
-							matchId: matchId,
-							payload: state.toPayload(),
-						}),
-					);
-				} else {
-					this.deleteClient(matchId, client);
-				}
+	private sendPongGameState(matchId: MatchId, clients: Set<WebSocket>) {
+		this.getPongStateUsecase
+			.execute({ matchId: matchId.value })
+			.then((state) => {
+				clients.forEach((client: WebSocket) => {
+					if (client.readyState === WebSocket.OPEN) {
+						client.send(
+							JSON.stringify({
+								event: "gameState",
+								matchId: matchId,
+								payload: state.toPayload(),
+							}),
+						);
+					} else {
+						this.deleteClient(matchId, client);
+					}
+				});
 			});
-		});
 	}
 }
 

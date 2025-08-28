@@ -1,4 +1,4 @@
-import { MatchId } from "@domain/model/pong";
+import { MatchId } from "@domain/model";
 import type { IKVSRepository } from "@domain/repository";
 
 export type EndPongUsecaseInput = {

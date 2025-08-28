@@ -1,4 +1,4 @@
-import { Ball, MatchId } from "@domain/model/pong";
+import { Ball, MatchId } from "@domain/model";
 import type { IKVSRepository } from "@domain/repository";
 import { PongField } from "@shared/api/pong";
 

@@ -1,5 +1,4 @@
-// import { ErrBadRequest } from "@domain/error";
-
+import { MatchId } from "@domain/model";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import type WebSocket from "ws";
 import type { PongGameServer } from "./pong_game_server";
@@ -15,26 +14,28 @@ export const pongController = (pongGameServer: PongGameServer) => {
 };
 
 const onOpenWebSocket = (pongGameServer: PongGameServer) => {
-	return (
+	return async (
 		socket: WebSocket,
 		req: FastifyRequest<{ Params: { match_id: string } }>,
 	) => {
-		pongGameServer.addClient(req.params.match_id, socket);
+		const matchId = new MatchId(req.params.match_id);
+
+		pongGameServer.addClient(matchId, socket);
 
 		socket.onmessage = (event: WebSocket.MessageEvent) => {
 			const message = event.data;
 			// TODO ゲーム開始は後でちゃんと書く
 			if (message.toString() === "start") {
-				pongGameServer.startMatch(req.params.match_id);
+				pongGameServer.startMatch(matchId);
 			}
 		};
 
 		socket.onclose = () => {
-			pongGameServer.deleteClient(req.params.match_id, socket);
+			pongGameServer.deleteClient(matchId, socket);
 		};
 
 		socket.onerror = (_error) => {
-			pongGameServer.deleteClient(req.params.match_id, socket);
+			pongGameServer.deleteClient(matchId, socket);
 		};
 	};
 };
