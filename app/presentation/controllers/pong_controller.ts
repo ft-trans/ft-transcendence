@@ -1,91 +1,40 @@
 // import { ErrBadRequest } from "@domain/error";
 
-import type { CalcPongStateUsecase } from "@usecase/pong/calc_pong_state_usecase";
-import type { EndPongUsecase } from "@usecase/pong/end_pong_usecase";
-import type { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import type { FastifyInstance, FastifyRequest } from "fastify";
-import WebSocket from "ws";
+import type WebSocket from "ws";
+import type { PongGameServer } from "./pong_game_server";
 
-export const pongController = (
-	getPongStateUsecase: CalcPongStateUsecase,
-	startPongUsecase: StartPongUsecase,
-	endPongUsecase: EndPongUsecase,
-) => {
+export const pongController = (pongGameServer: PongGameServer) => {
 	return async (fastify: FastifyInstance) => {
 		fastify.get(
 			"/pong/matches/:match_id",
 			{ websocket: true },
-			onLoad(getPongStateUsecase, startPongUsecase, endPongUsecase),
+			onOpenWebSocket(pongGameServer),
 		);
 	};
 };
 
-const connectedClients = new Map<string, Set<WebSocket>>();
-
-const onLoad = (
-	getPongStateUsecase: CalcPongStateUsecase,
-	startPongUsecase: StartPongUsecase,
-	endPongUsecase: EndPongUsecase,
-) => {
-	const addClient = (matchId: string, socket: WebSocket) => {
-		if (!connectedClients.has(matchId)) {
-			connectedClients.set(matchId, new Set<WebSocket>());
-			startPongUsecase.execute({ matchId });
-		}
-		connectedClients.get(matchId)?.add(socket);
-	};
-
-	const deleteClient = (matchId: string, socket: WebSocket) => {
-		connectedClients.get(matchId)?.delete(socket);
-		if (connectedClients.get(matchId)?.size === 0) {
-			connectedClients.delete(matchId);
-			endPongUsecase.execute({ matchId });
-		}
-	};
-
-	const sendPongGameState = (matchId: string, clients: Set<WebSocket>) => {
-		getPongStateUsecase.execute({ matchId }).then((state) => {
-			clients.forEach((client: WebSocket) => {
-				if (client.readyState === WebSocket.OPEN) {
-					client.send(
-						JSON.stringify({
-							event: "gameState",
-							matchId: matchId,
-							payload: state.toPayload(),
-						}),
-					);
-				} else {
-					deleteClient(matchId, client);
-				}
-			});
-		});
-	};
-
+const onOpenWebSocket = (pongGameServer: PongGameServer) => {
 	return (
 		socket: WebSocket,
 		req: FastifyRequest<{ Params: { match_id: string } }>,
 	) => {
-		addClient(req.params.match_id, socket);
+		pongGameServer.addClient(req.params.match_id, socket);
 
 		socket.onmessage = (event: WebSocket.MessageEvent) => {
 			const message = event.data;
+			// TODO ゲーム開始は後でちゃんと書く
 			if (message.toString() === "start") {
-				startPongUsecase.execute({ matchId: req.params.match_id });
+				pongGameServer.startMatch(req.params.match_id);
 			}
 		};
 
 		socket.onclose = () => {
-			deleteClient(req.params.match_id, socket);
+			pongGameServer.deleteClient(req.params.match_id, socket);
 		};
 
 		socket.onerror = (_error) => {
-			deleteClient(req.params.match_id, socket);
+			pongGameServer.deleteClient(req.params.match_id, socket);
 		};
-
-		setInterval(() => {
-			connectedClients.forEach((clients: Set<WebSocket>, matchId: string) => {
-				sendPongGameState(matchId, clients);
-			});
-		}, 1000 / 60); // 60 FPS
 	};
 };

@@ -1,8 +1,8 @@
-// import { ErrBadRequest } from "@domain/error";
-
 import type { CalcPongStateUsecase } from "@usecase/pong/calc_pong_state_usecase";
 import type { EndPongUsecase } from "@usecase/pong/end_pong_usecase";
 import type { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
+import type { FastifyInstance, FastifyPluginCallback } from "fastify";
+import fp from "fastify-plugin";
 import WebSocket from "ws";
 
 export class PongGameServer {
@@ -33,8 +33,8 @@ export class PongGameServer {
 		}
 	}
 
-	start() {
-		if (!this.intervalId) {
+	run() {
+		if (this.intervalId) {
 			return;
 		}
 
@@ -47,11 +47,15 @@ export class PongGameServer {
 		}, 1000 / 60); // 60 FPS
 	}
 
-	stop() {
+	shutdown() {
 		if (this.intervalId) {
 			clearInterval(this.intervalId);
 			this.intervalId = undefined;
 		}
+	}
+
+	startMatch(matchId: string) {
+		this.startPongUsecase.execute({ matchId });
 	}
 
 	private sendPongGameState(matchId: string, clients: Set<WebSocket>) {
@@ -72,3 +76,39 @@ export class PongGameServer {
 		});
 	}
 }
+
+// for fastify plugin
+interface PongGameServerOptions {
+	calcPongStateUsecase: CalcPongStateUsecase;
+	startPongUsecase: StartPongUsecase;
+	endPongUsecase: EndPongUsecase;
+}
+
+// register as a Fastify plugin
+const pongGameServerPlugin: FastifyPluginCallback<PongGameServerOptions> = (
+	fastify: FastifyInstance,
+	options: PongGameServerOptions,
+	done,
+) => {
+	const pongGameServer = new PongGameServer(
+		options.calcPongStateUsecase,
+		options.startPongUsecase,
+		options.endPongUsecase,
+	);
+
+	fastify.decorate("pongGameServer", pongGameServer);
+
+	pongGameServer.run();
+
+	fastify.addHook("onClose", async () => {
+		pongGameServer.shutdown();
+	});
+
+	done();
+};
+
+// wrap with fastify-plugin to export the type declaration
+export default fp(pongGameServerPlugin, {
+	name: "pong-game-server",
+	fastify: "5.x",
+});

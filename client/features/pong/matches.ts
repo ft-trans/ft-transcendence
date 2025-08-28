@@ -30,6 +30,7 @@ export class MatchesPong extends Component {
 
 		document.addEventListener("keydown", (event) => {
 			if (event.code === "Space") {
+				// TODO ゲーム開始は後でちゃんと書く
 				socket.send("start");
 			}
 		});

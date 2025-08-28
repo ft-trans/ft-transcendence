@@ -7,6 +7,7 @@ import { PrismaClient } from "@infra/database/generated";
 import { KVSRepository } from "@infra/kvs";
 import { authController } from "@presentation/controllers/auth_controller";
 import { pongController } from "@presentation/controllers/pong_controller";
+import pongGameServerPlugin from "@presentation/controllers/pong_game_server";
 import { profileController } from "@presentation/controllers/profile_controller";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
 import { CalcPongStateUsecase } from "@usecase/pong/calc_pong_state_usecase";
@@ -59,12 +60,14 @@ const start = async () => {
 		const calcPongStateUsecase = new CalcPongStateUsecase(kvsRepo);
 		const startPongUsecase = new StartPongUsecase(kvsRepo);
 		const endPongUsecase = new EndPongUsecase(kvsRepo);
-		app.register(
-			pongController(calcPongStateUsecase, startPongUsecase, endPongUsecase),
-			{
-				prefix: "/ws",
-			},
-		);
+		await app.register(pongGameServerPlugin, {
+			calcPongStateUsecase,
+			startPongUsecase,
+			endPongUsecase,
+		});
+		app.register(pongController(app.pongGameServer), {
+			prefix: "/ws",
+		});
 
 		app.get("/*", (_req, reply) => {
 			return reply.html();
