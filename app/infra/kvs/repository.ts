@@ -1,6 +1,6 @@
 import type { IBallRepository, IKVSRepository } from "@domain/repository";
 import type { FastifyRedis } from "@fastify/redis";
-import { BallRepository } from "./pong_repository";
+import { BallRepository } from "./ball_repository";
 
 export type Client = FastifyRedis;
 
