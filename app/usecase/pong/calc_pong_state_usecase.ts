@@ -1,5 +1,4 @@
-// import { ErrNotFound } from "@domain/error";
-import { Ball, MatchId, PongGameState } from "@domain/model/pong";
+import { Ball, MatchId, PongGameState } from "@domain/model";
 import type { IKVSRepository } from "@domain/repository";
 import { PongField } from "@shared/api/pong";
 
