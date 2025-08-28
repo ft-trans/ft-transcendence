@@ -30,6 +30,7 @@ const onLoad = (
 	const addClient = (matchId: string, socket: WebSocket) => {
 		if (!connectedClients.has(matchId)) {
 			connectedClients.set(matchId, new Set<WebSocket>());
+			startPongUsecase.execute({ matchId });
 		}
 		connectedClients.get(matchId)?.add(socket);
 	};
