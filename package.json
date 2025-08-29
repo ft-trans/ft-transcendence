@@ -45,6 +45,7 @@
 		"@tailwindcss/vite": "^4.1.10",
 		"fastify": "^5.4.0",
 		"lodash-es": "^4.17.21",
+		"pino-elasticsearch": "^8.1.0",
 		"tailwindcss": "^4.1.10",
 		"ulid": "^3.0.1"
 	}

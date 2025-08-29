@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { resolve } from "node:path";
 
 import FastifyRedis from "@fastify/redis";
@@ -9,9 +11,51 @@ import { PrismaClient } from "./infra/database/generated/index.js";
 
 import { initializeOtel, otelInstrumentation } from "./observability/otel.js";
 
-const app = Fastify({ logger: true });
+// const app = Fastify({ logger: true });
+
+const elasticPassword = process.env.ELASTIC_PASSWORD;
+if (!elasticPassword) {
+	console.error("[boot] ELASTIC_PASSWORD is missing");
+	process.exit(1);
+}
+
+const app = Fastify({
+	logger: {
+		level: "debug",
+		timestamp: () => `,"@timestamp":"${new Date().toISOString()}"`,
+		transport: {
+			targets: [
+				{
+					// 開発用
+					target: "pino/file",
+					level: "debug",
+					options: { destination: 1 }, // stdout
+				},
+				{
+					// 本番用
+					target: "pino-elasticsearch",
+					level: "info",
+					options: {
+						index: "ft-transcendence-app",
+						node: "https://es01:9200", // Docker compose上のElasticsearch
+						esVersion: 8,
+						auth: {
+							username: "elastic",
+							password: elasticPassword,
+						},
+						tls: {
+							ca: readFileSync("/app/certs/app_ca.crt"),
+							rejectUnauthorized: false,
+						},
+					},
+				},
+			],
+		},
+	},
+});
 
 const start = async () => {
+	app.log.info("Testing logger to ES");
 	try {
 		const prisma = new PrismaClient();
 

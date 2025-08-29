@@ -1,0 +1,31 @@
+# ingest_dataフォルダに手動で置いた汎用ログの読み込み
+filebeat.inputs:
+- type: filestream
+  id: default-filestream
+  paths:
+    - ingest_data/*.log
+
+# labelsに基づく、各dockerコンテナからのlog取得
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+
+# 送信前の共通処理 = コンテナ名/ID/イメージ/label などをfield名化
+processors:
+- add_docker_metadata: ~
+
+# filebeat setup 実行時のkibana接続情報
+setup.kibana:
+  host: ${KIBANA_HOSTS}
+  username: ${ELASTIC_USER}
+  password: ${ELASTIC_PASSWORD} 
+
+# 出力先をElasticsearchに指定している
+output.elasticsearch:
+  hosts: ${ELASTIC_HOSTS}
+  username: ${ELASTIC_USER}
+  password: ${ELASTIC_PASSWORD}
+  ssl.enabled: true
+  ssl.certificate_authorities: "certs/ca/ca.crt"
+  
