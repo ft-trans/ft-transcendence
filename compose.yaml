@@ -32,6 +32,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    labels:
+      co.elastic.logs/enabled: "false"
 
   nginx:
     build:
@@ -52,6 +54,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    labels:
+      co.elastic.logs/module: nginx
+      co.elastic.logs/fileset.stdout: access
+      co.elastic.logs/fileset.stderr: error
 
   redis:
     image: redis:8.0.2
@@ -269,7 +275,7 @@ services:
     networks:
       - transcendence_net
 
-  metricbeat01:
+  metricbeat01: # Metrics収集
     depends_on:
       es01:
         condition: service_healthy
@@ -281,7 +287,7 @@ services:
       - certs:/usr/share/metricbeat/certs
       - metricbeatdata01:/usr/share/metricbeat/data
       - "./deploy/elk/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro" # コンテナごとのCPU,メモリ,network情報の収集
       - "/sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro"
       - "/proc:/hostfs/proc:ro"
       - "/:/hostfs:ro"
@@ -292,7 +298,7 @@ services:
       - KIBANA_HOSTS=http://kibana:5601
       - LOGSTASH_HOSTS=http://logstash01:9600
     command:
-      - --strict.perms=false
+      - --strict.perms=false # TLS 証明書のパーミッション差し戻し対策
     networks:
       - transcendence_net
 
@@ -305,7 +311,7 @@ services:
     volumes:
       - certs:/usr/share/filebeat/certs
       - filebeatdata01:/usr/share/filebeat/data
-      - "./filebeat_ingest_data/:/usr/share/filebeat/ingest_data/"
+      - "./deploy/elk/filebeat_ingest_data/:/usr/share/filebeat/ingest_data/"
       - "./deploy/elk/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
       - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -333,7 +339,7 @@ services:
     volumes:
       - certs:/usr/share/logstash/certs
       - logstashdata01:/usr/share/logstash/data
-      - "./logstash_ingest_data/:/usr/share/logstash/ingest_data/"
+      - "./deploy/elk/logstash_ingest_data/:/usr/share/logstash/ingest_data/"
       - "./deploy/elk/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro"
     environment:
       - xpack.monitoring.enabled=false

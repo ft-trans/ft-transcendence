@@ -22,6 +22,7 @@ if (!elasticPassword) {
 const app = Fastify({
 	logger: {
 		level: "debug",
+		timestamp: () => `,"@timestamp":"${new Date().toISOString()}"`,
 		transport: {
 			targets: [
 				{
