@@ -19,7 +19,12 @@ export class DirectMessage {
 	static create(sender: User, receiver: User, content: string): DirectMessage {
 		if (sender.id.equals(receiver.id)) {
 			throw new ErrBadRequest({
-				userMessage: "Cannot send a message to oneself.",
+				userMessage: "自分自身にメッセージを送ることはできません。",
+			});
+		}
+		if (!content?.trim()) {
+			throw new ErrBadRequest({
+				userMessage: "メッセージの内容が空です。",
 			});
 		}
 		const id = ulid();
