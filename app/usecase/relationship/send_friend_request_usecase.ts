@@ -17,7 +17,7 @@ export class SendFriendRequestUsecase {
 
 		if (requesterId.equals(receiverId)) {
 			throw new ErrBadRequest({
-				userMessage: "Cannot send a friend request to oneself.",
+				userMessage: "自分自身に友達リクエストを送ることはできません。",
 			});
 		}
 
@@ -40,11 +40,11 @@ export class SendFriendRequestUsecase {
 			);
 
 			if (existingFriendship) {
-				if (existingFriendship.status === "blocked") {
+				if (existingFriendship.isBlocked()) {
 					throw new ErrForbidden();
 				}
 				throw new ErrBadRequest({
-					userMessage: "Friendship already exists or is pending.",
+					userMessage: "フレンドシップが既に存在するか、保留中です。",
 				});
 			}
 
