@@ -4,16 +4,16 @@ import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
 
 type IGetDirectMessagesUsecase = {
-	userId: string;
-	correspondentId: string;
+	senderId: string;
+	receiverId: string;
 };
 
 export class GetDirectMessagesUsecase {
 	constructor(private readonly transaction: ITransaction) {}
 
 	async execute(input: IGetDirectMessagesUsecase): Promise<DirectMessage[]> {
-		const userId = new UserId(input.userId);
-		const correspondentId = new UserId(input.correspondentId);
+		const userId = new UserId(input.senderId);
+		const correspondentId = new UserId(input.receiverId);
 
 		return this.transaction.exec(async (repo) => {
 			const userRepository = repo.newUserRepository();

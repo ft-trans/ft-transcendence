@@ -152,8 +152,8 @@ describe("GetDirectMessagesUsecase", () => {
 		messageRepo.findMessagesBetweenUsers.mockResolvedValue(messages);
 
 		const result = await usecase.execute({
-			userId: user1.id.value,
-			correspondentId: user2.id.value,
+			senderId: user1.id.value,
+			receiverId: user2.id.value,
 		});
 
 		expect(result).toHaveLength(2);
@@ -168,33 +168,33 @@ describe("GetDirectMessagesUsecase", () => {
 		messageRepo.findMessagesBetweenUsers.mockResolvedValue([]);
 
 		const result = await usecase.execute({
-			userId: user1.id.value,
-			correspondentId: user2.id.value,
+			senderId: user1.id.value,
+			receiverId: user2.id.value,
 		});
 
 		expect(result).toHaveLength(0);
 	});
 
-	it("should throw ErrNotFound if userId does not exist", async () => {
+	it("should throw ErrNotFound if senderId does not exist", async () => {
 		userRepo.findById
 			.mockResolvedValueOnce(undefined)
 			.mockResolvedValueOnce(user2);
 		await expect(
 			usecase.execute({
-				userId: ulid(),
-				correspondentId: user2.id.value,
+				senderId: ulid(),
+				receiverId: user2.id.value,
 			}),
 		).rejects.toThrow(ErrNotFound);
 	});
 
-	it("should throw ErrNotFound if correspondentId does not exist", async () => {
+	it("should throw ErrNotFound if receiverId does not exist", async () => {
 		userRepo.findById
 			.mockResolvedValueOnce(user1)
 			.mockResolvedValueOnce(undefined);
 		await expect(
 			usecase.execute({
-				userId: user1.id.value,
-				correspondentId: ulid(),
+				senderId: user1.id.value,
+				receiverId: ulid(),
 			}),
 		).rejects.toThrow(ErrNotFound);
 	});
