@@ -1,18 +1,21 @@
-import { ErrForbidden, ErrNotFound } from "@domain/error";
+import { ErrBadRequest, ErrForbidden, ErrNotFound } from "@domain/error";
 import { DirectMessage } from "@domain/model/direct_message";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
 
-interface ISendDirectMessageUsecase {
+type ISendDirectMessageUsecase = {
 	senderId: string;
 	receiverId: string;
 	content: string;
-}
+};
 
 export class SendDirectMessageUsecase {
 	constructor(private readonly transaction: ITransaction) {}
 
 	async execute(input: ISendDirectMessageUsecase): Promise<DirectMessage> {
+        if (input.senderId === input.receiverId) {
+			throw new ErrBadRequest( {userMessage: "自分自身にメッセージ送信することはできません。"} );
+		}
 		const senderId = new UserId(input.senderId);
 		const receiverId = new UserId(input.receiverId);
 
@@ -30,12 +33,15 @@ export class SendDirectMessageUsecase {
 			}
 
 			const friendshipRepo = repo.newFriendshipRepository();
-			const block = await friendshipRepo.findByUserIds(
+			const friendship = await friendshipRepo.findByUserIds(
 				senderId.value,
 				receiverId.value,
 			);
-			if (block.isBlocked()) {
-				throw new ErrForbidden();
+            if (friendship) {
+				if (friendship.isBlocked()) {
+					throw new ErrForbidden();
+                }
+				throw new ErrBadRequest( { userMessage: "すでに友達になっているか、友達リクエストが存在します。" });
 			}
 
 			const message = DirectMessage.create(sender, receiver, input.content);
