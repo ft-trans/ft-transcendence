@@ -13,8 +13,10 @@ export class SendDirectMessageUsecase {
 	constructor(private readonly transaction: ITransaction) {}
 
 	async execute(input: ISendDirectMessageUsecase): Promise<DirectMessage> {
-        if (input.senderId === input.receiverId) {
-			throw new ErrBadRequest( {userMessage: "自分自身にメッセージ送信することはできません。"} );
+		if (input.senderId === input.receiverId) {
+			throw new ErrBadRequest({
+				userMessage: "自分自身にメッセージ送信することはできません。",
+			});
 		}
 		const senderId = new UserId(input.senderId);
 		const receiverId = new UserId(input.receiverId);
@@ -37,11 +39,13 @@ export class SendDirectMessageUsecase {
 				senderId.value,
 				receiverId.value,
 			);
-            if (friendship) {
+			if (friendship) {
 				if (friendship.isBlocked()) {
 					throw new ErrForbidden();
-                }
-				throw new ErrBadRequest( { userMessage: "すでに友達になっているか、友達リクエストが存在します。" });
+				}
+				throw new ErrBadRequest({
+					userMessage: "すでに友達になっているか、友達リクエストが存在します。",
+				});
 			}
 
 			const message = DirectMessage.create(sender, receiver, input.content);
