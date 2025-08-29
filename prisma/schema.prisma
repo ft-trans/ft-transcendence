@@ -67,6 +67,7 @@ model Match {
   updatedAt DateTime @updatedAt
 
   participants MatchParticipant[]
+  history      MatchHistory?
 }
 
 // MatchとUserの多対多を表現する中間テーブル
@@ -82,12 +83,14 @@ model MatchParticipant {
 
 model MatchHistory {
   id          String   @id
+  matchId     String   @unique
   winnerId    String
   loserId     String
   winnerScore Int
   loserScore  Int
   playedAt    DateTime @default(now())
 
+  match  Match  @relation(fields: [matchId], references: [id])
   winner User @relation("Winner", fields: [winnerId], references: [id])
   loser  User @relation("Loser", fields: [loserId], references: [id])
 }
