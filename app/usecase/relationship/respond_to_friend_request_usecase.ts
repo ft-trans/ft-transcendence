@@ -2,7 +2,7 @@ import { ErrForbidden, ErrNotFound } from "@domain/error";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
 
-interface IRespondToFriendRequestUsecase {
+type IRespondToFriendRequestUsecase = {
 	receiverId: string; // The user responding to the request
 	requesterId: string; // The user who sent the request
 	response: "accept" | "reject";
