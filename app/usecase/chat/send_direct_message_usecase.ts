@@ -34,7 +34,7 @@ export class SendDirectMessageUsecase {
 				senderId.value,
 				receiverId.value,
 			);
-			if (block?.status === "blocked") {
+			if (block.isBlocked()) {
 				throw new ErrForbidden();
 			}
 
