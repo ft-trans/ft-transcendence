@@ -21,12 +21,13 @@ export class UnblockUserUsecase {
 				blockedId.value,
 			);
 
-			// Only the blocker can unblock, and status must be 'blocked'
-			if (
-				!friendship ||
-				friendship.status !== "blocked" ||
-				!friendship.requesterId.equals(blockerId)
-			) {
+			if (!friendship || !friendship.requesterId.equals(blockerId)) {
+				throw new ErrNotFound();
+			}
+
+			try {
+				friendship.unblock();
+			} catch (_e) {
 				throw new ErrNotFound();
 			}
 
