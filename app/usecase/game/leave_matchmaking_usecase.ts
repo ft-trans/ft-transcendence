@@ -1,4 +1,4 @@
-import type { MatchmakingService } from "../../domain/service/matchmaking_service";
+import type { MatchmakingService } from "@domain/service/matchmaking_service";
 
 export class LeaveMatchmakingUseCase {
 	constructor(private readonly matchmakingService: MatchmakingService) {}
