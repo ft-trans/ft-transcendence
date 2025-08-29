@@ -4,14 +4,7 @@ import type { IFriendshipRepository } from "@domain/repository/friendship_reposi
 import type { Client } from "./repository";
 
 // PrismaのUserモデルからドメインのUserモデルへ変換
-const toUserDomain = (prismaUser: {
-	id: string;
-	email: string | null;
-}): User => {
-	// emailがnullの場合はエラーとするか、デフォルト値を設定するかは要件次第
-	if (!prismaUser.email) {
-		throw new Error(`User with id ${prismaUser.id} has no email.`);
-	}
+const toUserDomain = (prismaUser: { id: string; email: string }): User => {
 	return User.reconstruct(
 		new UserId(prismaUser.id),
 		new UserEmail(prismaUser.email),
@@ -23,8 +16,6 @@ const toFriendshipDomain = (prismaFriendship: {
 	requesterId: string;
 	receiverId: string;
 	status: string;
-	createdAt: Date;
-	updatedAt: Date;
 }): Friendship => {
 	// PrismaのFriendshipStatus型はstringとして扱われるためキャスト
 	const status = prismaFriendship.status as "pending" | "accepted" | "blocked";
@@ -32,8 +23,6 @@ const toFriendshipDomain = (prismaFriendship: {
 		new UserId(prismaFriendship.requesterId),
 		new UserId(prismaFriendship.receiverId),
 		status,
-		prismaFriendship.createdAt,
-		prismaFriendship.updatedAt,
 	);
 };
 
@@ -63,7 +52,7 @@ export class FriendshipRepository implements IFriendshipRepository {
 	async findByUserIds(
 		userId1: string,
 		userId2: string,
-	): Promise<Friendship | null> {
+	): Promise<Friendship | undefined> {
 		const friendship = await this.client.friendship.findFirst({
 			where: {
 				OR: [
@@ -72,7 +61,7 @@ export class FriendshipRepository implements IFriendshipRepository {
 				],
 			},
 		});
-		return friendship ? toFriendshipDomain(friendship) : null;
+		return friendship ? toFriendshipDomain(friendship) : undefined;
 	}
 
 	async findFriendsByUserId(userId: string): Promise<User[]> {
