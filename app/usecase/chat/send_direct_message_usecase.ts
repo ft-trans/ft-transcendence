@@ -1,4 +1,4 @@
-import { ErrBadRequest, ErrForbidden, ErrNotFound } from "@domain/error";
+import { ErrForbidden, ErrNotFound } from "@domain/error";
 import { DirectMessage } from "@domain/model/direct_message";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
@@ -15,18 +15,6 @@ export class SendDirectMessageUsecase {
 	async execute(input: ISendDirectMessageUsecase): Promise<DirectMessage> {
 		const senderId = new UserId(input.senderId);
 		const receiverId = new UserId(input.receiverId);
-
-		if (senderId.equals(receiverId)) {
-			throw new ErrBadRequest({
-				userMessage: "Cannot send a message to oneself.",
-			});
-		}
-
-		if (!input.content?.trim()) {
-			throw new ErrBadRequest({
-				userMessage: "Message content cannot be empty.",
-			});
-		}
 
 		return this.transaction.exec(async (repo) => {
 			const userRepository = repo.newUserRepository();
