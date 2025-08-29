@@ -20,7 +20,7 @@ describe("JoinMatchmakingUseCase", () => {
 	it("should successfully add a user to the matchmaking queue", async () => {
 		const userId = new UserId(ulid());
 		const userEmail = new UserEmail("test@example.com");
-		const user = User.reconstruct(userId, userEmail); // reconstructメソッドを想定
+		const user = User.reconstruct(userId, userEmail);
 
 		userRepository.findById.mockResolvedValue(user);
 
