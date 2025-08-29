@@ -56,6 +56,7 @@ describe("SendDirectMessageUsecase", () => {
 	});
 
 	it("should throw ErrBadRequest when sending to oneself", async () => {
+		userRepo.findById.mockResolvedValue(sender);
 		const input = {
 			senderId: sender.id.value,
 			receiverId: sender.id.value,
@@ -65,6 +66,9 @@ describe("SendDirectMessageUsecase", () => {
 	});
 
 	it("should throw ErrBadRequest for empty content", async () => {
+		userRepo.findById
+			.mockResolvedValueOnce(sender)
+			.mockResolvedValueOnce(receiver);
 		const input = {
 			senderId: sender.id.value,
 			receiverId: receiver.id.value,
