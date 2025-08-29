@@ -4,13 +4,7 @@ import type { IDirectMessageRepository } from "@domain/repository/direct_message
 import type { Client } from "./repository";
 
 // PrismaのUserモデルからドメインのUserモデルへ変換
-const toUserDomain = (prismaUser: {
-	id: string;
-	email: string | null;
-}): User => {
-	if (!prismaUser.email) {
-		throw new Error(`User with id ${prismaUser.id} has no email.`);
-	}
+const toUserDomain = (prismaUser: { id: string; email: string }): User => {
 	return User.reconstruct(
 		new UserId(prismaUser.id),
 		new UserEmail(prismaUser.email),
@@ -58,6 +52,42 @@ export class DirectMessageRepository implements IDirectMessageRepository {
 			},
 		});
 		return toDirectMessageDomain(saved);
+	}
+
+	async findById(messageId: string): Promise<DirectMessage | undefined> {
+		const message = await this.client.directMessage.findUnique({
+			where: {
+				id: messageId,
+			},
+			include: {
+				sender: true,
+				receiver: true,
+			},
+		});
+
+		if (!message) {
+			return undefined;
+		}
+
+		return toDirectMessageDomain(message);
+	}
+
+	async update(message: DirectMessage): Promise<DirectMessage> {
+		const updated = await this.client.directMessage.update({
+			where: {
+				id: message.id,
+			},
+			data: {
+				content: message.content,
+				isRead: message.isRead,
+			},
+			include: {
+				sender: true,
+				receiver: true,
+			},
+		});
+
+		return toDirectMessageDomain(updated);
 	}
 
 	async findMessagesBetweenUsers(
