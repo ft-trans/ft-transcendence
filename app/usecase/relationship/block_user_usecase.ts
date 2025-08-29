@@ -3,10 +3,10 @@ import { Friendship } from "@domain/model/friendship";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
 
-interface IBlockUserUsecase {
+type IBlockUserUsecase = {
 	blockerId: string;
 	blockedId: string;
-}
+};
 
 export class BlockUserUsecase {
 	constructor(private readonly transaction: ITransaction) {}

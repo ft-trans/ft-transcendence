@@ -6,7 +6,7 @@ type IRespondToFriendRequestUsecase = {
 	receiverId: string; // The user responding to the request
 	requesterId: string; // The user who sent the request
 	response: "accept" | "reject";
-}
+};
 
 export class RespondToFriendRequestUsecase {
 	constructor(private readonly transaction: ITransaction) {}

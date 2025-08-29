@@ -2,10 +2,10 @@ import { ErrNotFound } from "@domain/error";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
 
-interface IRemoveFriendUsecase {
+type IRemoveFriendUsecase = {
 	userId: string;
 	friendId: string;
-}
+};
 
 export class RemoveFriendUsecase {
 	constructor(private readonly transaction: ITransaction) {}

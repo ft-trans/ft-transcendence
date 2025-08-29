@@ -2,10 +2,10 @@ import { ErrNotFound } from "@domain/error";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
 
-interface IUnblockUserUsecase {
+type IUnblockUserUsecase = {
 	blockerId: string;
 	blockedId: string;
-}
+};
 
 export class UnblockUserUsecase {
 	constructor(private readonly transaction: ITransaction) {}

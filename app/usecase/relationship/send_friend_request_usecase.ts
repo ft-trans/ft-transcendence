@@ -3,10 +3,10 @@ import { Friendship } from "@domain/model/friendship";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
 
-interface ISendFriendRequestUsecase {
+type ISendFriendRequestUsecase = {
 	requesterId: string;
 	receiverId: string;
-}
+};
 
 export class SendFriendRequestUsecase {
 	constructor(private readonly transaction: ITransaction) {}

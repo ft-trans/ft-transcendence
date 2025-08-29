@@ -3,10 +3,10 @@ import type { DirectMessage } from "@domain/model/direct_message";
 import { UserId } from "@domain/model/user";
 import type { ITransaction } from "@usecase/transaction";
 
-interface IGetDirectMessagesUsecase {
+type IGetDirectMessagesUsecase = {
 	userId: string;
 	correspondentId: string;
-}
+};
 
 export class GetDirectMessagesUsecase {
 	constructor(private readonly transaction: ITransaction) {}
