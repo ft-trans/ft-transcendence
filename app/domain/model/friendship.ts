@@ -5,32 +5,22 @@ export type FriendshipStatus = "pending" | "accepted" | "blocked";
 
 export class Friendship {
 	status: FriendshipStatus;
-	updatedAt: Date;
 
 	constructor(
 		readonly requesterId: UserId,
 		readonly receiverId: UserId,
 		status: FriendshipStatus,
-		readonly createdAt: Date,
-		updatedAt: Date,
 	) {
 		this.status = status;
-		this.updatedAt = updatedAt;
 	}
 
 	static create(requester: User, receiver: User): Friendship {
 		if (requester.id.equals(receiver.id)) {
 			throw new ErrBadRequest({
-				userMessage: "Cannot create a friendship with oneself.",
+				userMessage: "自分自身とフレンドシップを作成することはできません。",
 			});
 		}
-		return new Friendship(
-			requester.id,
-			receiver.id,
-			"pending",
-			new Date(),
-			new Date(),
-		);
+		return new Friendship(requester.id, receiver.id, "pending");
 	}
 
 	accept(): void {
@@ -38,7 +28,23 @@ export class Friendship {
 			throw new ErrForbidden();
 		}
 		this.status = "accepted";
-		this.updatedAt = new Date();
+	}
+
+	block(): void {
+		if (this.status === "blocked") {
+			return;
+		}
+		this.status = "blocked";
+	}
+
+	unblock(): void {
+		if (this.status !== "blocked") {
+			throw new ErrForbidden();
+		}
+	}
+
+	isBlocked(): boolean {
+		return this.status === "blocked";
 	}
 
 	isAccepted(): boolean {
