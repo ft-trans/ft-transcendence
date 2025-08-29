@@ -24,7 +24,7 @@ export class Match {
 	static create(participants: User[], gameType: GameType = "Pong"): Match {
 		if (participants.length < 2) {
 			throw new ErrBadRequest({
-				userMessage: "A match requires at least 2 participants.",
+				userMessage: "試合には少なくとも2人の参加者が必要です。",
 			});
 		}
 		const id = ulid();
@@ -39,6 +39,11 @@ export class Match {
 	}
 
 	complete(): void {
+		if (this.status !== "in_progress") {
+			throw new ErrBadRequest({
+				userMessage: "進行中ではない試合は完了できません。",
+			});
+		}
 		this.status = "completed";
 		this.updatedAt = new Date();
 	}
