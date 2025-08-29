@@ -38,14 +38,13 @@ export class BlockUserUsecase {
 			);
 
 			if (friendship) {
-				if (friendship.status === "blocked") {
-					return; // Already blocked
+				if (friendship.isBlocked()) {
+					return;
 				}
-				friendship.status = "blocked";
+				friendship.block();
 			} else {
-				// Create a new friendship with blocked status
 				friendship = Friendship.create(blocker, blocked);
-				friendship.status = "blocked";
+				friendship.block();
 			}
 
 			await friendshipRepository.save(friendship);
