@@ -10,13 +10,9 @@ scrape_configs:
     static_configs:
       - targets:
         - prometheus:9090
-  # - job_name: 'node-exporter'
-  #   static_configs:
-  #     - targets:
-  #       - node-exporter:9100
   - job_name: 'fastify-app'
     static_configs:
-      - targets: ['app:9464']
+      - targets: ['app:3000']
   - job_name: 'redis'
     static_configs:
       - targets: ['redis-exporter:9121']

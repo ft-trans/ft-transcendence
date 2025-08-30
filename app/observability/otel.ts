@@ -8,16 +8,11 @@ import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { PrismaInstrumentation } from "@prisma/instrumentation";
 
 const serviceName = process.env.OTEL_SERVICE_NAME ?? "fastify-app";
-const metricsPort = Number(process.env.OTEL_METRICS_PORT ?? 9464);
+const metricsPort = Number(process.env.OTEL_METRICS_PORT ?? 3000);
 
-const prometheusExporter = new PrometheusExporter(
-	{ port: metricsPort, endpoint: "/metrics" },
-	() => {
-		console.log(
-			`Prometheus metrics at http://localhost:${metricsPort}/metrics`,
-		);
-	},
-);
+export const prometheusExporter = new PrometheusExporter({
+	preventServerStart: true,
+});
 
 const fastifyOtelInstrumentation = new FastifyOtelInstrumentation({
 	servername: serviceName,
@@ -30,7 +25,7 @@ const otelSDK = new NodeSDK({
 	instrumentations: [
 		fastifyOtelInstrumentation,
 		new HttpInstrumentation(),
-		new PrismaInstrumentation({ middleware: true }),
+		new PrismaInstrumentation({}),
 	],
 });
 

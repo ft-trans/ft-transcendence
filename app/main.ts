@@ -13,7 +13,7 @@ import Fastify from "fastify";
 
 // import { PrismaClient } from "./infra/database/generated/index.js";
 
-import { initializeOtel, otelInstrumentation } from "./observability/otel.js";
+import { initializeOtel, otelInstrumentation, prometheusExporter } from "./observability/otel.js";
 
 const app = Fastify({ logger: true });
 
@@ -25,11 +25,17 @@ const start = async () => {
 			return { message: "OK" };
 		});
 
-		app.get("/metrics", async (_req, _reply) => {
-			_reply.type("text/plain").send(await prisma.$metrics.prometheus());
+		app.get("/metrics/otel", async (req, reply) => {
+			reply.hijack?.();
+			prometheusExporter.getMetricsRequestHandler(req.raw, reply.raw);
 		});
 
-		await initializeOtel();
+		app.get("/metrics", async (_req, _reply) => {
+			const otelRes = await fetch("http://127.0.0.1:3000/metrics/otel");
+			const otelText = await otelRes.text();
+			const prismaText = await (prisma as any).$metrics.prometheus();
+			_reply.type("text/plain; version=0.0.4; charset=utf-8").send([otelText, prismaText].join("\n"));
+		});
 
 		await app.register(otelInstrumentation.plugin());
 
