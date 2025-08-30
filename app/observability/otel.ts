@@ -31,10 +31,6 @@ const otelSDK = new NodeSDK({
 
 export const initializeOtel = async () => {
 	await otelSDK.start();
-
-	// Set global tracer and meter providers
-	fastifyOtelInstrumentation.setTracerProvider(trace.getTracerProvider());
-	fastifyOtelInstrumentation.setMeterProvider(metrics.getMeterProvider());
 };
 
 export const otelInstrumentation = fastifyOtelInstrumentation;

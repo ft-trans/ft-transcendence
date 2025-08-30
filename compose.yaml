@@ -13,7 +13,6 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
       OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME}
-      OTEL_METRICS_PORT: ${OTEL_METRICS_PORT}
     networks:
       - transcendence_net
     depends_on:
