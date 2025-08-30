@@ -8,7 +8,6 @@ services:
         DATABASE_URL: ${DATABASE_URL}
     ports:
       - "3000:3000"
-      - "9464:9464"
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
