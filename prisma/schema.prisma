@@ -12,8 +12,85 @@ datasource db {
 }
 
 model User {
-  id    String     @id
-  email String  @unique
+  id            String    @id
+  email         String    @unique
+  status        String    @default("offline") // "online" or "offline"
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Friendship relations
+  sentFriendRequests     Friendship[] @relation("Requester")
+  receivedFriendRequests Friendship[] @relation("Receiver")
+
+  // DirectMessage relations
+  sentMessages     DirectMessage[] @relation("Sender")
+  receivedMessages DirectMessage[] @relation("Receiver")
+
+  // Match relations
+  matchParticipants MatchParticipant[]
+
+  // MatchHistory relations
+  wonMatches  MatchHistory[] @relation("Winner")
+  lostMatches MatchHistory[] @relation("Loser")
+}
+
+model Friendship {
+  requesterId String
+  receiverId  String
+  status      String // "pending", "accepted", "blocked"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requester User @relation("Requester", fields: [requesterId], references: [id])
+  receiver  User @relation("Receiver", fields: [receiverId], references: [id])
+
+  @@id([requesterId, receiverId])
+}
+
+model DirectMessage {
+  id         String   @id
+  senderId   String
+  receiverId String
+  content    String
+  isRead     Boolean  @default(false)
+  sentAt     DateTime @default(now())
+
+  sender   User @relation("Sender", fields: [senderId], references: [id])
+  receiver User @relation("Receiver", fields: [receiverId], references: [id])
+}
+
+model Match {
+  id        String   @id
+  status    String // "in_progress", "completed"
+  gameType  String   @default("Pong")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  participants MatchParticipant[]
+  history      MatchHistory?
+}
+
+// MatchとUserの多対多を表現する中間テーブル
+model MatchParticipant {
+  matchId String
+  userId  String
+
+  match Match @relation(fields: [matchId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@id([matchId, userId])
+}
+
+model MatchHistory {
+  id          String   @id
+  matchId     String   @unique
+  winnerId    String
+  loserId     String
+  winnerScore Int
+  loserScore  Int
+  playedAt    DateTime @default(now())
+
+  match  Match  @relation(fields: [matchId], references: [id])
+  winner User @relation("Winner", fields: [winnerId], references: [id])
+  loser  User @relation("Loser", fields: [loserId], references: [id])
 }
