@@ -1,6 +1,14 @@
 {
   "$schema": "https://swc.rs/schema.json",
   "jsc": {
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["./shared/*"],
+      "@domain/*": ["./app/domain/*"],
+      "@infra/*": ["./app/infra/*"],
+      "@presentation/*": ["./app/presentation/*"],
+      "@usecase/*": ["./app/usecase/*"]
+    },
     "parser": {
       "syntax": "typescript",
       "decorators": true,
