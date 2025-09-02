@@ -6,10 +6,13 @@ import { Transaction } from "@infra/database";
 import { PrismaClient } from "@infra/database/generated";
 import { authController } from "@presentation/controllers/auth_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
+import { matchmakingController } from "@presentation/controllers/matchmaking_controller";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
-import Fastify from "fastify";
+import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
+import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
+import Fastify, { fastify } from "fastify";
 
 // import { PrismaClient } from "./infra/database/generated/index.js";
 
@@ -69,6 +72,9 @@ const start = async () => {
 				prefix: "/api",
 			},
 		);
+		await app.register(matchmakingController(JoinMatchmakingUseCase, LeaveMatchmakingUseCase), {
+			prefix: "/api/game",
+		});
 
 		app.get("/*", (_req, reply) => {
 			return reply.html();
