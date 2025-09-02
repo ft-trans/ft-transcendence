@@ -1,4 +1,4 @@
-import { Ball, MatchId } from "@domain/model";
+import { MatchId, PongBall } from "@domain/model";
 import type { IKVSRepository } from "@domain/repository";
 import { PongField } from "@shared/api/pong";
 
@@ -16,9 +16,9 @@ export class StartPongUsecase {
 		const y = PongField.height * Math.random();
 		const dx = 20 * (0.5 - Math.random());
 		const dy = 20 * (0.5 - Math.random());
-		const ball = new Ball({ x, y, dx, dy });
+		const ball = new PongBall({ x, y, dx, dy });
 
-		await this.repo.newBallRepository().set(matchId, ball);
+		await this.repo.newPongBallRepository().set(matchId, ball);
 
 		return matchId;
 	}

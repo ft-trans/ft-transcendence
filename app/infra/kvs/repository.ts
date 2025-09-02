@@ -1,13 +1,13 @@
-import type { IBallRepository, IKVSRepository } from "@domain/repository";
+import type { IKVSRepository, IPongBallRepository } from "@domain/repository";
 import type { FastifyRedis } from "@fastify/redis";
-import { BallRepository } from "./ball_repository";
+import { PongBallRepository } from "./pong_ball_repository";
 
 export type Client = FastifyRedis;
 
 export class KVSRepository implements IKVSRepository {
 	constructor(private readonly client: Client) {}
 
-	newBallRepository(): IBallRepository {
-		return new BallRepository(this.client);
+	newPongBallRepository(): IPongBallRepository {
+		return new PongBallRepository(this.client);
 	}
 }

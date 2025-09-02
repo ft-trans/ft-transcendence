@@ -1,16 +1,16 @@
-import type { Ball, MatchId } from "@domain/model";
-import type { IBallRepository } from "@domain/repository";
+import type { MatchId, PongBall } from "@domain/model";
+import type { IPongBallRepository } from "@domain/repository";
 import type { Client } from "./repository";
 
-export class BallRepository implements IBallRepository {
+export class PongBallRepository implements IPongBallRepository {
 	constructor(private readonly client: Client) {}
 
-	async set(matchId: MatchId, ball: Ball): Promise<Ball> {
+	async set(matchId: MatchId, ball: PongBall): Promise<PongBall> {
 		this.client.set(this.getKey(matchId), JSON.stringify(ball));
 		return ball;
 	}
 
-	async get(matchId: MatchId): Promise<Ball | undefined> {
+	async get(matchId: MatchId): Promise<PongBall | undefined> {
 		const data = await this.client.get(this.getKey(matchId));
 		return data ? JSON.parse(data) : undefined;
 	}

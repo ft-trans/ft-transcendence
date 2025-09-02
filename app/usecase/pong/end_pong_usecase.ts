@@ -11,7 +11,7 @@ export class EndPongUsecase {
 	async execute(input: EndPongUsecaseInput): Promise<MatchId> {
 		const matchId = new MatchId(input.matchId);
 
-		await this.repo.newBallRepository().delete(matchId);
+		await this.repo.newPongBallRepository().delete(matchId);
 
 		return matchId;
 	}

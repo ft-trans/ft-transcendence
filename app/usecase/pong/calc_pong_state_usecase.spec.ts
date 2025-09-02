@@ -1,5 +1,5 @@
-import { Ball } from "@domain/model";
-import type { IBallRepository, IKVSRepository } from "@domain/repository";
+import { PongBall } from "@domain/model";
+import type { IKVSRepository, IPongBallRepository } from "@domain/repository";
 import { PongField } from "@shared/api/pong";
 import { ulid } from "ulid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -12,13 +12,13 @@ describe("CalcPongStateUsecase", () => {
 	});
 
 	it("should calculate the current state of the pong game", async () => {
-		const ball = new Ball({ x: 1, y: 2, dx: 3, dy: 4 });
-		const newBall = new Ball({ x: 4, y: 6, dx: 3, dy: 4 });
-		const mockBallRepo = mock<IBallRepository>();
+		const ball = new PongBall({ x: 1, y: 2, dx: 3, dy: 4 });
+		const newBall = new PongBall({ x: 4, y: 6, dx: 3, dy: 4 });
+		const mockBallRepo = mock<IPongBallRepository>();
 		mockBallRepo.get.mockResolvedValue(ball);
 		mockBallRepo.set.mockResolvedValue(newBall);
 		const repo = mock<IKVSRepository>();
-		repo.newBallRepository.mockReturnValue(mockBallRepo);
+		repo.newPongBallRepository.mockReturnValue(mockBallRepo);
 
 		const usecase = new CalcPongStateUsecase(repo);
 
@@ -35,13 +35,13 @@ describe("CalcPongStateUsecase", () => {
 	});
 
 	it("should calculate bound (x = 0)", async () => {
-		const ball = new Ball({ x: 0, y: 2, dx: -3, dy: 4 });
-		const newBall = new Ball({ x: 3, y: 6, dx: 3, dy: 4 });
-		const mockBallRepo = mock<IBallRepository>();
+		const ball = new PongBall({ x: 0, y: 2, dx: -3, dy: 4 });
+		const newBall = new PongBall({ x: 3, y: 6, dx: 3, dy: 4 });
+		const mockBallRepo = mock<IPongBallRepository>();
 		mockBallRepo.get.mockResolvedValue(ball);
 		mockBallRepo.set.mockResolvedValue(newBall);
 		const repo = mock<IKVSRepository>();
-		repo.newBallRepository.mockReturnValue(mockBallRepo);
+		repo.newPongBallRepository.mockReturnValue(mockBallRepo);
 
 		const usecase = new CalcPongStateUsecase(repo);
 
@@ -58,13 +58,18 @@ describe("CalcPongStateUsecase", () => {
 	});
 
 	it("should calculate bound (x = width)", async () => {
-		const ball = new Ball({ x: PongField.width, y: 2, dx: 3, dy: 4 });
-		const newBall = new Ball({ x: PongField.width - 3, y: 6, dx: -3, dy: 4 });
-		const mockBallRepo = mock<IBallRepository>();
+		const ball = new PongBall({ x: PongField.width, y: 2, dx: 3, dy: 4 });
+		const newBall = new PongBall({
+			x: PongField.width - 3,
+			y: 6,
+			dx: -3,
+			dy: 4,
+		});
+		const mockBallRepo = mock<IPongBallRepository>();
 		mockBallRepo.get.mockResolvedValue(ball);
 		mockBallRepo.set.mockResolvedValue(newBall);
 		const repo = mock<IKVSRepository>();
-		repo.newBallRepository.mockReturnValue(mockBallRepo);
+		repo.newPongBallRepository.mockReturnValue(mockBallRepo);
 
 		const usecase = new CalcPongStateUsecase(repo);
 
@@ -81,13 +86,13 @@ describe("CalcPongStateUsecase", () => {
 	});
 
 	it("should calculate bound (y = 0)", async () => {
-		const ball = new Ball({ x: 1, y: 0, dx: 3, dy: -4 });
-		const newBall = new Ball({ x: 4, y: 4, dx: 3, dy: 4 });
-		const mockBallRepo = mock<IBallRepository>();
+		const ball = new PongBall({ x: 1, y: 0, dx: 3, dy: -4 });
+		const newBall = new PongBall({ x: 4, y: 4, dx: 3, dy: 4 });
+		const mockBallRepo = mock<IPongBallRepository>();
 		mockBallRepo.get.mockResolvedValue(ball);
 		mockBallRepo.set.mockResolvedValue(newBall);
 		const repo = mock<IKVSRepository>();
-		repo.newBallRepository.mockReturnValue(mockBallRepo);
+		repo.newPongBallRepository.mockReturnValue(mockBallRepo);
 
 		const usecase = new CalcPongStateUsecase(repo);
 
@@ -104,13 +109,18 @@ describe("CalcPongStateUsecase", () => {
 	});
 
 	it("should calculate bound (y = height)", async () => {
-		const ball = new Ball({ x: 1, y: PongField.height, dx: 3, dy: 4 });
-		const newBall = new Ball({ x: 4, y: PongField.height - 4, dx: 3, dy: -4 });
-		const mockBallRepo = mock<IBallRepository>();
+		const ball = new PongBall({ x: 1, y: PongField.height, dx: 3, dy: 4 });
+		const newBall = new PongBall({
+			x: 4,
+			y: PongField.height - 4,
+			dx: 3,
+			dy: -4,
+		});
+		const mockBallRepo = mock<IPongBallRepository>();
 		mockBallRepo.get.mockResolvedValue(ball);
 		mockBallRepo.set.mockResolvedValue(newBall);
 		const repo = mock<IKVSRepository>();
-		repo.newBallRepository.mockReturnValue(mockBallRepo);
+		repo.newPongBallRepository.mockReturnValue(mockBallRepo);
 
 		const usecase = new CalcPongStateUsecase(repo);
 

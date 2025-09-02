@@ -25,7 +25,7 @@ export class IntervalId extends ValueObject<number, "IntervalId"> {
 	}
 }
 
-export class Ball {
+export class PongBall {
 	readonly x: number;
 	readonly y: number;
 	readonly dx: number;
@@ -46,7 +46,7 @@ export class Ball {
 
 export class PongGameState {
 	constructor(
-		readonly ball: Ball,
+		readonly ball: PongBall,
 		// readonly paddles: { player1: Paddle; player2: Paddle },
 		// readonly score: { player1: number; player2: number },
 	) {}

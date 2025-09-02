@@ -1,4 +1,4 @@
-import { Ball, MatchId, PongGameState } from "@domain/model";
+import { MatchId, PongBall, PongGameState } from "@domain/model";
 import type { IKVSRepository } from "@domain/repository";
 import { PongField } from "@shared/api/pong";
 
@@ -12,7 +12,7 @@ export class CalcPongStateUsecase {
 	async execute(input: CalcPongStateUsecaseInput): Promise<PongGameState> {
 		const matchId = new MatchId(input.matchId);
 
-		const ball = await this.repo.newBallRepository().get(matchId);
+		const ball = await this.repo.newPongBallRepository().get(matchId);
 
 		if (!ball) {
 			// TODO ユーザーへの通知
@@ -20,12 +20,12 @@ export class CalcPongStateUsecase {
 		}
 
 		const newBall = this.calculateNewBallPosition(ball);
-		await this.repo.newBallRepository().set(matchId, newBall);
+		await this.repo.newPongBallRepository().set(matchId, newBall);
 
 		return new PongGameState(newBall);
 	}
 
-	private calculateNewBallPosition(ball: Ball): Ball {
+	private calculateNewBallPosition(ball: PongBall): PongBall {
 		let newX = ball.x + ball.dx;
 		let newY = ball.y + ball.dy;
 		let newDx = ball.dx;
@@ -46,6 +46,6 @@ export class CalcPongStateUsecase {
 			newY = PongField.height - (newY - PongField.height);
 		}
 
-		return new Ball({ x: newX, y: newY, dx: newDx, dy: newDy });
+		return new PongBall({ x: newX, y: newY, dx: newDx, dy: newDy });
 	}
 }

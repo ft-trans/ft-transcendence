@@ -1,4 +1,4 @@
-import type { IBallRepository, IKVSRepository } from "@domain/repository";
+import type { IKVSRepository, IPongBallRepository } from "@domain/repository";
 import { ulid } from "ulid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
@@ -10,10 +10,10 @@ describe("EndPongUsecase", () => {
 	});
 
 	it("should end the pong game", async () => {
-		const mockBallRepo = mock<IBallRepository>();
+		const mockBallRepo = mock<IPongBallRepository>();
 		mockBallRepo.delete.mockResolvedValue();
 		const repo = mock<IKVSRepository>();
-		repo.newBallRepository.mockReturnValue(mockBallRepo);
+		repo.newPongBallRepository.mockReturnValue(mockBallRepo);
 
 		const usecase = new EndPongUsecase(repo);
 

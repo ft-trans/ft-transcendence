@@ -1,7 +1,7 @@
 import { ErrBadRequest } from "@domain/error";
 import { ulid } from "ulid";
 import { describe, expect, it } from "vitest";
-import { Ball, MatchId } from "./pong";
+import { MatchId, PongBall } from "./pong";
 
 describe("MatchId", () => {
 	it("should create a MatchId instance with a valid ULID", () => {
@@ -21,11 +21,11 @@ describe("MatchId", () => {
 	});
 });
 
-describe("Ball", () => {
+describe("PongBall", () => {
 	it("should create a ball with valid values", () => {
-		const ball = new Ball({ x: 1, y: 2, dx: 3, dy: 4 });
+		const ball = new PongBall({ x: 1, y: 2, dx: 3, dy: 4 });
 
-		expect(ball).toBeInstanceOf(Ball);
+		expect(ball).toBeInstanceOf(PongBall);
 		expect(ball.x).toBe(1);
 		expect(ball.y).toBe(2);
 		expect(ball.dx).toBe(3);
