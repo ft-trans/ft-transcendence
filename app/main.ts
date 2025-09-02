@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
-import { Transaction } from "@infra/database/index.js";
+import { Transaction } from "@infra/database";
 import { PrismaClient } from "@infra/database/generated";
 import { authController } from "@presentation/controllers/auth_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
