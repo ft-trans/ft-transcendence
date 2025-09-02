@@ -6,8 +6,7 @@ services:
       target: production
       args:
         DATABASE_URL: ${DATABASE_URL}
-    ports:
-      - "3000:3000"
+        VITE_API_URL: ${VITE_API_URL}
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
