@@ -23,12 +23,12 @@ describe("MatchId", () => {
 
 describe("Ball", () => {
 	it("should create a ball with valid values", () => {
-		const ball = new Ball(0, 0, 1, 1);
+		const ball = new Ball({ x: 1, y: 2, dx: 3, dy: 4 });
 
 		expect(ball).toBeInstanceOf(Ball);
-		expect(ball.x).toBe(0);
-		expect(ball.y).toBe(0);
-		expect(ball.vx).toBe(1);
-		expect(ball.vy).toBe(1);
+		expect(ball.x).toBe(1);
+		expect(ball.y).toBe(2);
+		expect(ball.dx).toBe(3);
+		expect(ball.dy).toBe(4);
 	});
 });

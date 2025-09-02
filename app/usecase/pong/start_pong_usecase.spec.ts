@@ -11,7 +11,7 @@ describe("StartPongUsecase", () => {
 	});
 
 	it("should start the pong game", async () => {
-		const ball = new Ball(1, 2, 3, 4);
+		const ball = new Ball({ x: 1, y: 2, dx: 3, dy: 4 });
 		const mockBallRepo = mock<IBallRepository>();
 		mockBallRepo.set.mockResolvedValue(ball);
 		const repo = mock<IKVSRepository>();

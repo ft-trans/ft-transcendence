@@ -14,9 +14,9 @@ export class StartPongUsecase {
 
 		const x = PongField.width / 2;
 		const y = PongField.height * Math.random();
-		const vx = 20 * (0.5 - Math.random());
-		const vy = 20 * (0.5 - Math.random());
-		const ball = new Ball(x, y, vx, vy);
+		const dx = 20 * (0.5 - Math.random());
+		const dy = 20 * (0.5 - Math.random());
+		const ball = new Ball({ x, y, dx, dy });
 
 		await this.repo.newBallRepository().set(matchId, ball);
 

@@ -1,7 +1,7 @@
 export type PongGameEvent = "gameState";
 
 export type PongGameStatePayload = {
-	ball: { x: number; y: number; vx: number; vy: number };
+	ball: { x: number; y: number; dx: number; dy: number };
 	//   paddles: { player1: number; player2: number };
 	//   score: { player1: number; player2: number };
 };

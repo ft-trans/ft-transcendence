@@ -15,9 +15,8 @@ export class CalcPongStateUsecase {
 		const ball = await this.repo.newBallRepository().get(matchId);
 
 		if (!ball) {
-			return new PongGameState(
-				new Ball(PongField.width / 2, PongField.height / 2, 0, 0),
-			);
+			// TODO ユーザーへの通知
+			throw new Error("Ball not found");
 		}
 
 		const newBall = this.calculateNewBallPosition(ball);
@@ -27,26 +26,26 @@ export class CalcPongStateUsecase {
 	}
 
 	private calculateNewBallPosition(ball: Ball): Ball {
-		let newX = ball.x + ball.vx;
-		let newY = ball.y + ball.vy;
-		let newVx = ball.vx;
-		let newVy = ball.vy;
+		let newX = ball.x + ball.dx;
+		let newY = ball.y + ball.dy;
+		let newDx = ball.dx;
+		let newDy = ball.dy;
 
 		if (newX < 0) {
-			newVx *= -1;
+			newDx *= -1;
 			newX *= -1;
 		} else if (PongField.width < newX) {
-			newVx *= -1;
+			newDx *= -1;
 			newX = PongField.width - (newX - PongField.width);
 		}
 		if (newY < 0) {
-			newVy *= -1;
+			newDy *= -1;
 			newY *= -1;
 		} else if (PongField.height < newY) {
-			newVy *= -1;
+			newDy *= -1;
 			newY = PongField.height - (newY - PongField.height);
 		}
 
-		return new Ball(newX, newY, newVx, newVy);
+		return new Ball({ x: newX, y: newY, dx: newDx, dy: newDy });
 	}
 }

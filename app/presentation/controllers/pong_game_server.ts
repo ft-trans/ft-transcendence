@@ -1,4 +1,5 @@
-import { MatchId } from "@domain/model";
+import { MatchId, type PongGameState } from "@domain/model";
+import type { PongGameStatePayload } from "@shared/api/pong";
 import type { CalcPongStateUsecase } from "@usecase/pong/calc_pong_state_usecase";
 import type { EndPongUsecase } from "@usecase/pong/end_pong_usecase";
 import type { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
@@ -57,6 +58,14 @@ export class PongGameServer {
 		this.startPongUsecase.execute({ matchId: matchId.value });
 	}
 
+	toPayload(state: PongGameState): PongGameStatePayload {
+		return {
+			ball: state.ball,
+			// paddles: this.paddles,
+			// score: this.score,
+		};
+	}
+
 	private sendPongGameState(matchId: MatchId, clients: Set<WebSocket>) {
 		this.getPongStateUsecase
 			.execute({ matchId: matchId.value })
@@ -66,8 +75,7 @@ export class PongGameServer {
 						client.send(
 							JSON.stringify({
 								event: "gameState",
-								matchId: matchId,
-								payload: state.toPayload(),
+								payload: this.toPayload(state),
 							}),
 						);
 					} else {

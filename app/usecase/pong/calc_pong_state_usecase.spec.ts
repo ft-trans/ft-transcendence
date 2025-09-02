@@ -12,8 +12,8 @@ describe("CalcPongStateUsecase", () => {
 	});
 
 	it("should calculate the current state of the pong game", async () => {
-		const ball = new Ball(1, 2, 3, 4);
-		const newBall = new Ball(4, 6, 3, 4);
+		const ball = new Ball({ x: 1, y: 2, dx: 3, dy: 4 });
+		const newBall = new Ball({ x: 4, y: 6, dx: 3, dy: 4 });
 		const mockBallRepo = mock<IBallRepository>();
 		mockBallRepo.get.mockResolvedValue(ball);
 		mockBallRepo.set.mockResolvedValue(newBall);
@@ -28,15 +28,15 @@ describe("CalcPongStateUsecase", () => {
 
 		expect(state.ball.x).toEqual(newBall.x);
 		expect(state.ball.y).toEqual(newBall.y);
-		expect(state.ball.vx).toEqual(newBall.vx);
-		expect(state.ball.vy).toEqual(newBall.vy);
+		expect(state.ball.dx).toEqual(newBall.dx);
+		expect(state.ball.dy).toEqual(newBall.dy);
 		expect(mockBallRepo.get).toHaveBeenCalledOnce();
 		expect(mockBallRepo.set).toHaveBeenCalledOnce();
 	});
 
 	it("should calculate bound (x = 0)", async () => {
-		const ball = new Ball(0, 2, -3, 4);
-		const newBall = new Ball(3, 6, 3, 4);
+		const ball = new Ball({ x: 0, y: 2, dx: -3, dy: 4 });
+		const newBall = new Ball({ x: 3, y: 6, dx: 3, dy: 4 });
 		const mockBallRepo = mock<IBallRepository>();
 		mockBallRepo.get.mockResolvedValue(ball);
 		mockBallRepo.set.mockResolvedValue(newBall);
@@ -51,15 +51,15 @@ describe("CalcPongStateUsecase", () => {
 
 		expect(state.ball.x).toEqual(newBall.x);
 		expect(state.ball.y).toEqual(newBall.y);
-		expect(state.ball.vx).toEqual(newBall.vx);
-		expect(state.ball.vy).toEqual(newBall.vy);
+		expect(state.ball.dx).toEqual(newBall.dx);
+		expect(state.ball.dy).toEqual(newBall.dy);
 		expect(mockBallRepo.get).toHaveBeenCalledOnce();
 		expect(mockBallRepo.set).toHaveBeenCalledOnce();
 	});
 
 	it("should calculate bound (x = width)", async () => {
-		const ball = new Ball(PongField.width, 2, 3, 4);
-		const newBall = new Ball(PongField.width - 3, 6, -3, 4);
+		const ball = new Ball({ x: PongField.width, y: 2, dx: 3, dy: 4 });
+		const newBall = new Ball({ x: PongField.width - 3, y: 6, dx: -3, dy: 4 });
 		const mockBallRepo = mock<IBallRepository>();
 		mockBallRepo.get.mockResolvedValue(ball);
 		mockBallRepo.set.mockResolvedValue(newBall);
@@ -74,15 +74,15 @@ describe("CalcPongStateUsecase", () => {
 
 		expect(state.ball.x).toEqual(newBall.x);
 		expect(state.ball.y).toEqual(newBall.y);
-		expect(state.ball.vx).toEqual(newBall.vx);
-		expect(state.ball.vy).toEqual(newBall.vy);
+		expect(state.ball.dx).toEqual(newBall.dx);
+		expect(state.ball.dy).toEqual(newBall.dy);
 		expect(mockBallRepo.get).toHaveBeenCalledOnce();
 		expect(mockBallRepo.set).toHaveBeenCalledOnce();
 	});
 
 	it("should calculate bound (y = 0)", async () => {
-		const ball = new Ball(1, 0, 3, -4);
-		const newBall = new Ball(4, 4, 3, 4);
+		const ball = new Ball({ x: 1, y: 0, dx: 3, dy: -4 });
+		const newBall = new Ball({ x: 4, y: 4, dx: 3, dy: 4 });
 		const mockBallRepo = mock<IBallRepository>();
 		mockBallRepo.get.mockResolvedValue(ball);
 		mockBallRepo.set.mockResolvedValue(newBall);
@@ -97,15 +97,15 @@ describe("CalcPongStateUsecase", () => {
 
 		expect(state.ball.x).toEqual(newBall.x);
 		expect(state.ball.y).toEqual(newBall.y);
-		expect(state.ball.vx).toEqual(newBall.vx);
-		expect(state.ball.vy).toEqual(newBall.vy);
+		expect(state.ball.dx).toEqual(newBall.dx);
+		expect(state.ball.dy).toEqual(newBall.dy);
 		expect(mockBallRepo.get).toHaveBeenCalledOnce();
 		expect(mockBallRepo.set).toHaveBeenCalledOnce();
 	});
 
 	it("should calculate bound (y = height)", async () => {
-		const ball = new Ball(1, PongField.height, 3, 4);
-		const newBall = new Ball(4, PongField.height - 4, 3, -4);
+		const ball = new Ball({ x: 1, y: PongField.height, dx: 3, dy: 4 });
+		const newBall = new Ball({ x: 4, y: PongField.height - 4, dx: 3, dy: -4 });
 		const mockBallRepo = mock<IBallRepository>();
 		mockBallRepo.get.mockResolvedValue(ball);
 		mockBallRepo.set.mockResolvedValue(newBall);
@@ -120,8 +120,8 @@ describe("CalcPongStateUsecase", () => {
 
 		expect(state.ball.x).toEqual(newBall.x);
 		expect(state.ball.y).toEqual(newBall.y);
-		expect(state.ball.vx).toEqual(newBall.vx);
-		expect(state.ball.vy).toEqual(newBall.vy);
+		expect(state.ball.dx).toEqual(newBall.dx);
+		expect(state.ball.dy).toEqual(newBall.dy);
 		expect(mockBallRepo.get).toHaveBeenCalledOnce();
 		expect(mockBallRepo.set).toHaveBeenCalledOnce();
 	});
