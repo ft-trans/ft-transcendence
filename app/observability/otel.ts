@@ -1,5 +1,4 @@
 import { FastifyOtelInstrumentation } from "@fastify/otel";
-import { metrics, trace } from "@opentelemetry/api";
 import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
 import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
 import { resourceFromAttributes } from "@opentelemetry/resources";
@@ -8,7 +7,6 @@ import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { PrismaInstrumentation } from "@prisma/instrumentation";
 
 const serviceName = process.env.OTEL_SERVICE_NAME ?? "fastify-app";
-const metricsPort = Number(process.env.OTEL_METRICS_PORT ?? 3000);
 
 export const prometheusExporter = new PrometheusExporter({
 	preventServerStart: true,
