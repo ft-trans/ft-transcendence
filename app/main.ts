@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
 import { Transaction } from "@infra/database";
@@ -10,14 +11,39 @@ import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import Fastify from "fastify";
 
-const app = Fastify({ logger: true });
+// import { PrismaClient } from "./infra/database/generated/index.js";
 
-app.get("/api/health", async (_req, _reply) => {
-	return { message: "OK" };
-});
+import {
+	otelInstrumentation,
+	prometheusExporter,
+} from "./observability/otel.js";
+
+const app = Fastify({ logger: true });
 
 const start = async () => {
 	try {
+		const prisma = new PrismaClient();
+
+		app.get("/api/health", async (_req, _reply) => {
+			return { message: "OK" };
+		});
+
+		app.get("/metrics/otel", async (req, reply) => {
+			reply.hijack?.();
+			prometheusExporter.getMetricsRequestHandler(req.raw, reply.raw);
+		});
+
+		app.get("/metrics", async (_req, _reply) => {
+			const otelRes = await fetch("http://127.0.0.1:3000/metrics/otel");
+			const otelText = await otelRes.text();
+			const prismaText = await prisma.$metrics.prometheus();
+			_reply
+				.type("text/plain; version=0.0.4; charset=utf-8")
+				.send([otelText, prismaText].join("\n"));
+		});
+
+		await app.register(otelInstrumentation.plugin());
+
 		await app.register(FastifyVite, {
 			root: resolve(import.meta.dirname, ".."),
 			distDir: resolve(import.meta.dirname, ".."),
