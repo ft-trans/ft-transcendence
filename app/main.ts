@@ -5,18 +5,21 @@ import FastifyVite from "@fastify/vite";
 import { Transaction } from "@infra/database";
 import { PrismaClient } from "@infra/database/generated";
 import { authController } from "@presentation/controllers/auth_controller";
-import { profileController } from "@presentation/controllers/profile_controller";
 import { matchmakingController } from "@presentation/controllers/matchmaking_controller";
+import { profileController } from "@presentation/controllers/profile_controller";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
-import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
-import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
-import Fastify, { fastify } from "fastify";
+import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
+import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
+import Fastify from "fastify";
 
 // import { PrismaClient } from "./infra/database/generated/index.js";
 
-import { initializeOtel, otelInstrumentation, prometheusExporter } from "./observability/otel.js";
+import {
+	otelInstrumentation,
+	prometheusExporter,
+} from "./observability/otel.js";
 
 const app = Fastify({ logger: true });
 
@@ -36,8 +39,10 @@ const start = async () => {
 		app.get("/metrics", async (_req, _reply) => {
 			const otelRes = await fetch("http://127.0.0.1:3000/metrics/otel");
 			const otelText = await otelRes.text();
-			const prismaText = await (prisma as any).$metrics.prometheus();
-			_reply.type("text/plain; version=0.0.4; charset=utf-8").send([otelText, prismaText].join("\n"));
+			const prismaText = await prisma.$metrics.prometheus();
+			_reply
+				.type("text/plain; version=0.0.4; charset=utf-8")
+				.send([otelText, prismaText].join("\n"));
 		});
 
 		await app.register(otelInstrumentation.plugin());
@@ -72,9 +77,12 @@ const start = async () => {
 				prefix: "/api",
 			},
 		);
-		await app.register(matchmakingController(JoinMatchmakingUseCase, LeaveMatchmakingUseCase), {
-			prefix: "/api/game",
-		});
+		await app.register(
+			matchmakingController(JoinMatchmakingUseCase, LeaveMatchmakingUseCase),
+			{
+				prefix: "/api/game",
+			},
+		);
 
 		app.get("/*", (_req, reply) => {
 			return reply.html();

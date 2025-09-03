@@ -20,11 +20,11 @@ export const matchmakingController = (
 };
 
 const onJoinMatchmaking = (usecase: JoinMatchmakingUseCase) => {
-	return async (req: FastifyRequest, reply: FastifyReply) => {
+	return async (_req: FastifyRequest, reply: FastifyReply) => {
 		// TODO: セッションからuserIdを取得する
 		// **********************************************************
-        const userId = "01K24DQHXAJ2NFYKPZ812F4HBJ"; // 仮のユーザーID
-        // **********************************************************
+		const userId = "01K24DQHXAJ2NFYKPZ812F4HBJ"; // 仮のユーザーID
+		// **********************************************************
 
 		const match = await usecase.execute(userId);
 
@@ -48,12 +48,12 @@ const onJoinMatchmaking = (usecase: JoinMatchmakingUseCase) => {
 };
 
 const onLeaveMatchmaking = (usecase: LeaveMatchmakingUseCase) => {
-	return async (req: FastifyRequest, reply: FastifyReply) => {
+	return async (_req: FastifyRequest, reply: FastifyReply) => {
 		// TODO: セッションからuserIdを取得する
-        // **********************************************************
-        const userId = "01K24DQHXAJ2NFYKPZ812F4HBJ"; // 仮のユーザーID
-        // **********************************************************
-        
+		// **********************************************************
+		const userId = "01K24DQHXAJ2NFYKPZ812F4HBJ"; // 仮のユーザーID
+		// **********************************************************
+
 		await usecase.execute(userId);
 
 		reply.status(204).send();
