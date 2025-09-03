@@ -77,12 +77,14 @@ const start = async () => {
 				prefix: "/api",
 			},
 		);
-		await app.register(
-			matchmakingController(JoinMatchmakingUseCase, LeaveMatchmakingUseCase),
-			{
-				prefix: "/api/game",
-			},
-		);
+		
+		// app/infra/でマッチングサービスとリポジトリを実装したらコメントアウトを外す
+		// await app.register(
+		// 	matchmakingController(JoinMatchmakingUseCase, LeaveMatchmakingUseCase),
+		// 	{
+		// 		prefix: "/api/game",
+		// 	},
+		// );
 
 		app.get("/*", (_req, reply) => {
 			return reply.html();

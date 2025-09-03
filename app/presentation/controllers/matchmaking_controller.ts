@@ -28,6 +28,7 @@ const onJoinMatchmaking = (usecase: JoinMatchmakingUseCase) => {
 
 		const match = await usecase.execute(userId);
 
+		// ここでマッチング成立するのか, APIでは待機レスポンスだけ送ってマッチ成立の通知はwebsocketで行うのかは要検討
 		if (match) {
 			reply.status(200).send({
 				message: "マッチしました！",
