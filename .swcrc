@@ -18,12 +18,21 @@
       "legacyDecorator": true,
       "decoratorMetadata": true
     },
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["./shared/*"],
+      "@domain/*": ["./app/domain/*"],
+      "@infra/*": ["./app/infra/*"],
+      "@presentation/*": ["./app/presentation/*"],
+      "@usecase/*": ["./app/usecase/*"]
+    },
     "target": "esnext",
     "keepClassNames": true,
     "loose": true
   },
   "module": {
     "type": "es6",
+    "resolveFully": true,
     "strict": true,
     "strictMode": true,
     "lazy": false,
