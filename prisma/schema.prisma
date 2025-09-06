@@ -12,11 +12,16 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  email         String    @unique
-  status        String    @default("offline") // "online" or "offline"
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id              String    @id
+  email           String    @unique
+  passwordDigest  String?
+  status          String    @default("offline") // "online" or "offline"
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Session management for multiple devices
+  sessions Session[]
+
 
   // Friendship relations
   sentFriendRequests     Friendship[] @relation("Requester")
@@ -93,4 +98,14 @@ model MatchHistory {
   match  Match  @relation(fields: [matchId], references: [id])
   winner User @relation("Winner", fields: [winnerId], references: [id])
   loser  User @relation("Loser", fields: [loserId], references: [id])
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
