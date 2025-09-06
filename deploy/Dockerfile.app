@@ -17,6 +17,8 @@ FROM base AS build
 
 ARG DATABASE_URL
 ENV DATABASE_URL=${DATABASE_URL}
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
 
 COPY package.json pnpm-lock.yaml ./
 
@@ -49,7 +51,7 @@ RUN groupadd -r app && useradd -r -g app app
 
 COPY --from=build /app/dist /app/dist
 COPY --from=build /app/app/infra/database/generated /app/dist/app/infra/database/generated
-COPY --from=build /app/prisma /app/prisma
+COPY --from=build /app/prisma /app/dist/prisma
 COPY --from=dependency /app/node_modules /app/node_modules
 
 RUN set -x \
@@ -59,4 +61,4 @@ USER app
 
 EXPOSE 3000
 
-CMD ["node", "dist/app/main.js"]
+CMD ["node", "dist/app/server.js"]

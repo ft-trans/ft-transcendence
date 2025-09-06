@@ -1,6 +1,11 @@
-import { BadRequestError } from "@domain/error";
+// ==> app/usecase/auth/register_user_usecase.spec.ts <==
+import { ErrBadRequest } from "@domain/error";
 import { User, UserEmail } from "@domain/model";
-import type { IUserRepository } from "@domain/repository";
+import type {
+	IDirectMessageRepository,
+	IFriendshipRepository,
+	IUserRepository,
+} from "@domain/repository";
 import type { ITransaction } from "@usecase/transaction";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
@@ -20,6 +25,8 @@ describe("RegisterUserUsecase", () => {
 		mockTx.exec.mockImplementation(async (callback) => {
 			const repo = {
 				newUserRepository: () => mockUserRepo,
+				newFriendshipRepository: () => mock<IFriendshipRepository>(),
+				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
 			};
 			return callback(repo);
 		});
@@ -39,6 +46,8 @@ describe("RegisterUserUsecase", () => {
 		mockTx.exec.mockImplementation(async (callback) => {
 			const repo = {
 				newUserRepository: () => mockUserRepo,
+				newFriendshipRepository: () => mock<IFriendshipRepository>(),
+				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
 			};
 			return callback(repo);
 		});
@@ -46,6 +55,6 @@ describe("RegisterUserUsecase", () => {
 		const usecase = new RegisterUserUsecase(mockTx);
 		const input = { email: "test@example.com" };
 
-		await expect(usecase.execute(input)).rejects.toThrow(BadRequestError);
+		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 	});
 });

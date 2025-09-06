@@ -18,6 +18,33 @@ export class UserRepository implements IUserRepository {
 		);
 	}
 
+	async update(user: User): Promise<User> {
+		const updatedUser = await this.client.user.update({
+			where: {
+				id: user.id.value,
+			},
+			data: {
+				email: user.email.value,
+			},
+		});
+		return User.reconstruct(
+			new UserId(updatedUser.id),
+			new UserEmail(updatedUser.email),
+		);
+	}
+
+	async delete(id: UserId): Promise<User> {
+		const deletedUser = await this.client.user.delete({
+			where: {
+				id: id.value,
+			},
+		});
+		return User.reconstruct(
+			new UserId(deletedUser.id),
+			new UserEmail(deletedUser.email),
+		);
+	}
+
 	async findById(id: UserId): Promise<User | undefined> {
 		const user = await this.client.user.findUnique({
 			where: {

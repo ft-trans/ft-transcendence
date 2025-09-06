@@ -1,4 +1,4 @@
-import { BadRequestError, InternalServerError } from "@domain/error";
+import { ErrBadRequest, ErrInternalServer } from "@domain/error";
 import { User, UserEmail } from "@domain/model";
 import { UserService } from "@domain/service";
 import type { ITransaction } from "@usecase/transaction";
@@ -19,14 +19,14 @@ export class RegisterUserUsecase {
 			const userService = new UserService(userRepo);
 
 			if (await userService.exists(newUser)) {
-				throw new BadRequestError({
+				throw new ErrBadRequest({
 					userMessage: "メールアドレスはすでに使用されています",
 				});
 			}
 
 			const user = await userRepo.create(newUser);
 			if (!user) {
-				throw new InternalServerError();
+				throw new ErrInternalServer();
 			}
 			return user;
 		});

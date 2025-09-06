@@ -6,14 +6,11 @@ services:
       target: production
       args:
         DATABASE_URL: ${DATABASE_URL}
-    ports:
-      - "3000:3000"
-      - "9464:9464"
+        VITE_API_URL: ${VITE_API_URL}
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
       OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME}
-      OTEL_METRICS_PORT: ${OTEL_METRICS_PORT}
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
     networks:
       - transcendence_net
@@ -23,7 +20,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - prisma:/app/prisma
+      - prisma:/app/dist/prisma
       - ./deploy/shared/app_ca.crt:/app/certs/app_ca.crt:ro
     # TODO 提出前にコメントアウトを外す
     # restart: always
@@ -42,7 +39,6 @@ services:
       target: production
     ports:
       - "80:80"
-      - "8080:8080"
     networks:
       - transcendence_net
     depends_on:
@@ -86,14 +82,6 @@ services:
       - './deploy/prometheus/alertmanager_rules.yml:/etc/prometheus/alertmanager_rules.yml'
     networks:
       - transcendence_net
-
-  # node-exporter:
-  #   image: prom/node-exporter
-  #   container_name: node-exporter
-  #   ports:
-  #     - 9100:9100
-  #   networks:
-  #     - transcendence_net
 
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter

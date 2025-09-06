@@ -4,12 +4,21 @@ import { resolve } from "node:path";
 
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
-
+import { Transaction } from "@infra/database";
+import { PrismaClient } from "@infra/database/generated";
+import { authController } from "@presentation/controllers/auth_controller";
+import { profileController } from "@presentation/controllers/profile_controller";
+import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
+import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
+import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import Fastify from "fastify";
 
-import { PrismaClient } from "./infra/database/generated/index.js";
+// import { PrismaClient } from "./infra/database/generated/index.js";
 
-import { initializeOtel, otelInstrumentation } from "./observability/otel.js";
+import {
+	otelInstrumentation,
+	prometheusExporter,
+} from "./observability/otel.js";
 
 // const app = Fastify({ logger: true });
 
@@ -63,11 +72,19 @@ const start = async () => {
 			return { message: "OK" };
 		});
 
-		app.get("/metrics", async (_req, _reply) => {
-			_reply.type("text/plain").send(await prisma.$metrics.prometheus());
+		app.get("/metrics/otel", async (req, reply) => {
+			reply.hijack?.();
+			prometheusExporter.getMetricsRequestHandler(req.raw, reply.raw);
 		});
 
-		await initializeOtel();
+		app.get("/metrics", async (_req, _reply) => {
+			const otelRes = await fetch("http://127.0.0.1:3000/metrics/otel");
+			const otelText = await otelRes.text();
+			const prismaText = await prisma.$metrics.prometheus();
+			_reply
+				.type("text/plain; version=0.0.4; charset=utf-8")
+				.send([otelText, prismaText].join("\n"));
+		});
 
 		await app.register(otelInstrumentation.plugin());
 
@@ -89,8 +106,21 @@ const start = async () => {
 			url: redis_url,
 		});
 
-		app.get("/", (_req, _reply) => {
-			return _reply.html();
+		const tx = new Transaction(new PrismaClient());
+
+		const registerUserUsecase = new RegisterUserUsecase(tx);
+		await app.register(authController(registerUserUsecase), { prefix: "/api" });
+		const updateUserUsecase = new UpdateUserUsecase(tx);
+		const deleteUserUsecase = new DeleteUserUsecase(tx);
+		await app.register(
+			profileController(updateUserUsecase, deleteUserUsecase),
+			{
+				prefix: "/api",
+			},
+		);
+
+		app.get("/*", (_req, reply) => {
+			return reply.html();
 		});
 
 		await app.vite.ready();

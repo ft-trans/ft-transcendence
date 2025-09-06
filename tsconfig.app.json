@@ -19,11 +19,12 @@
 		/* Path Aliases */
 		"baseUrl": ".",
 		"paths": {
+			"@shared/*": ["./shared/*"],
 			"@domain/*": ["./app/domain/*"],
 			"@infra/*": ["./app/infra/*"],
 			"@presentation/*": ["./app/presentation/*"],
 			"@usecase/*": ["./app/usecase/*"]
 		}
 	},
-	"include": ["app"]
+	"include": ["app", "shared"]
 }
