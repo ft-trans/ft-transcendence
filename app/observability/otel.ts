@@ -8,8 +8,10 @@ import { PrismaInstrumentation } from "@prisma/instrumentation";
 
 const serviceName = process.env.OTEL_SERVICE_NAME ?? "fastify-app";
 
+const metricsPort = Number(process.env.OTEL_METRICS_PORT ?? 9464);
+
 export const prometheusExporter = new PrometheusExporter({
-	preventServerStart: true,
+	preventServerStart: true, port: metricsPort, endpoint: "/metrics"
 });
 
 const fastifyOtelInstrumentation = new FastifyOtelInstrumentation({
