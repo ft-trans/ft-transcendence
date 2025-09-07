@@ -18,14 +18,6 @@
       "legacyDecorator": true,
       "decoratorMetadata": true
     },
-    "baseUrl": ".",
-    "paths": {
-      "@shared/*": ["./shared/*"],
-      "@domain/*": ["./app/domain/*"],
-      "@infra/*": ["./app/infra/*"],
-      "@presentation/*": ["./app/presentation/*"],
-      "@usecase/*": ["./app/usecase/*"]
-    },
     "target": "esnext",
     "keepClassNames": true,
     "loose": true
