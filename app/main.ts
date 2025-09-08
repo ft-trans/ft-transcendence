@@ -1,3 +1,5 @@
+await import("./observability/otel.js");
+
 import { resolve } from "node:path";
 
 import FastifyRedis from "@fastify/redis";
@@ -26,20 +28,6 @@ const start = async () => {
 
 		app.get("/api/health", async (_req, _reply) => {
 			return { message: "OK" };
-		});
-
-		app.get("/metrics/otel", async (req, reply) => {
-			reply.hijack?.();
-			prometheusExporter.getMetricsRequestHandler(req.raw, reply.raw);
-		});
-
-		app.get("/metrics", async (_req, _reply) => {
-			const otelRes = await fetch("http://127.0.0.1:3000/metrics/otel");
-			const otelText = await otelRes.text();
-			const prismaText = await prisma.$metrics.prometheus();
-			_reply
-				.type("text/plain; version=0.0.4; charset=utf-8")
-				.send([otelText, prismaText].join("\n"));
 		});
 
 		await app.register(otelInstrumentation.plugin());

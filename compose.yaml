@@ -13,6 +13,9 @@ services:
       OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME}
     networks:
       - transcendence_net
+    # TODO 提出前に削除, metrics確認用
+    ports:
+      - "9464:9464"
     depends_on:
       redis:
         condition: service_healthy
