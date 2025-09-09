@@ -61,4 +61,4 @@ USER app
 
 EXPOSE 3000
 
-CMD ["node", "dist/app/main.js"]
+CMD ["node", "--import", "./dist/app/observability/instrument.js", "dist/app/main.js"]
