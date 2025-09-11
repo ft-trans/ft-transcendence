@@ -9,7 +9,7 @@ import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { PrismaInstrumentation } from "@prisma/instrumentation";
 
-const serviceName = process.env.OTEL_SERVICE_NAME ?? "fastify-app";
+const serviceName = "fastify-app";
 const otlpEndpoint =
 	process.env.OTEL_EXPORTER_OTLP_ENDPOINT_TRACE || "http://localhost:4317";
 

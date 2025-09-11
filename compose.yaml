@@ -10,7 +10,6 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
-      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME}
     networks:
       - transcendence_net
     # TODO 提出前に削除, metrics確認用
@@ -65,14 +64,14 @@ services:
       retries: 3
 
   prometheus:
-    image: prom/prometheus
+    build:
+      context: ./deploy/prometheus
+      dockerfile: Dockerfile.prometheus
     container_name: prometheus
     ports:
       - '9090:9090'
     volumes:
       - 'prometheus-data:/prometheus'
-      - './deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
-      - './deploy/prometheus/alertmanager_rules.yml:/etc/prometheus/alertmanager_rules.yml'
     networks:
       - transcendence_net
 
@@ -97,19 +96,20 @@ services:
       - transcendence_net
 
   grafana:
-    image: grafana/grafana
+    build:
+      context: ./deploy/grafana
+      dockerfile: Dockerfile.grafana
     container_name: grafana
     environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASS}
-      GF_AUTH_ANONYMOUS_ENABLED: false
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    secrets:
+      - grafana_admin_password
     ports:
       - '4000:3000'
     volumes:
       - grafana-data:/var/lib/grafana
-      - './deploy/grafana/datasources:/etc/grafana/provisioning/datasources'
-      - './deploy/grafana/dashboard-settings:/etc/grafana/provisioning/dashboards'
-      - './deploy/grafana/dashboards:/var/lib/grafana/dashboards'
     networks:
       - transcendence_net
 
@@ -118,6 +118,10 @@ volumes:
   prisma:
   prometheus-data:
   grafana-data:
+
+secrets:
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password.txt
 
 networks:
   transcendence_net:
