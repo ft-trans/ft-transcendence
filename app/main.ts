@@ -1,52 +1,33 @@
 import { resolve } from "node:path";
-
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
 import { Transaction } from "@infra/database";
 import { PrismaClient } from "@infra/database/generated";
+
 import { authController } from "@presentation/controllers/auth_controller";
-// import { matchmakingController } from "@presentation/controllers/matchmaking_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
+import { matchmakingController } from "@presentation/controllers/matchmaking_controller";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
-// import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
-// import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
+import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
+import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
 import Fastify from "fastify";
+import { MatchmakingService } from "@domain/service/matchmaking_service";		
+import { UserRepository } from "@infra/database/user_repository";
+import { MatchRepository } from "@infra/database/match_repository";
+import { MatchHistoryRepository } from "@infra/database/match_history_repository";
+import { MatchmakingQueueRepository } from "@infra/database/matchmaking_queue_repository";
 
-// import { PrismaClient } from "./infra/database/generated/index.js";
-
-import {
-	otelInstrumentation,
-	prometheusExporter,
-} from "./observability/otel.js";
 
 const app = Fastify({ logger: true });
 
+app.get("/api/health", async (_req, _reply) => {
+	return { message: "OK" };
+});
+
 const start = async () => {
 	try {
-		const prisma = new PrismaClient();
-
-		app.get("/api/health", async (_req, _reply) => {
-			return { message: "OK" };
-		});
-
-		app.get("/metrics/otel", async (req, reply) => {
-			reply.hijack?.();
-			prometheusExporter.getMetricsRequestHandler(req.raw, reply.raw);
-		});
-
-		app.get("/metrics", async (_req, _reply) => {
-			const otelRes = await fetch("http://127.0.0.1:3000/metrics/otel");
-			const otelText = await otelRes.text();
-			const prismaText = await prisma.$metrics.prometheus();
-			_reply
-				.type("text/plain; version=0.0.4; charset=utf-8")
-				.send([otelText, prismaText].join("\n"));
-		});
-
-		await app.register(otelInstrumentation.plugin());
-
 		await app.register(FastifyVite, {
 			root: resolve(import.meta.dirname, ".."),
 			distDir: resolve(import.meta.dirname, ".."),
@@ -77,13 +58,15 @@ const start = async () => {
 				prefix: "/api",
 			},
 		);
-		// app/infra/でマッチングサービスとリポジトリを実装したらコメントアウトを外す
-		// await app.register(
-		// 	matchmakingController(JoinMatchmakingUseCase, LeaveMatchmakingUseCase),
-		// 	{
-		// 		prefix: "/api/game",
-		// 	},
-		// );
+
+		const joinUserUsecase = new JoinMatchmakingUseCase();
+		const leaveUserUsecase = new LeaveMatchmakingUseCase();
+		await app.register(
+			matchmakingController(joinUserUsecase, leaveUserUsecase),
+			{
+				prefix: "/api"
+			},
+		);
 
 		app.get("/*", (_req, reply) => {
 			return reply.html();
