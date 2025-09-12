@@ -69,9 +69,6 @@ importers:
       '@vitest/coverage-v8':
         specifier: 3.2.4
         version: 3.2.4(vitest@3.2.4(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.20.4))
-      fastify-plugin:
-        specifier: ^5.0.1
-        version: 5.0.1
       prisma:
         specifier: ^6.10.1
         version: 6.10.1(typescript@5.8.3)

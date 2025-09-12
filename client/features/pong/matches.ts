@@ -28,9 +28,11 @@ export class MatchesPong extends Component {
 			this.pongGame.draw(state);
 		};
 
+		// TODO 画面遷移時にイベントを削除する
 		document.addEventListener("keydown", (event) => {
 			if (event.code === "Space") {
 				// TODO ゲーム開始は後でちゃんと書く
+				// TODO イベントの種類を./shared/apiで管理
 				socket.send("start");
 			}
 		});
@@ -42,6 +44,9 @@ export class MatchesPong extends Component {
     ${new SectionTitle({ text: "Pong!!" }).render()}
     <div id="pong-court" class="flex justify-center items-center">
     </div>
+	<div class="text-center mt-4 text-gray-700">
+		<small>スペースキーでゲーム開始</small>
+	</div>
 </div>
 `;
 	}

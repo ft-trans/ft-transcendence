@@ -6,7 +6,7 @@ export class PongBallRepository implements IPongBallRepository {
 	constructor(private readonly client: Client) {}
 
 	async set(matchId: MatchId, ball: PongBall): Promise<PongBall> {
-		this.client.set(this.getKey(matchId), JSON.stringify(ball));
+		await this.client.set(this.getKey(matchId), JSON.stringify(ball));
 		return ball;
 	}
 
@@ -16,7 +16,7 @@ export class PongBallRepository implements IPongBallRepository {
 	}
 
 	async delete(matchId: MatchId): Promise<void> {
-		this.client.del(this.getKey(matchId));
+		await this.client.del(this.getKey(matchId));
 	}
 
 	private getKey(matchId: MatchId): string {

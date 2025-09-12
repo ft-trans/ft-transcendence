@@ -12,6 +12,7 @@ export class PongGame {
 		this.canvas.height = this.height;
 		const ctx = this.canvas.getContext("2d");
 		if (!ctx) {
+			// TODO ユーザーに通知
 			throw new Error("Failed to get 2D context");
 		}
 		this.context = ctx;

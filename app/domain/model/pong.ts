@@ -1,4 +1,5 @@
 import { isValid } from "ulid";
+import WebSocket from "ws";
 import { ErrBadRequest } from "../error";
 import { ValueObject } from "./value_object";
 export class MatchId extends ValueObject<string, "MatchId"> {
@@ -13,16 +14,20 @@ export class MatchId extends ValueObject<string, "MatchId"> {
 	}
 }
 
-export class IntervalId extends ValueObject<number, "IntervalId"> {
-	protected validate(value: number): void {
-		if (!Number.isInteger(value) || value < 0) {
-			throw new ErrBadRequest({
-				details: {
-					intervalId: "インターバルIDは非負の整数である必要があります",
-				},
-			});
-		}
+export class PongClient {
+	constructor(readonly client: WebSocket) {}
+
+	isOpen(): boolean {
+		return this.client.readyState === WebSocket.OPEN;
 	}
+
+	send(data: string): void {
+		this.client.send(data);
+	}
+}
+
+export class PongLoopId extends ValueObject<NodeJS.Timeout, "PongLoop"> {
+	protected validate(_value: NodeJS.Timeout): void {}
 }
 
 export class PongBall {

@@ -9,7 +9,6 @@ export type PongGameStatePayload = {
 export type PongGameStateResponse = {
 	event: PongGameEvent;
 	payload: PongGameStatePayload;
-	matchid: string;
 };
 
 export const PongField = {
