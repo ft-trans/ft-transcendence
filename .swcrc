@@ -24,6 +24,7 @@
   },
   "module": {
     "type": "es6",
+    "resolveFully": true,
     "strict": true,
     "strictMode": true,
     "lazy": false,

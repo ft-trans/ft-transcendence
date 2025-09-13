@@ -17,6 +17,8 @@ FROM base AS build
 
 ARG DATABASE_URL
 ENV DATABASE_URL=${DATABASE_URL}
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
 
 COPY package.json pnpm-lock.yaml ./
 
@@ -59,4 +61,4 @@ USER app
 
 EXPOSE 3000
 
-CMD ["node", "dist/app/main.js"]
+CMD ["node", "--import", "./dist/app/observability/otel.js", "dist/app/main.js"]

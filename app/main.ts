@@ -2,8 +2,7 @@ import { resolve } from "node:path";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
 import { Transaction } from "@infra/database";
-import { PrismaClient } from "@infra/database/generated";
-
+import { prisma } from "@infra/database/prisma";
 import { authController } from "@presentation/controllers/auth_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
 import { matchmakingController } from "@presentation/controllers/matchmaking_controller";
@@ -18,7 +17,7 @@ import { UserRepository } from "@infra/database/user_repository";
 import { MatchRepository } from "@infra/database/match_repository";
 import { MatchHistoryRepository } from "@infra/database/match_history_repository";
 import { MatchmakingQueueRepository } from "@infra/database/matchmaking_queue_repository";
-
+import { otelInstrumentation } from "./observability/otel.js";
 
 const app = Fastify({ logger: true });
 
@@ -28,6 +27,10 @@ app.get("/api/health", async (_req, _reply) => {
 
 const start = async () => {
 	try {
+		app.get("/api/health", async () => ({ message: "OK" }));
+
+		await app.register(otelInstrumentation.plugin());
+
 		await app.register(FastifyVite, {
 			root: resolve(import.meta.dirname, ".."),
 			distDir: resolve(import.meta.dirname, ".."),
@@ -35,28 +38,22 @@ const start = async () => {
 			spa: true,
 		});
 
-		const redis_url = process.env.REDIS_URL;
-		if (!redis_url) {
-			app.log.error(
-				"REDIS_URL environment variable is missing. Please set it before starting the application.",
-			);
+		const redisUrl = process.env.REDIS_URL;
+		if (!redisUrl) {
+			app.log.error("REDIS_URL is not set");
 			process.exit(1);
 		}
-		await app.register(FastifyRedis, {
-			url: redis_url,
-		});
+		await app.register(FastifyRedis, { url: redisUrl });
 
-		const tx = new Transaction(new PrismaClient());
-
+		const tx = new Transaction(prisma);
 		const registerUserUsecase = new RegisterUserUsecase(tx);
-		await app.register(authController(registerUserUsecase), { prefix: "/api" });
 		const updateUserUsecase = new UpdateUserUsecase(tx);
 		const deleteUserUsecase = new DeleteUserUsecase(tx);
+
+		await app.register(authController(registerUserUsecase), { prefix: "/api" });
 		await app.register(
 			profileController(updateUserUsecase, deleteUserUsecase),
-			{
-				prefix: "/api",
-			},
+			{ prefix: "/api" },
 		);
 
 		const joinUserUsecase = new JoinMatchmakingUseCase();
@@ -74,6 +71,7 @@ const start = async () => {
 
 		await app.vite.ready();
 		await app.listen({ host: "0.0.0.0", port: 3000 });
+		app.log.info("HTTP app listening on :3000");
 	} catch (err) {
 		app.log.error(err);
 		process.exit(1);
