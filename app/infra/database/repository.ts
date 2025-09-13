@@ -4,10 +4,10 @@ import type { IRepository } from "@domain/repository/repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
 import { DirectMessageRepository } from "./direct_message_repository";
 import { FriendshipRepository } from "./friendship_repository";
-import type { Prisma, PrismaClient } from "./generated";
+import type { Prisma } from "./generated";
 import { UserRepository } from "./user_repository";
 
-export type Client = PrismaClient | Prisma.TransactionClient;
+export type Client = Prisma.DefaultPrismaClient | Prisma.TransactionClient;
 
 export class Repository implements IRepository {
 	constructor(private readonly client: Client) {}
