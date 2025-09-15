@@ -23,6 +23,8 @@ export const authController = (
 	};
 };
 
+const cookieName = "ft_trans";
+
 const onRegisterUser = (usecase: RegisterUserUsecase) => {
 	return async (
 		req: FastifyRequest<{ Body: RegisterUserRequest }>,
@@ -86,7 +88,7 @@ const onLoginUser = (usecase: LoginUserUsecase) => {
 		// - Set secure flag for HTTPS
 		// - Set sameSite attribute for CSRF protection
 		// - Consider cookie encryption/signing
-		reply.setCookie("sessionToken", output.sessionToken, {
+		reply.setCookie(cookieName, output.sessionToken, {
 			httpOnly: true,
 			// secure: true, // Enable in production with HTTPS
 			expires: output.session.expiresAt,
@@ -118,7 +120,7 @@ const onLogoutUser = (usecase: LogoutUserUsecase) => {
 		// TODO: Implement secure cookie clearing
 		// - Clear with same domain/path settings as when set
 		// - Consider security implications of cookie clearing
-		reply.clearCookie("sessionToken", {
+		reply.clearCookie(cookieName, {
 			path: "/",
 		});
 
