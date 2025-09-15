@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import { isValid, ulid } from "ulid";
 import { ErrBadRequest, ErrInternalServer } from "../error";
 import { ValueObject } from "./value_object";
@@ -34,21 +35,33 @@ export class User {
 	private constructor(
 		readonly id: UserId,
 		readonly email: UserEmail,
+		readonly passwordDigest: string,
 	) {}
 
-	static create(email: UserEmail): User {
+	static create(email: UserEmail, passwordDigest: string): User {
 		const id = new UserId(ulid());
-		return new User(id, email);
+		return new User(id, email, passwordDigest);
 	}
 
-	static reconstruct(id: UserId, email: UserEmail): User {
-		return new User(id, email);
+	static reconstruct(
+		id: UserId,
+		email: UserEmail,
+		passwordDigest: string,
+	): User {
+		return new User(id, email, passwordDigest);
+	}
+
+	authenticated(plainPassword: string): boolean {
+		return bcrypt.compareSync(plainPassword, this.passwordDigest);
 	}
 
 	isModified(other: User): boolean {
 		if (!this.id.equals(other.id)) {
 			throw new ErrInternalServer();
 		}
-		return !this.email.equals(other.email);
+		return (
+			!this.email.equals(other.email) ||
+			this.passwordDigest !== other.passwordDigest
+		);
 	}
 }

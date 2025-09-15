@@ -2,9 +2,11 @@ import { ErrBadRequest, ErrInternalServer } from "@domain/error";
 import { User, UserEmail } from "@domain/model";
 import { UserService } from "@domain/service";
 import type { ITransaction } from "@usecase/transaction";
+import bcrypt from "bcrypt";
 
 export type RegisterUserUsecaseInput = {
 	email: string;
+	password: string;
 };
 
 export class RegisterUserUsecase {
@@ -12,7 +14,8 @@ export class RegisterUserUsecase {
 
 	async execute(input: RegisterUserUsecaseInput): Promise<User> {
 		const email = new UserEmail(input.email);
-		const newUser = User.create(email);
+		const passwordDigest = bcrypt.hashSync(input.password, 10);
+		const newUser = User.create(email, passwordDigest);
 
 		const user = await this.tx.exec(async (repo) => {
 			const userRepo = repo.newUserRepository();
