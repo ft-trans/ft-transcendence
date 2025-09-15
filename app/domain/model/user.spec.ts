@@ -1,7 +1,7 @@
 import { ErrBadRequest, ErrInternalServer } from "@domain/error";
-import bcrypt from "bcrypt";
 import { ulid } from "ulid";
 import { describe, expect, it } from "vitest";
+import { Password } from "./password";
 import { User, UserEmail, UserId } from "./user";
 
 describe("UserId", () => {
@@ -88,7 +88,8 @@ describe("User", () => {
 	describe("authenticated", () => {
 		it("should return true when password matches the digest", () => {
 			const plainPassword = "testPassword123";
-			const passwordDigest = bcrypt.hashSync(plainPassword, 10);
+			const password = new Password(plainPassword);
+			const passwordDigest = password.hash();
 			const user = User.reconstruct(
 				new UserId(ulid()),
 				new UserEmail("test@example.com"),
@@ -101,7 +102,8 @@ describe("User", () => {
 		it("should return false when password does not match the digest", () => {
 			const plainPassword = "testPassword123";
 			const wrongPassword = "wrongPassword456";
-			const passwordDigest = bcrypt.hashSync(plainPassword, 10);
+			const password = new Password(plainPassword);
+			const passwordDigest = password.hash();
 			const user = User.reconstruct(
 				new UserId(ulid()),
 				new UserEmail("test@example.com"),

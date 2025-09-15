@@ -1,6 +1,6 @@
-import bcrypt from "bcrypt";
 import { isValid, ulid } from "ulid";
 import { ErrBadRequest, ErrInternalServer } from "../error";
+import { Password } from "./password";
 import { ValueObject } from "./value_object";
 
 export class UserId extends ValueObject<string, "UserId"> {
@@ -55,7 +55,10 @@ export class User {
 		if (!this.passwordDigest) {
 			return false;
 		}
-		return bcrypt.compareSync(plainPassword, this.passwordDigest);
+		return Password.isCorrect({
+			plainPassword,
+			hashedPassword: this.passwordDigest,
+		});
 	}
 
 	isModified(other: User): boolean {
