@@ -8,10 +8,13 @@ services:
         DATABASE_URL: ${DATABASE_URL}
         VITE_API_URL: ${VITE_API_URL}
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
     networks:
       - transcendence_net
+    # TODO 提出前に削除, metrics確認用
+    ports:
+      - "9464:9464"
     depends_on:
       redis:
         condition: service_healthy
@@ -60,9 +63,65 @@ services:
       timeout: 5s
       retries: 3
 
+  prometheus:
+    build:
+      context: ./deploy/prometheus
+      dockerfile: Dockerfile.prometheus
+    container_name: prometheus
+    ports:
+      - '9090:9090'
+    volumes:
+      - 'prometheus-data:/prometheus'
+    networks:
+      - transcendence_net
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter
+    command:
+      - "--nginx.scrape-uri=http://nginx:8080/stub_status"
+    ports:
+      - "9113:9113"
+    depends_on:
+      nginx:
+        condition: service_started
+    networks:
+      - transcendence_net
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.61.0
+    command: ["--redis.addr=redis://redis:6379"]
+    ports:
+      - "9121:9121"
+    networks:
+      - transcendence_net
+
+  grafana:
+    build:
+      context: ./deploy/grafana
+      dockerfile: Dockerfile.grafana
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    secrets:
+      - grafana_admin_password
+    ports:
+      - '4000:3000'
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - transcendence_net
+
 volumes:
   redis:
   prisma:
+  prometheus-data:
+  grafana-data:
+
+secrets:
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password.txt
 
 networks:
   transcendence_net:
