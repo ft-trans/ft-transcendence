@@ -26,5 +26,5 @@
 			"@usecase/*": ["./app/usecase/*"]
 		}
 	},
-	"include": ["app"]
+	"include": ["app", "shared"]
 }
