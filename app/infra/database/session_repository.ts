@@ -23,8 +23,9 @@ export class SessionRepository implements ISessionRepository {
 	}
 
 	async findByToken(token: SessionToken): Promise<Session | undefined> {
+		const tokenDigest = token.hash();
 		const foundSession = await this.prisma.session.findUnique({
-			where: { tokenDigest: token.value },
+			where: { tokenDigest },
 		});
 
 		if (!foundSession) return undefined;
@@ -38,8 +39,9 @@ export class SessionRepository implements ISessionRepository {
 	}
 
 	async deleteByToken(token: SessionToken): Promise<void> {
+		const tokenDigest = token.hash();
 		await this.prisma.session.delete({
-			where: { tokenDigest: token.value },
+			where: { tokenDigest },
 		});
 	}
 }

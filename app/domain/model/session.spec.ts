@@ -119,10 +119,10 @@ describe("Session", () => {
 
 	describe("create", () => {
 		it("should create a session with generated id and hashed token", () => {
-			const session = Session.create(userId, token, futureDate);
+			const session = Session.create(userId, token);
 
 			expect(session.userId).toBe(userId);
-			expect(session.expiresAt).toBe(futureDate);
+			expect(session.expiresAt).toBeInstanceOf(Date);
 			expect(session.tokenDigest).not.toBe(token.value);
 			expect(session.tokenDigest.length).toBeGreaterThan(0);
 		});
@@ -149,23 +149,27 @@ describe("Session", () => {
 
 	describe("isValid", () => {
 		it("should return true for valid token and non-expired session", () => {
-			const session = Session.create(userId, token, futureDate);
+			const session = Session.create(userId, token);
 			expect(session.isValid(token)).toBe(true);
 		});
 
 		it("should return false for invalid token", () => {
-			const session = Session.create(userId, token, futureDate);
+			const session = Session.create(userId, token);
 			const wrongToken = SessionToken.generate();
 			expect(session.isValid(wrongToken)).toBe(false);
 		});
 
 		it("should return false for expired session even with correct token", () => {
-			const session = Session.create(userId, token, pastDate);
+			const sessionId = new SessionId(ulid());
+			const tokenDigest = token.hash();
+			const session = Session.reconstruct(sessionId, userId, tokenDigest, pastDate);
 			expect(session.isValid(token)).toBe(false);
 		});
 
 		it("should return false for expired session with wrong token", () => {
-			const session = Session.create(userId, token, pastDate);
+			const sessionId = new SessionId(ulid());
+			const tokenDigest = token.hash();
+			const session = Session.reconstruct(sessionId, userId, tokenDigest, pastDate);
 			const wrongToken = SessionToken.generate();
 			expect(session.isValid(wrongToken)).toBe(false);
 		});

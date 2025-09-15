@@ -52,6 +52,8 @@ export class SessionToken extends ValueObject<string, "SessionToken"> {
 }
 
 export class Session {
+	static readonly EXPIRES_IN_DAYS = 7;
+
 	private constructor(
 		readonly id: SessionId,
 		readonly userId: UserId,
@@ -59,9 +61,12 @@ export class Session {
 		readonly expiresAt: Date,
 	) {}
 
-	static create(userId: UserId, token: SessionToken, expiresAt: Date): Session {
+	static create(userId: UserId, token: SessionToken): Session {
 		const id = new SessionId(ulid());
 		const tokenDigest = token.hash();
+		const expiresAt = new Date(
+			Date.now() + Session.EXPIRES_IN_DAYS * 24 * 60 * 60 * 1000,
+		);
 		return new Session(id, userId, tokenDigest, expiresAt);
 	}
 

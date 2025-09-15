@@ -1,10 +1,13 @@
 import { resolve } from "node:path";
+import FastifyCookie from "@fastify/cookie";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
 import { Transaction } from "@infra/database";
 import { PrismaClient } from "@infra/database/generated";
 import { authController } from "@presentation/controllers/auth_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
+import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
+import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
@@ -25,6 +28,8 @@ const start = async () => {
 			spa: true,
 		});
 
+		await app.register(FastifyCookie);
+
 		const redis_url = process.env.REDIS_URL;
 		if (!redis_url) {
 			app.log.error(
@@ -39,7 +44,12 @@ const start = async () => {
 		const tx = new Transaction(new PrismaClient());
 
 		const registerUserUsecase = new RegisterUserUsecase(tx);
-		await app.register(authController(registerUserUsecase), { prefix: "/api" });
+		const loginUserUsecase = new LoginUserUsecase(tx);
+		const logoutUserUsecase = new LogoutUserUsecase(tx);
+		await app.register(
+			authController(registerUserUsecase, loginUserUsecase, logoutUserUsecase),
+			{ prefix: "/api" },
+		);
 		const updateUserUsecase = new UpdateUserUsecase(tx);
 		const deleteUserUsecase = new DeleteUserUsecase(tx);
 		await app.register(
