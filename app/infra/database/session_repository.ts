@@ -1,4 +1,4 @@
-import { Session, SessionId, SessionToken, UserId } from "@domain/model";
+import { Session, SessionId, type SessionToken, UserId } from "@domain/model";
 import type { ISessionRepository } from "@domain/repository";
 import type { Client } from "./repository";
 
@@ -10,21 +10,21 @@ export class SessionRepository implements ISessionRepository {
 			data: {
 				id: session.id.value,
 				userId: session.userId.value,
-				token: session.token.value,
+				tokenDigest: session.tokenDigest,
 				expiresAt: session.expiresAt,
 			},
 		});
 		return Session.reconstruct(
 			new SessionId(createdSession.id),
 			new UserId(createdSession.userId),
-			new SessionToken(createdSession.token),
+			createdSession.tokenDigest,
 			createdSession.expiresAt,
 		);
 	}
 
 	async findByToken(token: SessionToken): Promise<Session | undefined> {
 		const foundSession = await this.prisma.session.findUnique({
-			where: { token: token.value },
+			where: { tokenDigest: token.value },
 		});
 
 		if (!foundSession) return undefined;
@@ -32,14 +32,14 @@ export class SessionRepository implements ISessionRepository {
 		return Session.reconstruct(
 			new SessionId(foundSession.id),
 			new UserId(foundSession.userId),
-			new SessionToken(foundSession.token),
+			foundSession.tokenDigest,
 			foundSession.expiresAt,
 		);
 	}
 
 	async deleteByToken(token: SessionToken): Promise<void> {
 		await this.prisma.session.delete({
-			where: { token: token.value },
+			where: { tokenDigest: token.value },
 		});
 	}
 }
