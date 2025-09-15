@@ -162,14 +162,24 @@ describe("Session", () => {
 		it("should return false for expired session even with correct token", () => {
 			const sessionId = new SessionId(ulid());
 			const tokenDigest = token.hash();
-			const session = Session.reconstruct(sessionId, userId, tokenDigest, pastDate);
+			const session = Session.reconstruct(
+				sessionId,
+				userId,
+				tokenDigest,
+				pastDate,
+			);
 			expect(session.isValid(token)).toBe(false);
 		});
 
 		it("should return false for expired session with wrong token", () => {
 			const sessionId = new SessionId(ulid());
 			const tokenDigest = token.hash();
-			const session = Session.reconstruct(sessionId, userId, tokenDigest, pastDate);
+			const session = Session.reconstruct(
+				sessionId,
+				userId,
+				tokenDigest,
+				pastDate,
+			);
 			const wrongToken = SessionToken.generate();
 			expect(session.isValid(wrongToken)).toBe(false);
 		});
