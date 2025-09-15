@@ -35,10 +35,10 @@ export class User {
 	private constructor(
 		readonly id: UserId,
 		readonly email: UserEmail,
-		readonly passwordDigest: string,
+		readonly passwordDigest: string | undefined,
 	) {}
 
-	static create(email: UserEmail, passwordDigest: string): User {
+	static create(email: UserEmail, passwordDigest?: string): User {
 		const id = new UserId(ulid());
 		return new User(id, email, passwordDigest);
 	}
@@ -46,12 +46,15 @@ export class User {
 	static reconstruct(
 		id: UserId,
 		email: UserEmail,
-		passwordDigest: string,
+		passwordDigest?: string,
 	): User {
 		return new User(id, email, passwordDigest);
 	}
 
 	authenticated(plainPassword: string): boolean {
+		if (!this.passwordDigest) {
+			return false;
+		}
 		return bcrypt.compareSync(plainPassword, this.passwordDigest);
 	}
 
