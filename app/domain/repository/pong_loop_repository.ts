@@ -1,7 +1,7 @@
 import type { MatchId, PongLoopId } from "@domain/model";
 
 export interface IPongLoopRepository {
-	start(matchId: MatchId, processFrame: () => void): PongLoopId | undefined;
-	stop(matchId: MatchId): PongLoopId | undefined;
+	set(matchId: MatchId, pongLoopId: PongLoopId): PongLoopId;
+	delete(matchId: MatchId): boolean;
 	get(matchId: MatchId): PongLoopId | undefined;
 }

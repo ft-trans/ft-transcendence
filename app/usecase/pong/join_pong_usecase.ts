@@ -1,5 +1,6 @@
 import { MatchId } from "@domain/model";
 import type { IInMemoryRepository, IKVSRepository } from "@domain/repository";
+import { PongLoopService } from "@domain/service";
 import { PongBehaviourService } from "@domain/service/pong_behaviour_service";
 import type { IPongClient } from "@domain/service/pong_client";
 
@@ -24,7 +25,8 @@ export class JoinPongUsecase {
 
 	private startLoop(matchId: MatchId): void {
 		const pongLoopRepo = this.repo.newPongLoopRepository();
-		if (pongLoopRepo.get(matchId)) {
+		const pongLoopService = new PongLoopService(pongLoopRepo);
+		if (pongLoopService.exists(matchId)) {
 			return;
 		}
 
@@ -35,6 +37,6 @@ export class JoinPongUsecase {
 			pongBallRepo,
 			pongClientRepo,
 		);
-		pongLoopRepo.start(matchId, () => pongBehaviourService.processFrame());
+		pongLoopService.start(matchId, () => pongBehaviourService.processFrame());
 	}
 }

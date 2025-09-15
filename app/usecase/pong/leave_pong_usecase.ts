@@ -1,5 +1,6 @@
 import { MatchId } from "@domain/model";
 import type { IInMemoryRepository, IKVSRepository } from "@domain/repository";
+import { PongLoopService } from "@domain/service";
 import type { IPongClient } from "@domain/service/pong_client";
 
 export type LeavePongUsecaseInput = {
@@ -17,11 +18,12 @@ export class LeavePongUsecase {
 		const matchId = new MatchId(input.matchId);
 		const pongClientRepo = this.repo.newPongClientRepository();
 		const pongLoopRepo = this.repo.newPongLoopRepository();
+		const pongLoopService = new PongLoopService(pongLoopRepo);
 		const pongBallRepo = this.kvsRepo.newPongBallRepository();
 
 		const clients = pongClientRepo.delete(matchId, input.client);
 		if (!clients) {
-			pongLoopRepo.stop(matchId);
+			pongLoopService.stop(matchId);
 			await pongBallRepo.delete(matchId);
 		}
 
