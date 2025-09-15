@@ -1,9 +1,9 @@
 import { Session, SessionId, SessionToken, UserId } from "@domain/model";
 import type { ISessionRepository } from "@domain/repository";
-import type { PrismaClient } from "./generated";
+import type { Client } from "./repository";
 
 export class SessionRepository implements ISessionRepository {
-	constructor(private readonly prisma: PrismaClient) {}
+	constructor(private readonly prisma: Client) {}
 
 	async create(session: Session): Promise<Session | undefined> {
 		const createdSession = await this.prisma.session.create({
