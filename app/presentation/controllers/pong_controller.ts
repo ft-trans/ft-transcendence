@@ -1,4 +1,5 @@
-import { MatchId, PongClient } from "@domain/model";
+import { MatchId } from "@domain/model";
+import { PongClient } from "@infra/in_memory/pong_client";
 import type { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
 import type { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
 import type { StartPongUsecase } from "@usecase/pong/start_pong_usecase";

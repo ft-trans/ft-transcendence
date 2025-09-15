@@ -1,9 +1,10 @@
-import { MatchId, type PongClient } from "@domain/model";
+import { MatchId } from "@domain/model";
 import type { IInMemoryRepository, IKVSRepository } from "@domain/repository";
+import type { IPongClient } from "@domain/service/pong_client";
 
 export type LeavePongUsecaseInput = {
 	matchId: string;
-	client: PongClient;
+	client: IPongClient;
 };
 
 export class LeavePongUsecase {

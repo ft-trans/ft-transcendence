@@ -1,10 +1,11 @@
-import { MatchId, type PongClient } from "@domain/model";
+import { MatchId } from "@domain/model";
 import type { IInMemoryRepository, IKVSRepository } from "@domain/repository";
 import { PongBehaviourService } from "@domain/service/pong_behaviour_service";
+import type { IPongClient } from "@domain/service/pong_client";
 
 export type JoinPongUsecaseInput = {
 	matchId: string;
-	client: PongClient;
+	client: IPongClient;
 };
 
 export class JoinPongUsecase {
