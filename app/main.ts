@@ -1,11 +1,18 @@
 import { resolve } from "node:path";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
+import websocket from "@fastify/websocket";
 import { Transaction } from "@infra/database";
 import { prisma } from "@infra/database/prisma";
+import { InMemoryRepository } from "@infra/in_memory";
+import { KVSRepository } from "@infra/kvs";
 import { authController } from "@presentation/controllers/auth_controller";
+import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
+import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
+import { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
+import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import Fastify from "fastify";
@@ -31,8 +38,11 @@ const start = async () => {
 			app.log.error("REDIS_URL is not set");
 			process.exit(1);
 		}
-		await app.register(FastifyRedis, { url: redisUrl });
 
+		await app.register(websocket);
+		await app.register(FastifyRedis, { url: redisUrl });
+		const kvsRepo = new KVSRepository(app.redis);
+		const inMemRepo = new InMemoryRepository();
 		const tx = new Transaction(prisma);
 		const registerUserUsecase = new RegisterUserUsecase(tx);
 		const updateUserUsecase = new UpdateUserUsecase(tx);
@@ -42,6 +52,13 @@ const start = async () => {
 		await app.register(
 			profileController(updateUserUsecase, deleteUserUsecase),
 			{ prefix: "/api" },
+		);
+		const joinPongUsecase = new JoinPongUsecase(inMemRepo, kvsRepo);
+		const leavePongUsecase = new LeavePongUsecase(inMemRepo, kvsRepo);
+		const startPongUsecase = new StartPongUsecase(kvsRepo);
+		app.register(
+			pongController(joinPongUsecase, leavePongUsecase, startPongUsecase),
+			{ prefix: "/ws" },
 		);
 
 		app.get("/*", (_req, reply) => reply.html());
