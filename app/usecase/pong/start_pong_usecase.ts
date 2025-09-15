@@ -1,6 +1,5 @@
-import { MatchId } from "@domain/model";
+import { MatchId, PongGame } from "@domain/model";
 import type { IKVSRepository } from "@domain/repository";
-import { PongBehaviourService } from "@domain/service/pong_behaviour_service";
 
 export type StartPongUsecaseInput = {
 	matchId: string;
@@ -11,7 +10,7 @@ export class StartPongUsecase {
 
 	async execute(input: StartPongUsecaseInput): Promise<MatchId> {
 		const matchId = new MatchId(input.matchId);
-		const ball = PongBehaviourService.initialBall();
+		const ball = PongGame.initialBall();
 		const pongBallRepo = this.repo.newPongBallRepository();
 		await pongBallRepo.set(matchId, ball);
 		return matchId;
