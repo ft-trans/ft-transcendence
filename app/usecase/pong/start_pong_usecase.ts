@@ -1,12 +1,12 @@
 import { MatchId, PongGame } from "@domain/model";
-import type { IKVSRepository } from "@domain/repository";
+import type { IRepository } from "@domain/repository";
 
 export type StartPongUsecaseInput = {
 	matchId: string;
 };
 
 export class StartPongUsecase {
-	constructor(private readonly repo: IKVSRepository) {}
+	constructor(private readonly repo: IRepository) {}
 
 	async execute(input: StartPongUsecaseInput): Promise<MatchId> {
 		const matchId = new MatchId(input.matchId);

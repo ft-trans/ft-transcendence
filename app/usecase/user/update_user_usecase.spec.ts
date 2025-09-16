@@ -4,6 +4,9 @@ import { User, UserEmail } from "@domain/model";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IPongBallRepository,
+	IPongClientRepository,
+	IPongLoopRepository,
 	IUserRepository,
 } from "@domain/repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -11,6 +14,21 @@ import { ulid } from "ulid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { UpdateUserUsecase } from "./update_user_usecase";
+
+const mockUserRepo = mock<IUserRepository>();
+const repo = {
+	newUserRepository: () => mockUserRepo,
+	newFriendshipRepository: () => mock<IFriendshipRepository>(),
+	newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+	newPongBallRepository: () => mock<IPongBallRepository>(),
+	newPongClientRepository: () => mock<IPongClientRepository>(),
+	newPongLoopRepository: () => mock<IPongLoopRepository>(),
+};
+
+const mockTx = mock<ITransaction>();
+mockTx.exec.mockImplementation(async (callback) => {
+	return callback(repo);
+});
 
 describe("UpdateUserUsecase", () => {
 	beforeEach(() => {
@@ -20,19 +38,9 @@ describe("UpdateUserUsecase", () => {
 	it("should update a user and return it", async () => {
 		const currentUser = User.create(new UserEmail("current@example.com"));
 		const expectedUser = User.create(new UserEmail("edit@example.com"));
-		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.update.mockResolvedValue(expectedUser);
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		mockUserRepo.findByEmail.mockResolvedValue(undefined);
-		const mockTx = mock<ITransaction>();
-		mockTx.exec.mockImplementation(async (callback) => {
-			const repo = {
-				newUserRepository: () => mockUserRepo,
-				newFriendshipRepository: () => mock<IFriendshipRepository>(),
-				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
-			};
-			return callback(repo);
-		});
 
 		const usecase = new UpdateUserUsecase(mockTx);
 		const input = { id: currentUser.id.value, email: "edit@example.com" };
@@ -44,20 +52,9 @@ describe("UpdateUserUsecase", () => {
 
 	it("should return current user without update when no changes", async () => {
 		const currentUser = User.create(new UserEmail("same@example.com"));
-		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		// don't call update
 		mockUserRepo.update.mockResolvedValue(undefined);
-
-		const mockTx = mock<ITransaction>();
-		mockTx.exec.mockImplementation(async (callback) => {
-			const repo = {
-				newUserRepository: () => mockUserRepo,
-				newFriendshipRepository: () => mock<IFriendshipRepository>(),
-				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
-			};
-			return callback(repo);
-		});
 
 		const usecase = new UpdateUserUsecase(mockTx);
 		const input = { id: currentUser.id.value, email: currentUser.email.value };
@@ -72,19 +69,8 @@ describe("UpdateUserUsecase", () => {
 		const currentUser = User.create(new UserEmail("current@example.com"));
 		const existingUser = User.create(new UserEmail("edit@example.com"));
 
-		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		mockUserRepo.findByEmail.mockResolvedValue(existingUser);
-
-		const mockTx = mock<ITransaction>();
-		mockTx.exec.mockImplementation(async (callback) => {
-			const repo = {
-				newUserRepository: () => mockUserRepo,
-				newFriendshipRepository: () => mock<IFriendshipRepository>(),
-				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
-			};
-			return callback(repo);
-		});
 
 		const usecase = new UpdateUserUsecase(mockTx);
 		const input = { id: currentUser.id.value, email: existingUser.email.value };
@@ -100,18 +86,7 @@ describe("UpdateUserUsecase", () => {
 	});
 
 	it("should throw NotFoundError if user does not exist", async () => {
-		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findById.mockResolvedValue(undefined);
-
-		const mockTx = mock<ITransaction>();
-		mockTx.exec.mockImplementation(async (callback) => {
-			const repo = {
-				newUserRepository: () => mockUserRepo,
-				newFriendshipRepository: () => mock<IFriendshipRepository>(),
-				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
-			};
-			return callback(repo);
-		});
 
 		const usecase = new UpdateUserUsecase(mockTx);
 		const input = { id: ulid(), email: "edit@example.com" };

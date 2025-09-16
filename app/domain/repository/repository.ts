@@ -6,16 +6,15 @@ import type { IPongLoopRepository } from "./pong_loop_repository";
 import type { IUserRepository } from "./user_repository";
 
 export interface IRepository {
+	// database repositories
 	newUserRepository(): IUserRepository;
 	newFriendshipRepository(): IFriendshipRepository;
 	newDirectMessageRepository(): IDirectMessageRepository;
-}
 
-export interface IKVSRepository {
+	// KVS repositories
 	newPongBallRepository(): IPongBallRepository;
-}
 
-export interface IInMemoryRepository {
+	// in-memory repositories
 	newPongClientRepository(): IPongClientRepository;
 	newPongLoopRepository(): IPongLoopRepository;
 }
