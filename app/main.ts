@@ -15,15 +15,10 @@ import Fastify from "fastify";
 import { MatchmakingService } from "@domain/service/matchmaking_service";		
 import { UserRepository } from "@infra/database/user_repository";
 import { MatchRepository } from "@infra/database/match_repository";
-import { MatchHistoryRepository } from "@infra/database/match_history_repository";
 import { MatchmakingQueueRepository } from "@infra/database/matchmaking_queue_repository";
 import { otelInstrumentation } from "./observability/otel.js";
 
 const app = Fastify({ logger: true });
-
-app.get("/api/health", async (_req, _reply) => {
-	return { message: "OK" };
-});
 
 const start = async () => {
 	try {
@@ -49,6 +44,14 @@ const start = async () => {
 		const registerUserUsecase = new RegisterUserUsecase(tx);
 		const updateUserUsecase = new UpdateUserUsecase(tx);
 		const deleteUserUsecase = new DeleteUserUsecase(tx);
+		const userRepo = new UserRepository(prisma);
+		const matchRepo = new MatchRepository(prisma);
+		const queueRepo = new MatchmakingQueueRepository(app.redis, {
+		  prefix: "mm",
+		});
+		const matchmakingService = new MatchmakingService(
+			tx, matchRepo, queueRepo
+		);
 
 		await app.register(authController(registerUserUsecase), { prefix: "/api" });
 		await app.register(
@@ -56,8 +59,8 @@ const start = async () => {
 			{ prefix: "/api" },
 		);
 
-		const joinUserUsecase = new JoinMatchmakingUseCase();
-		const leaveUserUsecase = new LeaveMatchmakingUseCase();
+		const joinUserUsecase = new JoinMatchmakingUseCase(userRepo, matchmakingService);
+		const leaveUserUsecase = new LeaveMatchmakingUseCase(matchmakingService);
 		await app.register(
 			matchmakingController(joinUserUsecase, leaveUserUsecase),
 			{

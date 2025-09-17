@@ -40,6 +40,7 @@ export class Matchmaking extends Component {
   private pathJoin(): string {
     return "/api/matchmaking/join";
   }
+
   private pathLeave(): string {
     return "/api/matchmaking/leave";
   }
@@ -156,7 +157,7 @@ export class Matchmaking extends Component {
           ${new SectionTitle({ text: "Matchmaking" }).render()}
           <div class="max-w-2xl mx-auto rounded-2xl shadow p-6 space-y-4">
             <div class="rounded-xl border px-4 py-3 bg-green-50">
-              🎉 マッチが成立しました！（ID: <span class="font-mono">${m.id}</span>）
+              マッチが成立しました!（ID: <span class="font-mono">${m.id}</span>）
             </div>
             <ul class="list-disc pl-6 space-y-1">
               <li>status: ${m.status}</li>
@@ -185,7 +186,6 @@ export class Matchmaking extends Component {
       `;
     }
 
-    // error
     return `
       <div>
         ${new SectionTitle({ text: "Matchmaking" }).render()}

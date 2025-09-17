@@ -23,7 +23,7 @@ const onJoinMatchmaking = (usecase: JoinMatchmakingUseCase) => {
 	return async (_req: FastifyRequest, reply: FastifyReply) => {
 		// TODO: セッションからuserIdを取得する
 		// **********************************************************
-		const userId = "01K24DQHXAJ2NFYKPZ812F4HBJ"; // 仮のユーザーID
+		const userId = "01K53G4RVBKV6NKJ71S8AGQASX"; // 仮のユーザーID
 		// **********************************************************
 
 		const match = await usecase.execute(userId);
@@ -52,7 +52,7 @@ const onLeaveMatchmaking = (usecase: LeaveMatchmakingUseCase) => {
 	return async (_req: FastifyRequest, reply: FastifyReply) => {
 		// TODO: セッションからuserIdを取得する
 		// **********************************************************
-		const userId = "01K24DQHXAJ2NFYKPZ812F4HBJ"; // 仮のユーザーID
+		const userId = "01K53G4RVBKV6NKJ71S8AGQASX"; // 仮のユーザーID
 		// **********************************************************
 
 		await usecase.execute(userId);
