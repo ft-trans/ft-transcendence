@@ -15,7 +15,7 @@ import {
 import { annotateZodErrors } from "client/components/form/error";
 
 export class Register extends Component {
-	onload(_params: RouteParams): void {
+	onLoad(_params: RouteParams): void {
 		const form = document.getElementById("register-form");
 		if (form && form instanceof HTMLFormElement) {
 			form.addEventListener("submit", async (e) => {

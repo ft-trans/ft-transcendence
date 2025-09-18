@@ -35,7 +35,7 @@ export const router = async () => {
 		if (match) {
 			container.innerHTML = route.component.render();
 			const params = createRouteParams(keys, match);
-			route.component.onload(params);
+			route.component.onLoad(params);
 			return;
 		}
 	}

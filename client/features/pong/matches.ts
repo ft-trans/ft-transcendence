@@ -10,7 +10,7 @@ export class MatchesPong extends Component {
 		this.pongGame = new PongGame();
 	}
 
-	onload(params: RouteParams): void {
+	onLoad(params: RouteParams): void {
 		const pongCourt = document.getElementById("pong-court");
 		if (pongCourt) {
 			this.pongGame.appendTo(pongCourt);
