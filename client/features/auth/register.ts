@@ -9,12 +9,13 @@ import {
 	Component,
 	FloatingBanner,
 	FormInput,
+	type RouteParams,
 	SectionTitle,
 } from "client/components";
 import { annotateZodErrors } from "client/components/form/error";
 
 export class Register extends Component {
-	addEventListeners(): void {
+	onload(_params: RouteParams): void {
 		const form = document.getElementById("register-form");
 		if (form && form instanceof HTMLFormElement) {
 			form.addEventListener("submit", async (e) => {

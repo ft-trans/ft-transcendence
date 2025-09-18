@@ -9,12 +9,13 @@ import {
 	Component,
 	FloatingBanner,
 	FormInput,
+	type RouteParams,
 	SectionTitle,
 } from "client/components";
 import { annotateZodErrors } from "client/components/form/error";
 
 export class EditProfile extends Component {
-	addEventListeners(): void {
+	onload(_params: RouteParams): void {
 		const form = document.getElementById("profile-form");
 		if (form && form instanceof HTMLFormElement) {
 			form.addEventListener("submit", async (e) => {

@@ -1,5 +1,5 @@
 import { pathToRegexp } from "path-to-regexp";
-import { Navigation } from "./components";
+import { createRouteParams, Navigation } from "./components";
 import { Register } from "./features/auth";
 import { Home } from "./features/home";
 import { MatchesPong } from "./features/pong/matches";
@@ -29,12 +29,13 @@ export const router = async () => {
 
 	const path = window.location.pathname;
 	for (const route of routes) {
-		const { regexp } = pathToRegexp(route.path);
+		const { regexp, keys } = pathToRegexp(route.path);
 		const match = regexp.exec(path);
 
 		if (match) {
 			container.innerHTML = route.component.render();
-			route.component.addEventListeners();
+			const params = createRouteParams(keys, match);
+			route.component.onload(params);
 			return;
 		}
 	}
