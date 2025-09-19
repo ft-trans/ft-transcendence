@@ -5,6 +5,7 @@ import type {
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
+	IPongPaddleRepository,
 	IUserRepository,
 } from "@domain/repository";
 import type { IPongClient } from "@domain/service/pong_client";
@@ -21,6 +22,7 @@ const repo = {
 	newFriendshipRepository: () => mock<IFriendshipRepository>(),
 	newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
 	newPongBallRepository: () => mock<IPongBallRepository>(),
+	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 	newPongClientRepository: () => pongClientRepo,
 	newPongLoopRepository: () => pongLoopRepo,
 };

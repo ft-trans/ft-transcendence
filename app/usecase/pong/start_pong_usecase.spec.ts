@@ -4,6 +4,7 @@ import type {
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
+	IPongPaddleRepository,
 	IUserRepository,
 } from "@domain/repository";
 import { ulid } from "ulid";
@@ -18,6 +19,7 @@ const repo = {
 	newFriendshipRepository: () => mock<IFriendshipRepository>(),
 	newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
 	newPongBallRepository: () => pongBallRepo,
+	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 };

@@ -3,5 +3,6 @@ export * from "./friendship_repository";
 export * from "./pong_ball_repository";
 export * from "./pong_client_repository";
 export * from "./pong_loop_repository";
+export * from "./pong_paddle_repository";
 export * from "./repository";
 export * from "./user_repository";

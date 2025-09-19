@@ -28,10 +28,12 @@ export class JoinPongUsecase {
 		}
 
 		const pongBallRepo = this.repo.newPongBallRepository();
+		const pongPaddleRepo = this.repo.newPongPaddleRepository();
 		const pongClientRepo = this.repo.newPongClientRepository();
 		const pongGameEngineService = new PongGameEngineService(
 			matchId,
 			pongBallRepo,
+			pongPaddleRepo,
 			pongClientRepo,
 		);
 		pongLoopService.start(matchId, () => pongGameEngineService.processFrame());

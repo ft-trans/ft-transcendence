@@ -4,6 +4,7 @@ import type {
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
+	IPongPaddleRepository,
 	IRepository,
 	IUserRepository,
 } from "@domain/repository";
@@ -15,6 +16,7 @@ import { UserRepository } from "./database/user_repository";
 import { PongClientRepository } from "./in_memory/pong_client_repository";
 import { PongLoopRepository } from "./in_memory/pong_loop_repository";
 import { PongBallRepository } from "./kvs/pong_ball_repository";
+import { PongPaddleRepository } from "./kvs/pong_paddle_repository";
 
 export type Client = Prisma.DefaultPrismaClient | Prisma.TransactionClient;
 export type KvsClient = FastifyRedis;
@@ -41,6 +43,9 @@ export class Repository implements IRepository {
 	// KVS repositories
 	newPongBallRepository(): IPongBallRepository {
 		return new PongBallRepository(this.kvsClient);
+	}
+	newPongPaddleRepository(): IPongPaddleRepository {
+		return new PongPaddleRepository(this.kvsClient);
 	}
 
 	// in-memory repositories

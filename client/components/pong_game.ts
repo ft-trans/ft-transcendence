@@ -25,7 +25,9 @@ export class PongGame {
 
 	draw(gameState: PongGameStateResponse) {
 		this.drawField();
-		this.drawBall(gameState.payload.ball.x, gameState.payload.ball.y);
+		this.drawBall(gameState.payload.ball);
+		this.drawPaddle(gameState.payload.paddles.player1);
+		this.drawPaddle(gameState.payload.paddles.player2);
 	}
 
 	private drawField() {
@@ -41,10 +43,25 @@ export class PongGame {
 		this.context.stroke();
 	}
 
-	private drawBall(x: number, y: number) {
+	private drawBall({ x, y }: { x: number; y: number }) {
 		this.context.fillStyle = "white";
 		this.context.beginPath();
 		this.context.arc(x, y, 5, 0, Math.PI * 2);
 		this.context.fill();
+	}
+
+	private drawPaddle({
+		x,
+		y,
+		width,
+		height,
+	}: {
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+	}) {
+		this.context.fillStyle = "white";
+		this.context.fillRect(x, y, width, height);
 	}
 }
