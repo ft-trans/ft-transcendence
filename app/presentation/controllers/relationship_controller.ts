@@ -46,7 +46,7 @@ const toUserDTO = (user: User) => {
 };
 
 const onGetFriends = (usecase: GetFriendsUsecase) => {
-	return async (req: FastifyRequest, reply: FastifyReply) => {
+	return async (_req: FastifyRequest, reply: FastifyReply) => {
 		// TODO: セッションからuserIdを取得する
 		const userId = "01K24DQHXAJ2NFYKPZ812F4HBJ"; // 仮のユーザーID
 
@@ -76,7 +76,7 @@ const onSendFriendRequest = (usecase: SendFriendRequestUsecase) => {
 				if (value && value.length > 0) details[key] = value.join(", ");
 			}
 			if (flat.formErrors && flat.formErrors.length > 0) {
-				details["formErrors"] = flat.formErrors.join(", ");
+				details.formErrors = flat.formErrors.join(", ");
 			}
 			throw new ErrBadRequest({ details });
 		}
@@ -112,7 +112,7 @@ const onRespondToFriendRequest = (usecase: RespondToFriendRequestUsecase) => {
 				if (value && value.length > 0) details[key] = value.join(", ");
 			}
 			if (flat.formErrors && flat.formErrors.length > 0) {
-				details["formErrors"] = flat.formErrors.join(", ");
+				details.formErrors = flat.formErrors.join(", ");
 			}
 			throw new ErrBadRequest({ details });
 		}
@@ -162,7 +162,7 @@ const onBlockUser = (usecase: BlockUserUsecase) => {
 				if (value && value.length > 0) details[key] = value.join(", ");
 			}
 			if (flat.formErrors && flat.formErrors.length > 0) {
-				details["formErrors"] = flat.formErrors.join(", ");
+				details.formErrors = flat.formErrors.join(", ");
 			}
 			throw new ErrBadRequest({ details });
 		}
