@@ -4,12 +4,23 @@ import FastifyVite from "@fastify/vite";
 import websocket from "@fastify/websocket";
 import { Transaction } from "@infra/database";
 import { prisma } from "@infra/database/prisma";
-import { InMemoryRepository } from "@infra/in_memory";
+import {
+	InMemoryChatClientRepository,
+	InMemoryRepository,
+} from "@infra/in_memory";
 import { KVSRepository } from "@infra/kvs";
 import { authController } from "@presentation/controllers/auth_controller";
+import { chatController } from "@presentation/controllers/chat_controller";
 import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
+import {
+	JoinChatUsecase,
+	LeaveChatUsecase,
+	SendChatMessageUsecase,
+	SendDirectMessageUsecase,
+	SendGameInviteUsecase,
+} from "@usecase/chat";
 import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
 import { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
 import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
@@ -58,6 +69,28 @@ const start = async () => {
 		const startPongUsecase = new StartPongUsecase(kvsRepo);
 		app.register(
 			pongController(joinPongUsecase, leavePongUsecase, startPongUsecase),
+			{ prefix: "/ws" },
+		);
+
+		const chatClientRepository = new InMemoryChatClientRepository();
+		const sendDirectMessageUsecase = new SendDirectMessageUsecase(tx);
+		const sendChatMessageUsecase = new SendChatMessageUsecase(
+			sendDirectMessageUsecase,
+			chatClientRepository,
+		);
+		const sendGameInviteUsecase = new SendGameInviteUsecase(
+			tx,
+			chatClientRepository,
+		);
+		const joinChatUsecase = new JoinChatUsecase(chatClientRepository);
+		const leaveChatUsecase = new LeaveChatUsecase(chatClientRepository);
+		app.register(
+			chatController(
+				joinChatUsecase,
+				leaveChatUsecase,
+				sendChatMessageUsecase,
+				sendGameInviteUsecase,
+			),
 			{ prefix: "/ws" },
 		);
 
