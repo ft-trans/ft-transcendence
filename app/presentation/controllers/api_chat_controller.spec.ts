@@ -1,13 +1,11 @@
+// test/controllers/directMessageController.test.ts
+
 import { ErrBadRequest } from "@domain/error";
 import { DirectMessage } from "@domain/model/direct_message";
 import { User, UserEmail, UserId } from "@domain/model/user";
-import { chatController } from "@presentation/controllers/chat_controller";
+import { apiChatController } from "@presentation/controllers/api_chat_controller";
 import type { GetDirectMessagesUsecase } from "@usecase/chat/get_direct_messages_usecase";
-import type { JoinChatUsecase } from "@usecase/chat/join_chat_usecase";
-import type { LeaveChatUsecase } from "@usecase/chat/leave_chat_usecase";
-import type { SendChatMessageUsecase } from "@usecase/chat/send_chat_message_usecase";
 import type { SendDirectMessageUsecase } from "@usecase/chat/send_direct_message_usecase";
-import type { SendGameInviteUsecase } from "@usecase/chat/send_game_invite_usecase";
 import type { FastifyInstance } from "fastify";
 import Fastify from "fastify";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -22,17 +20,16 @@ const receiver = User.reconstruct(
 	new UserEmail("receiver@example.com"),
 );
 
-describe("chatController HTTP endpoints", () => {
+describe("directMessageController", () => {
+	// 変更
 	let app: FastifyInstance;
-	const joinChatUsecase = mock<JoinChatUsecase>();
-	const leaveChatUsecase = mock<LeaveChatUsecase>();
-	const sendChatMessageUsecase = mock<SendChatMessageUsecase>();
-	const sendGameInviteUsecase = mock<SendGameInviteUsecase>();
+	// HTTP APIに必要なユースケースのみをモックする
 	const getDirectMessagesUsecase = mock<GetDirectMessagesUsecase>();
 	const sendDirectMessageUsecase = mock<SendDirectMessageUsecase>();
 
 	beforeEach(() => {
 		app = Fastify();
+		// エラーハンドラはそのまま
 		app.setErrorHandler((error, _request, reply) => {
 			if (error instanceof ErrBadRequest) {
 				const err = error as ErrBadRequest;
@@ -50,15 +47,9 @@ describe("chatController HTTP endpoints", () => {
 				});
 			}
 		});
+		// directMessageControllerを登録するように変更
 		app.register(
-			chatController(
-				joinChatUsecase,
-				leaveChatUsecase,
-				sendChatMessageUsecase,
-				sendGameInviteUsecase,
-				getDirectMessagesUsecase,
-				sendDirectMessageUsecase,
-			),
+			apiChatController(getDirectMessagesUsecase, sendDirectMessageUsecase),
 		);
 	});
 
@@ -66,6 +57,7 @@ describe("chatController HTTP endpoints", () => {
 		vi.clearAllMocks();
 	});
 
+	// テストケース自体は変更なし
 	describe("GET /dms/:partnerId", () => {
 		it("should return direct messages with a partner", async () => {
 			const messages = [
