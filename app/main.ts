@@ -16,10 +16,29 @@ import { matchmakingController } from "@presentation/controllers/matchmaking_con
 import { matchmakingWsController } from "@presentation/controllers/matchmaking_ws_controller";
 import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
+import { relationshipController } from "@presentation/controllers/relationship_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
 import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
+import {
+	BlockUserUsecase,
+} from "@usecase/relationship/block_user_usecase";
+import {
+	GetFriendsUsecase,
+} from "@usecase/relationship/get_friends_usecase";
+import {
+	RemoveFriendUsecase,
+} from "@usecase/relationship/remove_friend_usecase";
+import {
+	RespondToFriendRequestUsecase,
+} from "@usecase/relationship/respond_to_friend_request_usecase";
+import {
+	SendFriendRequestUsecase,
+} from "@usecase/relationship/send_friend_request_usecase";
+import {
+	UnblockUserUsecase,
+} from "@usecase/relationship/unblock_user_usecase";
 import {
 	JoinChatUsecase,
 	LeaveChatUsecase,
@@ -141,6 +160,24 @@ const start = async () => {
 				sendGameInviteUsecase,
 			),
 			{ prefix: "/ws" },
+		);
+
+		const getFriendsUsecase = new GetFriendsUsecase(tx);
+		const sendFriendRequestUsecase = new SendFriendRequestUsecase(tx);
+		const respondToFriendRequestUsecase = new RespondToFriendRequestUsecase(tx);
+		const removeFriendUsecase = new RemoveFriendUsecase(tx);
+		const blockUserUsecase = new BlockUserUsecase(tx);
+		const unblockUserUsecase = new UnblockUserUsecase(tx);
+		app.register(
+			relationshipController(
+				getFriendsUsecase,
+				sendFriendRequestUsecase,
+				respondToFriendRequestUsecase,
+				removeFriendUsecase,
+				blockUserUsecase,
+				unblockUserUsecase,
+			),
+			{ prefix: "/api" },
 		);
 
 		const getMatchUseCase = new GetMatchUseCase(repo.newMatchRepository());
