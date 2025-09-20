@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
 import websocket from "@fastify/websocket";
-import { Transaction } from "@infra/database";
+import { Transaction, UserRepository } from "@infra/database";
 import { prisma } from "@infra/database/prisma";
 import {
 	InMemoryChatClientRepository,
@@ -78,8 +78,9 @@ const start = async () => {
 			sendDirectMessageUsecase,
 			chatClientRepository,
 		);
+		const userRepository = new UserRepository(prisma);
 		const sendGameInviteUsecase = new SendGameInviteUsecase(
-			tx,
+			userRepository,
 			chatClientRepository,
 		);
 		const joinChatUsecase = new JoinChatUsecase(chatClientRepository);
