@@ -1,8 +1,8 @@
 import type { UserId } from "@domain/model";
-import type { ChatClientRepository } from "@domain/repository/chat_client_repository";
+import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
 import type { ChatClient } from "@domain/service/chat_client";
 
-export class InMemoryChatClientRepository implements ChatClientRepository {
+export class InMemoryChatClientRepository implements IChatClientRepository {
 	private readonly clients = new Map<string, ChatClient>();
 
 	add(client: ChatClient): void {

@@ -1,11 +1,11 @@
-import type { ChatClientRepository } from "@domain/repository/chat_client_repository";
+import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
 import type { ChatClient } from "@domain/service/chat_client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { JoinChatUsecase } from "./join_chat_usecase";
 import { LeaveChatUsecase } from "./leave_chat_usecase";
 
-const chatClientRepo = mock<ChatClientRepository>();
+const chatClientRepo = mock<IChatClientRepository>();
 const chatClient = mock<ChatClient>();
 
 beforeEach(() => {

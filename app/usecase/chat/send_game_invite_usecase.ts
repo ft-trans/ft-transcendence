@@ -1,7 +1,7 @@
 import { ErrBadRequest, ErrNotFound } from "@domain/error";
 import { UserId } from "@domain/model";
-import type { ChatClientRepository } from "@domain/repository/chat_client_repository";
-import type { UserRepository } from "@domain/repository/user_repository";
+import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
+import type { IUserRepository } from "@domain/repository/user_repository";
 
 type ISendGameInviteUsecase = {
 	senderId: string;
@@ -10,8 +10,8 @@ type ISendGameInviteUsecase = {
 
 export class SendGameInviteUsecase {
 	constructor(
-		private readonly userRepository: UserRepository,
-		private readonly chatClientRepository: ChatClientRepository,
+		private readonly userRepository: IUserRepository,
+		private readonly chatClientRepository: IChatClientRepository,
 	) {}
 
 	async execute(input: ISendGameInviteUsecase): Promise<void> {
@@ -25,7 +25,7 @@ export class SendGameInviteUsecase {
 			new UserId(input.senderId),
 		);
 		if (!sender) {
-			throw new ErrNotFound({ userMessage: "送信者が見つかりません。" });
+			throw new ErrNotFound();
 		}
 
 		const receiverClient = this.chatClientRepository.findByUserId(

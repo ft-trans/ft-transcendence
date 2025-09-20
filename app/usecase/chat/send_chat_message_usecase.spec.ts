@@ -1,6 +1,6 @@
 import { DirectMessage } from "@domain/model/direct_message";
 import { User, UserEmail } from "@domain/model/user";
-import type { ChatClientRepository } from "@domain/repository/chat_client_repository";
+import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
 import type { ChatClient } from "@domain/service/chat_client";
 import type { SendDirectMessageUsecase } from "@usecase/chat/send_direct_message_usecase";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -8,7 +8,7 @@ import { mock } from "vitest-mock-extended";
 import { SendChatMessageUsecase } from "./send_chat_message_usecase";
 
 const sendDirectMessageUsecase = mock<SendDirectMessageUsecase>();
-const chatClientRepo = mock<ChatClientRepository>();
+const chatClientRepo = mock<IChatClientRepository>();
 const receiverClient = mock<ChatClient>();
 
 beforeEach(() => {
@@ -26,8 +26,8 @@ describe("SendChatMessageUsecase", () => {
 
 	const input = {
 		senderId: sender.id.value,
+		content: message.content,
 		receiverId: receiver.id.value,
-		content: message.content.value,
 	};
 
 	it("should save message and send to online receiver", async () => {
@@ -43,7 +43,7 @@ describe("SendChatMessageUsecase", () => {
 			payload: {
 				senderId: sender.id.value,
 				senderEmail: sender.email.value,
-				content: message.content.value,
+				content: message.content,
 				timestamp: message.sentAt.toISOString(),
 			},
 		});

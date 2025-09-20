@@ -1,5 +1,5 @@
 import { UserId } from "@domain/model";
-import type { ChatClientRepository } from "@domain/repository/chat_client_repository";
+import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
 import type { SendDirectMessageUsecase } from "@usecase/chat/send_direct_message_usecase";
 
 type ISendChatMessageUsecase = {
@@ -11,7 +11,7 @@ type ISendChatMessageUsecase = {
 export class SendChatMessageUsecase {
 	constructor(
 		private readonly sendDirectMessageUsecase: SendDirectMessageUsecase,
-		private readonly chatClientRepository: ChatClientRepository,
+		private readonly chatClientRepository: IChatClientRepository,
 	) {}
 
 	async execute(input: ISendChatMessageUsecase): Promise<void> {
@@ -27,7 +27,7 @@ export class SendChatMessageUsecase {
 				payload: {
 					senderId: message.sender.id.value,
 					senderEmail: message.sender.email.value,
-					content: message.content.value,
+					content: message.content,
 					timestamp: message.sentAt.toISOString(),
 				},
 			});
