@@ -17,7 +17,7 @@ const ErrorCodeMessages: Record<ErrorCode, string> = {
 	[ErrorCode.INTERNAL_SERVER_ERROR]: "サーバーエラーが発生しました",
 };
 
-class AppError extends Error {
+export class AppError extends Error {
 	readonly code: ErrorCode;
 	readonly userMessage: string;
 	readonly systemMessage?: string;
