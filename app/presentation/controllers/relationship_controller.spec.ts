@@ -1,3 +1,4 @@
+import { User, UserEmail, UserId } from "@domain/model/user";
 import { relationshipController } from "@presentation/controllers/relationship_controller";
 import type { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
 import type { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
@@ -5,11 +6,10 @@ import type { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_us
 import type { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_friend_request_usecase";
 import type { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
 import type { UnblockUserUsecase } from "@usecase/relationship/unblock_user_usecase";
-import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
+import Fastify from "fastify";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
-import { User, UserId, UserEmail } from "@domain/model/user";
 
 describe("relationshipController", () => {
 	let app: FastifyInstance;
@@ -38,12 +38,12 @@ describe("relationshipController", () => {
 		vi.clearAllMocks();
 	});
 
-    describe("GET /friends", () => {
+	describe("GET /friends", () => {
 		it("should return friends list", async () => {
-            const friends = [
+			const friends = [
 				User.reconstruct(
 					new UserId("01K24DQHXAJ2NFYKPZ812F4HBC"),
-					new UserEmail("friend1@example.com")
+					new UserEmail("friend1@example.com"),
 				),
 			];
 			getFriendsUsecase.execute.mockResolvedValue(friends);
@@ -52,15 +52,15 @@ describe("relationshipController", () => {
 				method: "GET",
 				url: "/friends",
 			});
-            
-			const expectedResponseBody = friends.map(f => ({
+
+			const expectedResponseBody = friends.map((f) => ({
 				id: f.id.value,
 				email: f.email.value,
 			}));
 
 			expect(response.statusCode).toBe(200);
 			expect(response.json()).toEqual(expectedResponseBody);
-            
+
 			expect(getFriendsUsecase.execute).toHaveBeenCalledWith(
 				"01K24DQHXAJ2NFYKPZ812F4HBJ",
 			);

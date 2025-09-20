@@ -16,24 +16,7 @@ import { profileController } from "@presentation/controllers/profile_controller"
 import { relationshipController } from "@presentation/controllers/relationship_controller";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
 import {
-	BlockUserUsecase,
-} from "@usecase/relationship/block_user_usecase";
-import {
-	GetFriendsUsecase,
-} from "@usecase/relationship/get_friends_usecase";
-import {
-	RemoveFriendUsecase,
-} from "@usecase/relationship/remove_friend_usecase";
-import {
-	RespondToFriendRequestUsecase,
-} from "@usecase/relationship/respond_to_friend_request_usecase";
-import {
-	SendFriendRequestUsecase,
-} from "@usecase/relationship/send_friend_request_usecase";
-import {
-	UnblockUserUsecase,
-} from "@usecase/relationship/unblock_user_usecase";
-import {
+	GetDirectMessagesUsecase,
 	JoinChatUsecase,
 	LeaveChatUsecase,
 	SendChatMessageUsecase,
@@ -43,6 +26,12 @@ import {
 import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
 import { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
 import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
+import { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
+import { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
+import { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase";
+import { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_friend_request_usecase";
+import { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
+import { UnblockUserUsecase } from "@usecase/relationship/unblock_user_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import Fastify from "fastify";
@@ -104,14 +93,17 @@ const start = async () => {
 		);
 		const joinChatUsecase = new JoinChatUsecase(chatClientRepository);
 		const leaveChatUsecase = new LeaveChatUsecase(chatClientRepository);
+		const getDirectMessagesUsecase = new GetDirectMessagesUsecase(tx);
 		app.register(
 			chatController(
 				joinChatUsecase,
 				leaveChatUsecase,
 				sendChatMessageUsecase,
 				sendGameInviteUsecase,
+				getDirectMessagesUsecase,
+				sendDirectMessageUsecase,
 			),
-			{ prefix: "/ws" },
+			{ prefix: "/api" },
 		);
 
 		const getFriendsUsecase = new GetFriendsUsecase(tx);
