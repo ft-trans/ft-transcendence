@@ -2,15 +2,17 @@ import { isValid } from "ulid";
 import { ErrBadRequest } from "../error";
 import { ValueObject } from "./value_object";
 
-const pongFieldSize = {
+export const pongFieldSize = {
 	width: 600,
 	height: 400,
 };
 
-const pongPaddleSize = {
+export const pongPaddleSize = {
 	width: 10,
 	height: 50,
 };
+
+export const pongPaddleDy = 20;
 
 export class MatchId extends ValueObject<string, "MatchId"> {
 	protected validate(value: string): void {
@@ -29,6 +31,7 @@ export class PongLoopId extends ValueObject<NodeJS.Timeout, "PongLoop"> {
 }
 
 export type PongPlayer = "player1" | "player2";
+export type PongPaddleDirection = "up" | "down";
 
 export class PongPaddle {
 	readonly x: number;
@@ -41,6 +44,22 @@ export class PongPaddle {
 		this.x = x;
 		this.y = y;
 		this.player = player;
+	}
+
+	move(direction: PongPaddleDirection): PongPaddle {
+		const newY =
+			direction === "up" ? this.y - pongPaddleDy : this.y + pongPaddleDy;
+		if (newY < 0) {
+			return new PongPaddle({ x: this.x, y: 0, player: this.player });
+		}
+		if (newY > pongFieldSize.height - this.height) {
+			return new PongPaddle({
+				x: this.x,
+				y: pongFieldSize.height - this.height,
+				player: this.player,
+			});
+		}
+		return new PongPaddle({ x: this.x, y: newY, player: this.player });
 	}
 
 	static createInitial(player: PongPlayer): PongPaddle {

@@ -2,7 +2,15 @@ import { ErrBadRequest } from "@domain/error";
 import { PongField } from "@shared/api/pong";
 import { ulid } from "ulid";
 import { describe, expect, it } from "vitest";
-import { MatchId, PongBall, PongGame, PongPaddle } from "./pong";
+import {
+	MatchId,
+	PongBall,
+	PongGame,
+	PongPaddle,
+	pongFieldSize,
+	pongPaddleDy,
+	pongPaddleSize,
+} from "./pong";
 
 describe("MatchId", () => {
 	it("should create a MatchId instance with a valid ULID", () => {
@@ -31,6 +39,43 @@ describe("PongBall", () => {
 		expect(ball.y).toBe(2);
 		expect(ball.dx).toBe(3);
 		expect(ball.dy).toBe(4);
+	});
+});
+
+describe("PongPaddle", () => {
+	it("should create a paddle with valid values", () => {
+		const paddle = new PongPaddle({ x: 1, y: 2, player: "player1" });
+
+		expect(paddle).toBeInstanceOf(PongPaddle);
+		expect(paddle.x).toBe(1);
+		expect(paddle.y).toBe(2);
+		expect(paddle.player).toBe("player1");
+		expect(paddle.width).toBe(pongPaddleSize.width);
+		expect(paddle.height).toBe(pongPaddleSize.height);
+	});
+
+	it("should move", () => {
+		const paddle = new PongPaddle({ x: 10, y: 100, player: "player1" });
+		const upPaddle = paddle.move("up");
+		expect(upPaddle.y).toBe(100 - pongPaddleDy);
+		const downPaddle = paddle.move("down");
+		expect(downPaddle.y).toBe(100 + pongPaddleDy);
+	});
+
+	it("should not move out of the field(Top)", () => {
+		const paddle = new PongPaddle({ x: 10, y: 2, player: "player1" });
+		const upPaddle = paddle.move("up");
+		expect(upPaddle.y).toBe(0);
+	});
+
+	it("should not move out of the field(Bottom)", () => {
+		const paddle = new PongPaddle({
+			x: 10,
+			y: pongFieldSize.height - pongPaddleSize.height - 2,
+			player: "player1",
+		});
+		const upPaddle = paddle.move("down");
+		expect(upPaddle.y).toBe(pongFieldSize.height - pongPaddleSize.height);
 	});
 });
 
