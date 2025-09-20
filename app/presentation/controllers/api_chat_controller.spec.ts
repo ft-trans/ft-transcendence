@@ -21,15 +21,12 @@ const receiver = User.reconstruct(
 );
 
 describe("directMessageController", () => {
-	// 変更
 	let app: FastifyInstance;
-	// HTTP APIに必要なユースケースのみをモックする
 	const getDirectMessagesUsecase = mock<GetDirectMessagesUsecase>();
 	const sendDirectMessageUsecase = mock<SendDirectMessageUsecase>();
 
 	beforeEach(() => {
 		app = Fastify();
-		// エラーハンドラはそのまま
 		app.setErrorHandler((error, _request, reply) => {
 			if (error instanceof ErrBadRequest) {
 				const err = error as ErrBadRequest;
@@ -47,7 +44,6 @@ describe("directMessageController", () => {
 				});
 			}
 		});
-		// directMessageControllerを登録するように変更
 		app.register(
 			apiChatController(getDirectMessagesUsecase, sendDirectMessageUsecase),
 		);
@@ -57,7 +53,6 @@ describe("directMessageController", () => {
 		vi.clearAllMocks();
 	});
 
-	// テストケース自体は変更なし
 	describe("GET /dms/:partnerId", () => {
 		it("should return direct messages with a partner", async () => {
 			const messages = [
