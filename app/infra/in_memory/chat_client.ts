@@ -1,8 +1,8 @@
-import type { ChatClient } from "@domain/service/chat_client";
+import type { IChatClient } from "@domain/service/chat_client";
 import type { ServerMessage } from "@shared/api/chat";
 import type WebSocket from "ws";
 
-export class InMemoryChatClient implements ChatClient {
+export class InMemoryChatClient implements IChatClient {
 	private userId: string | undefined;
 
 	constructor(private readonly client: WebSocket) {}

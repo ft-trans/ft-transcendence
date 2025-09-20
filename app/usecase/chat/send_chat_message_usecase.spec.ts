@@ -1,7 +1,7 @@
 import { DirectMessage } from "@domain/model/direct_message";
 import { User, UserEmail } from "@domain/model/user";
 import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
-import type { ChatClient } from "@domain/service/chat_client";
+import type { IChatClient } from "@domain/service/chat_client";
 import type { SendDirectMessageUsecase } from "@usecase/chat/send_direct_message_usecase";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
@@ -9,7 +9,7 @@ import { SendChatMessageUsecase } from "./send_chat_message_usecase";
 
 const sendDirectMessageUsecase = mock<SendDirectMessageUsecase>();
 const chatClientRepo = mock<IChatClientRepository>();
-const receiverClient = mock<ChatClient>();
+const receiverClient = mock<IChatClient>();
 
 beforeEach(() => {
 	vi.clearAllMocks();

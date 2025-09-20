@@ -1,8 +1,8 @@
 import type { UserId } from "@domain/model";
-import type { ChatClient } from "@domain/service/chat_client";
+import type { IChatClient } from "@domain/service/chat_client";
 
 export interface IChatClientRepository {
-	add(client: ChatClient): void;
-	remove(client: ChatClient): void;
-	findByUserId(userId: UserId): ChatClient | undefined;
+	add(client: IChatClient): void;
+	remove(client: IChatClient): void;
+	findByUserId(userId: UserId): IChatClient | undefined;
 }

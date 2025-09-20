@@ -2,14 +2,14 @@ import { ErrBadRequest, ErrNotFound } from "@domain/error";
 import { User, UserEmail } from "@domain/model/user";
 import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
-import type { ChatClient } from "@domain/service/chat_client";
+import type { IChatClient } from "@domain/service/chat_client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { SendGameInviteUsecase } from "./send_game_invite_usecase";
 
 const userRepo = mock<IUserRepository>();
 const chatClientRepo = mock<IChatClientRepository>();
-const receiverClient = mock<ChatClient>();
+const receiverClient = mock<IChatClient>();
 
 beforeEach(() => {
 	vi.clearAllMocks();
