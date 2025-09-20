@@ -10,7 +10,7 @@
     ```typescript
     export abstract class Component {
         abstract render(props: unknown): string;
-        onLoad(params: RouteParams): void {}
+        onLoad(params?: RouteParams): void {}
     }
     ```
 -   **レンダリング**: `render()` メソッドは、コンポーネントのHTML構造を文字列として返します。

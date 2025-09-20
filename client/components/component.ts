@@ -18,5 +18,5 @@ export const createRouteParams = (
 export abstract class Component {
 	abstract render(): string;
 
-	onLoad(_params: RouteParams): void {}
+	onLoad(_params?: RouteParams): void {}
 }

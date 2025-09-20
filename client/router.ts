@@ -34,9 +34,14 @@ export const router = async () => {
 
 		if (match) {
 			container.innerHTML = route.component.render();
-			const params = createRouteParams(keys, match);
-			route.component.onLoad(params);
-			return;
+			if (keys.length === 0) {
+				route.component.onLoad();
+				return;
+			} else {
+				const params = createRouteParams(keys, match);
+				route.component.onLoad(params);
+				return;
+			}
 		}
 	}
 

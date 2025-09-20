@@ -33,7 +33,7 @@ export class Navigation extends Component {
     `;
 	}
 
-	onLoad(params: RouteParams): void {
+	onLoad(params?: RouteParams): void {
 		this.child.onLoad(params);
 	}
 }
