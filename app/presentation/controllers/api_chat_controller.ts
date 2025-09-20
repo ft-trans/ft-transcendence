@@ -1,37 +1,17 @@
+// src/interfaces/controllers/directMessageController.ts
+
 import { ErrBadRequest } from "@domain/error";
 import type { DirectMessage } from "@domain/model/direct_message";
-import { InMemoryChatClient } from "@infra/in_memory/chat_client";
-import type { ClientMessage } from "@shared/api/chat";
 import type { GetDirectMessagesUsecase } from "@usecase/chat/get_direct_messages_usecase";
-import type { JoinChatUsecase } from "@usecase/chat/join_chat_usecase";
-import type { LeaveChatUsecase } from "@usecase/chat/leave_chat_usecase";
-import type { SendChatMessageUsecase } from "@usecase/chat/send_chat_message_usecase";
 import type { SendDirectMessageUsecase } from "@usecase/chat/send_direct_message_usecase";
-import type { SendGameInviteUsecase } from "@usecase/chat/send_game_invite_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import type WebSocket from "ws";
 import { z } from "zod";
 
-export const chatController = (
-	joinChatUsecase: JoinChatUsecase,
-	leaveChatUsecase: LeaveChatUsecase,
-	sendChatMessageUsecase: SendChatMessageUsecase,
-	sendGameInviteUsecase: SendGameInviteUsecase,
+export const apiChatController = (
 	getDirectMessagesUsecase: GetDirectMessagesUsecase,
 	sendDirectMessageUsecase: SendDirectMessageUsecase,
 ) => {
 	return async (fastify: FastifyInstance) => {
-		fastify.get(
-			"/chat",
-			{ websocket: true },
-			onConnectClient(
-				joinChatUsecase,
-				leaveChatUsecase,
-				sendChatMessageUsecase,
-				sendGameInviteUsecase,
-			),
-		);
-
 		fastify.get(
 			"/dms/:partnerId",
 			onGetDirectMessages(getDirectMessagesUsecase),
@@ -115,58 +95,5 @@ const onSendDirectMessage = (usecase: SendDirectMessageUsecase) => {
 		const responseBody = toDirectMessageDTO(sentMessage);
 
 		reply.status(201).send(responseBody);
-	};
-};
-
-const onConnectClient = (
-	joinChatUsecase: JoinChatUsecase,
-	leaveChatUsecase: LeaveChatUsecase,
-	sendChatMessageUsecase: SendChatMessageUsecase,
-	sendGameInviteUsecase: SendGameInviteUsecase,
-) => {
-	return async (socket: WebSocket, req: FastifyRequest) => {
-		// TODO: Should authenticate user and get userId
-		const userId = req.headers["x-user-id"] as string; // Temporary solution for getting user id
-		if (!userId) {
-			socket.close(1008, "User not authenticated");
-			return;
-		}
-
-		const chatClient = new InMemoryChatClient(socket);
-		chatClient.setUserId(userId);
-
-		joinChatUsecase.execute(chatClient);
-
-		socket.onmessage = async (event: WebSocket.MessageEvent) => {
-			try {
-				const message: ClientMessage = JSON.parse(event.data.toString());
-
-				switch (message.type) {
-					case "sendMessage":
-						await sendChatMessageUsecase.execute({
-							senderId: userId,
-							...message.payload,
-						});
-						break;
-					case "sendGameInvite":
-						await sendGameInviteUsecase.execute({
-							senderId: userId,
-							...message.payload,
-						});
-						break;
-				}
-			} catch (error) {
-				// TODO: Error handling
-				console.error(error);
-			}
-		};
-
-		socket.onclose = () => {
-			leaveChatUsecase.execute(chatClient);
-		};
-
-		socket.onerror = (_err) => {
-			leaveChatUsecase.execute(chatClient);
-		};
 	};
 };
