@@ -1,7 +1,7 @@
 import { Friendship } from "@domain/model/friendship";
 import { User, UserEmail, UserId } from "@domain/model/user";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
-import type { Client } from "./repository";
+import type { Client } from "../repository";
 
 // PrismaのUserモデルからドメインのUserモデルへ変換
 const toUserDomain = (prismaUser: { id: string; email: string }): User => {

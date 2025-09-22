@@ -1,5 +1,5 @@
 import { MatchId } from "@domain/model";
-import type { IInMemoryRepository, IKVSRepository } from "@domain/repository";
+import type { IRepository } from "@domain/repository";
 import { PongLoopService } from "@domain/service";
 import type { IPongClient } from "@domain/service/pong_client";
 import { PongGameEngineService } from "@domain/service/pong_game_engine_service";
@@ -10,10 +10,7 @@ export type JoinPongUsecaseInput = {
 };
 
 export class JoinPongUsecase {
-	constructor(
-		private readonly repo: IInMemoryRepository,
-		private readonly kvsRepo: IKVSRepository,
-	) {}
+	constructor(private readonly repo: IRepository) {}
 
 	async execute(input: JoinPongUsecaseInput): Promise<MatchId> {
 		const matchId = new MatchId(input.matchId);
@@ -30,7 +27,7 @@ export class JoinPongUsecase {
 			return;
 		}
 
-		const pongBallRepo = this.kvsRepo.newPongBallRepository();
+		const pongBallRepo = this.repo.newPongBallRepository();
 		const pongClientRepo = this.repo.newPongClientRepository();
 		const pongGameEngineService = new PongGameEngineService(
 			matchId,

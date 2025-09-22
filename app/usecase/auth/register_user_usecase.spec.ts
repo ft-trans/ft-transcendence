@@ -4,6 +4,9 @@ import { User, UserEmail } from "@domain/model";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IPongBallRepository,
+	IPongClientRepository,
+	IPongLoopRepository,
 	IUserRepository,
 } from "@domain/repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -27,6 +30,9 @@ describe("RegisterUserUsecase", () => {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 			};
 			return callback(repo);
 		});
@@ -48,6 +54,9 @@ describe("RegisterUserUsecase", () => {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 			};
 			return callback(repo);
 		});
