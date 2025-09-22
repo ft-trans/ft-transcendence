@@ -1,4 +1,4 @@
-import { Component } from "../component";
+import { Component, type RouteParams } from "../component";
 import { Link } from "../navigation";
 
 type Props = {
@@ -33,7 +33,7 @@ export class Navigation extends Component {
     `;
 	}
 
-	addEventListeners(): void {
-		this.child.addEventListeners();
+	onLoad(params?: RouteParams): void {
+		this.child.onLoad(params);
 	}
 }

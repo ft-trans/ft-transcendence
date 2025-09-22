@@ -14,7 +14,7 @@ import {
 import { annotateZodErrors } from "client/components/form/error";
 
 export class EditProfile extends Component {
-	addEventListeners(): void {
+	onLoad(): void {
 		const form = document.getElementById("profile-form");
 		if (form && form instanceof HTMLFormElement) {
 			form.addEventListener("submit", async (e) => {
