@@ -3,7 +3,7 @@ import { z } from "zod";
 export const registerUserFormSchema = z
 	.object({
 		email: z.email("有効なメールアドレスを入力してください"),
-		username: z.string().min(1, "ユーザー名を入力してください"),
+		username: z.string().min(1, "ユーザー名を入力してください").max(30, "ユーザー名は30文字以下にしてください").regex(/^[a-zA-Z0-9_-]+$/, "ユーザー名は英数字、アンダースコア、ハイフンのみ使用可能です"),
 		password: z.string().min(8, "パスワードは8文字以上である必要があります"),
 		passwordConfirm: z.string(),
 	})
