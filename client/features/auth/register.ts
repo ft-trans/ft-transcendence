@@ -39,7 +39,13 @@ export class Register extends Component {
 				// TODO: APIエラーのハンドリング
 				await new ApiClient().post<RegisterUserRequest, RegisterUserResponse>(
 					"/api/auth/register",
-					{ user: { email: input.data.email, username: input.data.username, password: input.data.password } },
+					{
+						user: {
+							email: input.data.email,
+							username: input.data.username,
+							password: input.data.password,
+						},
+					},
 				);
 			});
 		}

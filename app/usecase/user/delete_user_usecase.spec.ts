@@ -22,7 +22,10 @@ describe("DeleteUserUsecase", () => {
 	});
 
 	it("should delete a user and return it", async () => {
-		const currentUser = User.create(new UserEmail("current@example.com"), new Username("current"));
+		const currentUser = User.create(
+			new UserEmail("current@example.com"),
+			new Username("current"),
+		);
 		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.delete.mockResolvedValue(currentUser);
 		mockUserRepo.findById.mockResolvedValue(currentUser);

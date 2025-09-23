@@ -2,7 +2,15 @@ import { ErrBadRequest, ErrInternalServer } from "@domain/error";
 import { ulid } from "ulid";
 import { describe, expect, it } from "vitest";
 import { Password } from "./password";
-import { User, UserEmail, UserId, Username, UserAvatar, UserStatusValue } from "./user";
+import {
+	User,
+	UserAvatar,
+	UserEmail,
+	UserId,
+	Username,
+	type UserStatus,
+	UserStatusValue,
+} from "./user";
 
 describe("UserId", () => {
 	it("should create a UserId instance with a valid ULID", () => {
@@ -93,7 +101,9 @@ describe("UserStatusValue", () => {
 	});
 
 	it("should throw a BadRequestError for invalid status", () => {
-		expect(() => new UserStatusValue("invalid" as any)).toThrowError(ErrBadRequest);
+		expect(
+			() => new UserStatusValue("invalid" as unknown as UserStatus),
+		).toThrowError(ErrBadRequest);
 	});
 });
 
@@ -190,7 +200,7 @@ describe("User", () => {
 		it("should return false when user has no password digest", () => {
 			const user = User.create(
 				new UserEmail("test@example.com"),
-				new Username("testuser")
+				new Username("testuser"),
 			);
 
 			expect(user.authenticated("anyPassword")).toBe(false);

@@ -20,7 +20,9 @@ export class EditProfile extends Component {
 	async onLoad(): Promise<void> {
 		// 現在のユーザー情報を取得
 		try {
-			const response = await new ApiClient().get<GetProfileResponse>("/api/profile");
+			const response = await new ApiClient().get<GetProfileResponse>(
+				"/api/profile",
+			);
 			this.currentUser = response.user;
 			this.populateForm();
 		} catch (error) {
@@ -54,12 +56,12 @@ export class EditProfile extends Component {
 				// TODO: APIエラーのハンドリング
 				await new ApiClient().put<UpdateProfileRequest, UpdateProfileResponse>(
 					"/api/profile",
-					{ 
-						user: { 
+					{
+						user: {
 							email: input.data.email,
 							username: input.data.username,
 							avatar: input.data.avatar,
-						} 
+						},
 					},
 				);
 			});
@@ -80,7 +82,9 @@ export class EditProfile extends Component {
 		if (!this.currentUser) return;
 
 		const emailInput = document.getElementById("email") as HTMLInputElement;
-		const usernameInput = document.getElementById("username") as HTMLInputElement;
+		const usernameInput = document.getElementById(
+			"username",
+		) as HTMLInputElement;
 		const avatarInput = document.getElementById("avatar") as HTMLInputElement;
 
 		if (emailInput) emailInput.value = this.currentUser.email || "";

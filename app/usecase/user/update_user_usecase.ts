@@ -1,5 +1,11 @@
 import { ErrBadRequest, ErrNotFound } from "@domain/error";
-import { User, UserEmail, UserId, Username, UserAvatar } from "@domain/model";
+import {
+	type User,
+	UserAvatar,
+	UserEmail,
+	UserId,
+	Username,
+} from "@domain/model";
 import type { ITransaction } from "@usecase/transaction";
 
 export type UpdateUserUsecaseInput = {
@@ -21,9 +27,16 @@ export class UpdateUserUsecase {
 				throw new ErrNotFound();
 			}
 
-			const email = input.email ? new UserEmail(input.email) : currentUser.email;
-			const username = input.username ? new Username(input.username) : currentUser.username;
-			const avatar = input.avatar !== undefined ? new UserAvatar(input.avatar) : currentUser.avatar;
+			const email = input.email
+				? new UserEmail(input.email)
+				: currentUser.email;
+			const username = input.username
+				? new Username(input.username)
+				: currentUser.username;
+			const avatar =
+				input.avatar !== undefined
+					? new UserAvatar(input.avatar)
+					: currentUser.avatar;
 
 			const updatedUser = currentUser.updateProfile(email, username, avatar);
 

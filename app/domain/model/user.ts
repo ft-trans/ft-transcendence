@@ -44,7 +44,8 @@ export class Username extends ValueObject<string, "Username"> {
 		if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
 			throw new ErrBadRequest({
 				details: {
-					username: "ユーザー名は英数字、アンダースコア、ハイフンのみ使用可能です",
+					username:
+						"ユーザー名は英数字、アンダースコア、ハイフンのみ使用可能です",
 				},
 			});
 		}
@@ -75,7 +76,8 @@ export class UserStatusValue extends ValueObject<UserStatus, "UserStatus"> {
 		if (value !== "online" && value !== "offline") {
 			throw new ErrBadRequest({
 				details: {
-					userStatus: "ユーザーステータスはonlineまたはofflineである必要があります",
+					userStatus:
+						"ユーザーステータスはonlineまたはofflineである必要があります",
 				},
 			});
 		}
@@ -101,7 +103,14 @@ export class User {
 		const id = new UserId(ulid());
 		const defaultAvatar = avatar || new UserAvatar(""); // デフォルトアバター
 		const defaultStatus = new UserStatusValue("offline");
-		return new User(id, email, username, defaultAvatar, defaultStatus, passwordDigest);
+		return new User(
+			id,
+			email,
+			username,
+			defaultAvatar,
+			defaultStatus,
+			passwordDigest,
+		);
 	}
 
 	static reconstruct(

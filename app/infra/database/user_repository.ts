@@ -1,4 +1,12 @@
-import { User, UserEmail, UserId, Username, UserAvatar, UserStatusValue, UserStatus } from "@domain/model";
+import {
+	User,
+	UserAvatar,
+	UserEmail,
+	UserId,
+	Username,
+	type UserStatus,
+	UserStatusValue,
+} from "@domain/model";
 import type { IUserRepository } from "@domain/repository";
 import type { Client } from "./prisma";
 

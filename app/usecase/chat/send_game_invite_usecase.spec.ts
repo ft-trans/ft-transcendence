@@ -18,8 +18,14 @@ beforeEach(() => {
 
 describe("SendGameInviteUsecase", () => {
 	const usecase = new SendGameInviteUsecase(userRepo, chatClientRepo);
-	const sender = User.create(new UserEmail("sender@test.com"), new Username("sender"));
-	const receiver = User.create(new UserEmail("receiver@test.com"), new Username("receiver"));
+	const sender = User.create(
+		new UserEmail("sender@test.com"),
+		new Username("sender"),
+	);
+	const receiver = User.create(
+		new UserEmail("receiver@test.com"),
+		new Username("receiver"),
+	);
 
 	const input = {
 		senderId: sender.id.value,

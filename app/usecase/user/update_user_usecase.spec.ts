@@ -38,8 +38,14 @@ describe("UpdateUserUsecase", () => {
 	});
 
 	it("should update a user and return it", async () => {
-		const currentUser = User.create(new UserEmail("current@example.com"), new Username("current"));
-		const expectedUser = User.create(new UserEmail("edit@example.com"), new Username("current"));
+		const currentUser = User.create(
+			new UserEmail("current@example.com"),
+			new Username("current"),
+		);
+		const expectedUser = User.create(
+			new UserEmail("edit@example.com"),
+			new Username("current"),
+		);
 		mockUserRepo.update.mockResolvedValue(expectedUser);
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		mockUserRepo.findByEmail.mockResolvedValue(undefined);
@@ -54,7 +60,10 @@ describe("UpdateUserUsecase", () => {
 	});
 
 	it("should return current user without update when no changes", async () => {
-		const currentUser = User.create(new UserEmail("same@example.com"), new Username("same"));
+		const currentUser = User.create(
+			new UserEmail("same@example.com"),
+			new Username("same"),
+		);
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		// don't call update
 		mockUserRepo.update.mockResolvedValue(undefined);
@@ -69,8 +78,14 @@ describe("UpdateUserUsecase", () => {
 	});
 
 	it("should throw BadRequestError if email is already used", async () => {
-		const currentUser = User.create(new UserEmail("current@example.com"), new Username("current"));
-		const existingUser = User.create(new UserEmail("edit@example.com"), new Username("existing"));
+		const currentUser = User.create(
+			new UserEmail("current@example.com"),
+			new Username("current"),
+		);
+		const existingUser = User.create(
+			new UserEmail("edit@example.com"),
+			new Username("existing"),
+		);
 
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		mockUserRepo.findByEmail.mockResolvedValue(existingUser);

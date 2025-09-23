@@ -21,8 +21,14 @@ describe("SendChatMessageUsecase", () => {
 		sendDirectMessageUsecase,
 		chatClientRepo,
 	);
-	const sender = User.create(new UserEmail("sender@test.com"), new Username("sender"));
-	const receiver = User.create(new UserEmail("receiver@test.com"), new Username("receiver"));
+	const sender = User.create(
+		new UserEmail("sender@test.com"),
+		new Username("sender"),
+	);
+	const receiver = User.create(
+		new UserEmail("receiver@test.com"),
+		new Username("receiver"),
+	);
 	const message = DirectMessage.create(sender, receiver, "Hello!");
 
 	const input = {

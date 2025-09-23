@@ -43,8 +43,14 @@ beforeEach(() => {
 
 describe("SendDirectMessageUsecase", () => {
 	const usecase = new SendDirectMessageUsecase(tx);
-	const sender = User.create(new UserEmail("sender@test.com"), new Username("sender"));
-	const receiver = User.create(new UserEmail("receiver@test.com"), new Username("receiver"));
+	const sender = User.create(
+		new UserEmail("sender@test.com"),
+		new Username("sender"),
+	);
+	const receiver = User.create(
+		new UserEmail("receiver@test.com"),
+		new Username("receiver"),
+	);
 
 	it("should send a message successfully", async () => {
 		userRepo.findById
@@ -146,8 +152,15 @@ describe("SendDirectMessageUsecase", () => {
 
 describe("GetDirectMessagesUsecase", () => {
 	const usecase = new GetDirectMessagesUsecase(tx);
-		const user1 = User.create(new UserEmail("user1@test.com"), new Username("user1"));
-		const user2 = User.create(new UserEmail("user2@test.com"), new Username("user2"));	beforeEach(() => {
+	const user1 = User.create(
+		new UserEmail("user1@test.com"),
+		new Username("user1"),
+	);
+	const user2 = User.create(
+		new UserEmail("user2@test.com"),
+		new Username("user2"),
+	);
+	beforeEach(() => {
 		userRepo.findById.mockReset();
 	});
 

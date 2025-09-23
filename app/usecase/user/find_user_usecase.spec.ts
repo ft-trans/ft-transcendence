@@ -11,7 +11,10 @@ describe("FindUserUsecase", () => {
 	});
 
 	test("should return user when user is found", async () => {
-		const user = User.create(new UserEmail("test@example.com"), new Username("test"));
+		const user = User.create(
+			new UserEmail("test@example.com"),
+			new Username("test"),
+		);
 
 		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findById.mockResolvedValue(user);
@@ -29,7 +32,10 @@ describe("FindUserUsecase", () => {
 	});
 
 	test("should throw NotFoundError when user is not found", async () => {
-		const user = User.create(new UserEmail("test@example.com"), new Username("test"));
+		const user = User.create(
+			new UserEmail("test@example.com"),
+			new Username("test"),
+		);
 
 		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findById.mockResolvedValue(undefined);
