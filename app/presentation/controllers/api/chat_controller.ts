@@ -7,7 +7,7 @@ import type { SendDirectMessageUsecase } from "@usecase/chat/send_direct_message
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 
-export const apiChatController = (
+export const chatController = (
 	getDirectMessagesUsecase: GetDirectMessagesUsecase,
 	sendDirectMessageUsecase: SendDirectMessageUsecase,
 ) => {

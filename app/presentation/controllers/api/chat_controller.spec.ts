@@ -2,8 +2,15 @@
 
 import { ErrBadRequest } from "@domain/error";
 import { DirectMessage } from "@domain/model/direct_message";
-import { User, UserEmail, UserId } from "@domain/model/user";
-import { apiChatController } from "@presentation/controllers/api_chat_controller";
+import {
+	User,
+	UserAvatar,
+	UserEmail,
+	UserId,
+	Username,
+	UserStatusValue,
+} from "@domain/model/user";
+import { chatController as apiChatController } from "@presentation/controllers/api/chat_controller";
 import type { GetDirectMessagesUsecase } from "@usecase/chat/get_direct_messages_usecase";
 import type { SendDirectMessageUsecase } from "@usecase/chat/send_direct_message_usecase";
 import type { FastifyInstance } from "fastify";
@@ -14,12 +21,17 @@ import { mock } from "vitest-mock-extended";
 const sender = User.reconstruct(
 	new UserId("01K24DQHXAJ2NFYKPZ812F4HBJ"),
 	new UserEmail("sender@example.com"),
+	new Username("sender"),
+	new UserAvatar(""),
+	new UserStatusValue("online"),
 );
 const receiver = User.reconstruct(
-	new UserId("01K24DQHXAJ2NFYKPZ812F4HBP"),
+	new UserId("01K24DQHXAJ2NFYKPZ812F4HBK"),
 	new UserEmail("receiver@example.com"),
+	new Username("receiver"),
+	new UserAvatar(""),
+	new UserStatusValue("online"),
 );
-
 describe("directMessageController", () => {
 	let app: FastifyInstance;
 	const getDirectMessagesUsecase = mock<GetDirectMessagesUsecase>();
