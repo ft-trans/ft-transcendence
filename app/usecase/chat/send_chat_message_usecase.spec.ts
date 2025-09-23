@@ -1,5 +1,5 @@
 import { DirectMessage } from "@domain/model/direct_message";
-import { User, UserEmail } from "@domain/model/user";
+import { User, UserEmail, Username } from "@domain/model/user";
 import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
 import type { IChatClient } from "@domain/service/chat_client";
 import { MESSAGE_TYPES } from "@shared/api/chat";
@@ -21,8 +21,8 @@ describe("SendChatMessageUsecase", () => {
 		sendDirectMessageUsecase,
 		chatClientRepo,
 	);
-	const sender = User.create(new UserEmail("sender@test.com"));
-	const receiver = User.create(new UserEmail("receiver@test.com"));
+	const sender = User.create(new UserEmail("sender@test.com"), new Username("sender"));
+	const receiver = User.create(new UserEmail("receiver@test.com"), new Username("receiver"));
 	const message = DirectMessage.create(sender, receiver, "Hello!");
 
 	const input = {

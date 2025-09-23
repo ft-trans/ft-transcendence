@@ -1,6 +1,6 @@
 // ==> app/usecase/user/update_user_usecase.spec.ts <==
 import { ErrBadRequest, ErrNotFound } from "@domain/error";
-import { User, UserEmail } from "@domain/model";
+import { User, UserEmail, Username } from "@domain/model";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
@@ -38,24 +38,12 @@ describe("UpdateUserUsecase", () => {
 	});
 
 	it("should update a user and return it", async () => {
-		const currentUser = User.create(new UserEmail("current@example.com"));
-		const expectedUser = User.create(new UserEmail("edit@example.com"));
+		const currentUser = User.create(new UserEmail("current@example.com"), new Username("current"));
+		const expectedUser = User.create(new UserEmail("edit@example.com"), new Username("current"));
 		mockUserRepo.update.mockResolvedValue(expectedUser);
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		mockUserRepo.findByEmail.mockResolvedValue(undefined);
-		const mockTx = mock<ITransaction>();
-		mockTx.exec.mockImplementation(async (callback) => {
-			const repo = {
-				newUserRepository: () => mockUserRepo,
-				newFriendshipRepository: () => mock<IFriendshipRepository>(),
-				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
-				newPongBallRepository: () => mock<IPongBallRepository>(),
-				newPongClientRepository: () => mock<IPongClientRepository>(),
-				newPongLoopRepository: () => mock<IPongLoopRepository>(),
-				newSessionRepository: () => mock<ISessionRepository>(),
-			};
-			return callback(repo);
-		});
+		mockUserRepo.findByUsername.mockResolvedValue(undefined);
 
 		const usecase = new UpdateUserUsecase(mockTx);
 		const input = { id: currentUser.id.value, email: "edit@example.com" };
@@ -66,27 +54,13 @@ describe("UpdateUserUsecase", () => {
 	});
 
 	it("should return current user without update when no changes", async () => {
-		const currentUser = User.create(new UserEmail("same@example.com"));
+		const currentUser = User.create(new UserEmail("same@example.com"), new Username("same"));
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		// don't call update
 		mockUserRepo.update.mockResolvedValue(undefined);
 
-		const mockTx = mock<ITransaction>();
-		mockTx.exec.mockImplementation(async (callback) => {
-			const repo = {
-				newUserRepository: () => mockUserRepo,
-				newFriendshipRepository: () => mock<IFriendshipRepository>(),
-				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
-				newPongBallRepository: () => mock<IPongBallRepository>(),
-				newPongClientRepository: () => mock<IPongClientRepository>(),
-				newPongLoopRepository: () => mock<IPongLoopRepository>(),
-				newSessionRepository: () => mock<ISessionRepository>(),
-			};
-			return callback(repo);
-		});
-
 		const usecase = new UpdateUserUsecase(mockTx);
-		const input = { id: currentUser.id.value, email: currentUser.email.value };
+		const input = { id: currentUser.id.value };
 		const user = await usecase.execute(input);
 
 		expect(user).toBe(currentUser);
@@ -95,25 +69,12 @@ describe("UpdateUserUsecase", () => {
 	});
 
 	it("should throw BadRequestError if email is already used", async () => {
-		const currentUser = User.create(new UserEmail("current@example.com"));
-		const existingUser = User.create(new UserEmail("edit@example.com"));
+		const currentUser = User.create(new UserEmail("current@example.com"), new Username("current"));
+		const existingUser = User.create(new UserEmail("edit@example.com"), new Username("existing"));
 
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		mockUserRepo.findByEmail.mockResolvedValue(existingUser);
-
-		const mockTx = mock<ITransaction>();
-		mockTx.exec.mockImplementation(async (callback) => {
-			const repo = {
-				newUserRepository: () => mockUserRepo,
-				newFriendshipRepository: () => mock<IFriendshipRepository>(),
-				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
-				newPongBallRepository: () => mock<IPongBallRepository>(),
-				newPongClientRepository: () => mock<IPongClientRepository>(),
-				newPongLoopRepository: () => mock<IPongLoopRepository>(),
-				newSessionRepository: () => mock<ISessionRepository>(),
-			};
-			return callback(repo);
-		});
+		mockUserRepo.findByUsername.mockResolvedValue(undefined);
 
 		const usecase = new UpdateUserUsecase(mockTx);
 		const input = { id: currentUser.id.value, email: existingUser.email.value };
@@ -130,20 +91,6 @@ describe("UpdateUserUsecase", () => {
 
 	it("should throw NotFoundError if user does not exist", async () => {
 		mockUserRepo.findById.mockResolvedValue(undefined);
-
-		const mockTx = mock<ITransaction>();
-		mockTx.exec.mockImplementation(async (callback) => {
-			const repo = {
-				newUserRepository: () => mockUserRepo,
-				newFriendshipRepository: () => mock<IFriendshipRepository>(),
-				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
-				newPongBallRepository: () => mock<IPongBallRepository>(),
-				newPongClientRepository: () => mock<IPongClientRepository>(),
-				newPongLoopRepository: () => mock<IPongLoopRepository>(),
-				newSessionRepository: () => mock<ISessionRepository>(),
-			};
-			return callback(repo);
-		});
 
 		const usecase = new UpdateUserUsecase(mockTx);
 		const input = { id: ulid(), email: "edit@example.com" };

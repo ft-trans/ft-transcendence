@@ -1,5 +1,5 @@
 import { ErrNotFound } from "@domain/error";
-import { User, UserEmail } from "@domain/model";
+import { User, UserEmail, Username } from "@domain/model";
 import type { IRepository, IUserRepository } from "@domain/repository";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
@@ -11,7 +11,7 @@ describe("FindUserUsecase", () => {
 	});
 
 	test("should return user when user is found", async () => {
-		const user = User.create(new UserEmail("test@example.com"));
+		const user = User.create(new UserEmail("test@example.com"), new Username("test"));
 
 		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findById.mockResolvedValue(user);
@@ -29,7 +29,7 @@ describe("FindUserUsecase", () => {
 	});
 
 	test("should throw NotFoundError when user is not found", async () => {
-		const user = User.create(new UserEmail("test@example.com"));
+		const user = User.create(new UserEmail("test@example.com"), new Username("test"));
 
 		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findById.mockResolvedValue(undefined);

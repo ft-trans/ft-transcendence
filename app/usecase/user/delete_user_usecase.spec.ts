@@ -1,6 +1,6 @@
 // ==> app/usecase/user/delete_user_usecase.spec.ts <==
 import { ErrNotFound } from "@domain/error";
-import { User, UserEmail } from "@domain/model";
+import { User, UserEmail, Username } from "@domain/model";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
@@ -22,7 +22,7 @@ describe("DeleteUserUsecase", () => {
 	});
 
 	it("should delete a user and return it", async () => {
-		const currentUser = User.create(new UserEmail("current@example.com"));
+		const currentUser = User.create(new UserEmail("current@example.com"), new Username("current"));
 		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.delete.mockResolvedValue(currentUser);
 		mockUserRepo.findById.mockResolvedValue(currentUser);
