@@ -2,3 +2,8 @@ export * from "./password";
 export * from "./pong";
 export * from "./session";
 export * from "./user";
+export * from "./value_object";
+export * from "./match";
+export * from "./match_history";
+export * from "./friendship";
+export * from "./direct_message";
