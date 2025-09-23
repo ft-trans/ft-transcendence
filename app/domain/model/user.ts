@@ -53,9 +53,11 @@ export class Username extends ValueObject<string, "Username"> {
 }
 
 export class UserAvatar extends ValueObject<string, "UserAvatar"> {
+	static readonly DEFAULT_AVATAR = "";
+
 	protected validate(value: string): void {
 		// 空文字列の場合はデフォルトアバターを使用
-		if (value === "") {
+		if (value === UserAvatar.DEFAULT_AVATAR) {
 			return;
 		}
 		// URLまたはファイルパスの基本的な検証
@@ -101,7 +103,7 @@ export class User {
 		passwordDigest?: string,
 	): User {
 		const id = new UserId(ulid());
-		const defaultAvatar = avatar || new UserAvatar(""); // デフォルトアバター
+		const defaultAvatar = avatar || new UserAvatar(UserAvatar.DEFAULT_AVATAR); // デフォルトアバター
 		const defaultStatus = new UserStatusValue("offline");
 		return new User(
 			id,
