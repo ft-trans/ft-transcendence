@@ -1,4 +1,4 @@
-import { User, UserEmail, UserId } from "@domain/model";
+import { User, UserEmail, UserId, Username, UserAvatar, UserStatusValue, UserStatus } from "@domain/model";
 import type { IUserRepository } from "@domain/repository";
 import type { Client } from "./prisma";
 
@@ -10,12 +10,18 @@ export class UserRepository implements IUserRepository {
 			data: {
 				id: user.id.value,
 				email: user.email.value,
+				username: user.username.value,
+				avatar: user.avatar.value,
+				status: user.status.value,
 				passwordDigest: user.passwordDigest,
 			},
 		});
 		return User.reconstruct(
 			new UserId(createdUser.id),
 			new UserEmail(createdUser.email),
+			new Username(createdUser.username),
+			new UserAvatar(createdUser.avatar),
+			new UserStatusValue(createdUser.status as UserStatus),
 			createdUser.passwordDigest,
 		);
 	}
@@ -27,12 +33,18 @@ export class UserRepository implements IUserRepository {
 			},
 			data: {
 				email: user.email.value,
+				username: user.username.value,
+				avatar: user.avatar.value,
+				status: user.status.value,
 				passwordDigest: user.passwordDigest,
 			},
 		});
 		return User.reconstruct(
 			new UserId(updatedUser.id),
 			new UserEmail(updatedUser.email),
+			new Username(updatedUser.username),
+			new UserAvatar(updatedUser.avatar),
+			new UserStatusValue(updatedUser.status as UserStatus),
 			updatedUser.passwordDigest,
 		);
 	}
@@ -46,6 +58,9 @@ export class UserRepository implements IUserRepository {
 		return User.reconstruct(
 			new UserId(deletedUser.id),
 			new UserEmail(deletedUser.email),
+			new Username(deletedUser.username),
+			new UserAvatar(deletedUser.avatar),
+			new UserStatusValue(deletedUser.status as UserStatus),
 			deletedUser.passwordDigest,
 		);
 	}
@@ -62,6 +77,9 @@ export class UserRepository implements IUserRepository {
 		return User.reconstruct(
 			new UserId(user.id),
 			new UserEmail(user.email),
+			new Username(user.username),
+			new UserAvatar(user.avatar),
+			new UserStatusValue(user.status as UserStatus),
 			user.passwordDigest,
 		);
 	}
@@ -78,6 +96,28 @@ export class UserRepository implements IUserRepository {
 		return User.reconstruct(
 			new UserId(user.id),
 			new UserEmail(user.email),
+			new Username(user.username),
+			new UserAvatar(user.avatar),
+			new UserStatusValue(user.status as UserStatus),
+			user.passwordDigest,
+		);
+	}
+
+	async findByUsername(username: Username): Promise<User | undefined> {
+		const user = await this.client.user.findUnique({
+			where: {
+				username: username.value,
+			},
+		});
+		if (!user) {
+			return undefined;
+		}
+		return User.reconstruct(
+			new UserId(user.id),
+			new UserEmail(user.email),
+			new Username(user.username),
+			new UserAvatar(user.avatar),
+			new UserStatusValue(user.status as UserStatus),
 			user.passwordDigest,
 		);
 	}

@@ -1,13 +1,22 @@
 import { DirectMessage } from "@domain/model/direct_message";
-import { User, UserEmail, UserId } from "@domain/model/user";
+import { User, UserEmail, UserId, Username, UserAvatar, UserStatusValue, UserStatus } from "@domain/model/user";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
 import type { Client } from "./prisma";
 
 // PrismaのUserモデルからドメインのUserモデルへ変換
-const toUserDomain = (prismaUser: { id: string; email: string }): User => {
+const toUserDomain = (prismaUser: { 
+	id: string; 
+	email: string; 
+	username: string;
+	avatar: string;
+	status: string;
+}): User => {
 	return User.reconstruct(
 		new UserId(prismaUser.id),
 		new UserEmail(prismaUser.email),
+		new Username(prismaUser.username),
+		new UserAvatar(prismaUser.avatar),
+		new UserStatusValue(prismaUser.status as UserStatus),
 	);
 };
 
@@ -17,8 +26,8 @@ const toDirectMessageDomain = (prismaMessage: {
 	content: string;
 	isRead: boolean;
 	sentAt: Date;
-	sender: { id: string; email: string | null };
-	receiver: { id: string; email: string | null };
+	sender: { id: string; email: string; username: string; avatar: string; status: string };
+	receiver: { id: string; email: string; username: string; avatar: string; status: string };
 }): DirectMessage => {
 	const sender = toUserDomain(prismaMessage.sender);
 	const receiver = toUserDomain(prismaMessage.receiver);
