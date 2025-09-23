@@ -1,6 +1,6 @@
 // ==> app/usecase/auth/register_user_usecase.spec.ts <==
 import { ErrBadRequest } from "@domain/error";
-import { User, UserEmail } from "@domain/model";
+import { User, UserEmail, Username } from "@domain/model";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
@@ -21,10 +21,11 @@ describe("RegisterUserUsecase", () => {
 	});
 
 	it("should create a new user and return it", async () => {
-		const expectedUser = User.create(new UserEmail("test@example.com"));
+		const expectedUser = User.create(new UserEmail("test@example.com"), new Username("testuser"));
 		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.create.mockResolvedValue(expectedUser);
 		mockUserRepo.findByEmail.mockResolvedValue(undefined);
+		mockUserRepo.findByUsername.mockResolvedValue(undefined);
 		const mockTx = mock<ITransaction>();
 		mockTx.exec.mockImplementation(async (callback) => {
 			const repo = {
@@ -40,10 +41,11 @@ describe("RegisterUserUsecase", () => {
 		});
 
 		const usecase = new RegisterUserUsecase(mockTx);
-		const input = { email: "test@example.com", password: "ValidPass123" };
+		const input = { email: "test@example.com", username: "testuser", password: "ValidPass123" };
 		const user = await usecase.execute(input);
 
 		expect(user.email).toEqual(expectedUser.email);
+		expect(user.username).toEqual(expectedUser.username);
 	});
 
 	it("should throw BadRequestError if password is too short", async () => {
@@ -64,15 +66,16 @@ describe("RegisterUserUsecase", () => {
 		});
 
 		const usecase = new RegisterUserUsecase(mockTx);
-		const input = { email: "test@example.com", password: "short" };
+		const input = { email: "test@example.com", username: "testuser", password: "short" };
 
 		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 	});
 
 	it("should throw BadRequestError if email is already used", async () => {
-		const existingUser = User.create(new UserEmail("test@example.com"));
+		const existingUser = User.create(new UserEmail("test@example.com"), new Username("testuser"));
 		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findByEmail.mockResolvedValue(existingUser);
+		mockUserRepo.findByUsername.mockResolvedValue(undefined);
 		const mockTx = mock<ITransaction>();
 		mockTx.exec.mockImplementation(async (callback) => {
 			const repo = {
@@ -88,7 +91,7 @@ describe("RegisterUserUsecase", () => {
 		});
 
 		const usecase = new RegisterUserUsecase(mockTx);
-		const input = { email: "test@example.com", password: "ValidPass123" };
+		const input = { email: "test@example.com", username: "testuser", password: "ValidPass123" };
 
 		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 	});

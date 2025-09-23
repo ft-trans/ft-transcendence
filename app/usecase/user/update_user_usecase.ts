@@ -1,10 +1,12 @@
 import { ErrBadRequest, ErrNotFound } from "@domain/error";
-import { User, UserEmail, UserId } from "@domain/model";
+import { User, UserEmail, UserId, Username, UserAvatar } from "@domain/model";
 import type { ITransaction } from "@usecase/transaction";
 
 export type UpdateUserUsecaseInput = {
 	id: string;
-	email: string;
+	email?: string;
+	username?: string;
+	avatar?: string;
 };
 
 export class UpdateUserUsecase {
@@ -19,23 +21,44 @@ export class UpdateUserUsecase {
 				throw new ErrNotFound();
 			}
 
-			const email = new UserEmail(input.email);
-			const updatedUser = User.reconstruct(currentUser.id, email);
+			const email = input.email ? new UserEmail(input.email) : currentUser.email;
+			const username = input.username ? new Username(input.username) : currentUser.username;
+			const avatar = input.avatar !== undefined ? new UserAvatar(input.avatar) : currentUser.avatar;
+
+			const updatedUser = currentUser.updateProfile(email, username, avatar);
 
 			if (!currentUser.isModified(updatedUser)) {
 				return currentUser;
 			}
 
-			const existingUserByEmail = await userRepo.findByEmail(email);
-			if (
-				existingUserByEmail &&
-				!existingUserByEmail.id.equals(currentUser.id)
-			) {
-				throw new ErrBadRequest({
-					details: {
-						userEmail: "メールアドレスは既に使用されています",
-					},
-				});
+			// メールアドレスの重複チェック
+			if (input.email) {
+				const existingUserByEmail = await userRepo.findByEmail(email);
+				if (
+					existingUserByEmail &&
+					!existingUserByEmail.id.equals(currentUser.id)
+				) {
+					throw new ErrBadRequest({
+						details: {
+							userEmail: "メールアドレスは既に使用されています",
+						},
+					});
+				}
+			}
+
+			// ユーザー名の重複チェック
+			if (input.username) {
+				const existingUserByUsername = await userRepo.findByUsername(username);
+				if (
+					existingUserByUsername &&
+					!existingUserByUsername.id.equals(currentUser.id)
+				) {
+					throw new ErrBadRequest({
+						details: {
+							username: "ユーザー名は既に使用されています",
+						},
+					});
+				}
 			}
 
 			return await userRepo.update(updatedUser);
