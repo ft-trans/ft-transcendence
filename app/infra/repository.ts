@@ -5,19 +5,18 @@ import type {
 	IPongClientRepository,
 	IPongLoopRepository,
 	IRepository,
+	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
-import type { FastifyRedis } from "@fastify/redis";
 import { DirectMessageRepository } from "./database/direct_message_repository";
 import { FriendshipRepository } from "./database/friendship_repository";
-import type { Prisma } from "./database/generated";
+import type { Client } from "./database/prisma";
+import { SessionRepository } from "./database/session_repository";
 import { UserRepository } from "./database/user_repository";
 import { PongClientRepository } from "./in_memory/pong_client_repository";
 import { PongLoopRepository } from "./in_memory/pong_loop_repository";
+import type { KvsClient } from "./kvs/client";
 import { PongBallRepository } from "./kvs/pong_ball_repository";
-
-export type Client = Prisma.DefaultPrismaClient | Prisma.TransactionClient;
-export type KvsClient = FastifyRedis;
 
 export class Repository implements IRepository {
 	constructor(
@@ -36,6 +35,10 @@ export class Repository implements IRepository {
 
 	newDirectMessageRepository(): IDirectMessageRepository {
 		return new DirectMessageRepository(this.client);
+	}
+
+	newSessionRepository(): ISessionRepository {
+		return new SessionRepository(this.client);
 	}
 
 	// KVS repositories

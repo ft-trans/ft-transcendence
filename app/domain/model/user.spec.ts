@@ -1,6 +1,7 @@
 import { ErrBadRequest, ErrInternalServer } from "@domain/error";
 import { ulid } from "ulid";
 import { describe, expect, it } from "vitest";
+import { Password } from "./password";
 import { User, UserEmail, UserId } from "./user";
 
 describe("UserId", () => {
@@ -82,5 +83,50 @@ describe("User", () => {
 		expect(user1.isModified(user2)).toBe(false);
 		expect(() => user1.isModified(user3)).toThrowError(new ErrInternalServer());
 		expect(user1.isModified(user4)).toBe(true);
+	});
+
+	describe("authenticated", () => {
+		it("should return true when password matches the digest", () => {
+			const plainPassword = "testPassword123";
+			const password = new Password(plainPassword);
+			const passwordDigest = password.hash();
+			const user = User.reconstruct(
+				new UserId(ulid()),
+				new UserEmail("test@example.com"),
+				passwordDigest,
+			);
+
+			expect(user.authenticated(plainPassword)).toBe(true);
+		});
+
+		it("should return false when password does not match the digest", () => {
+			const plainPassword = "testPassword123";
+			const wrongPassword = "wrongPassword456";
+			const password = new Password(plainPassword);
+			const passwordDigest = password.hash();
+			const user = User.reconstruct(
+				new UserId(ulid()),
+				new UserEmail("test@example.com"),
+				passwordDigest,
+			);
+
+			expect(user.authenticated(wrongPassword)).toBe(false);
+		});
+
+		it("should return false when user has no password digest", () => {
+			const user = User.create(new UserEmail("test@example.com"));
+
+			expect(user.authenticated("anyPassword")).toBe(false);
+		});
+
+		it("should return false when user has undefined password digest", () => {
+			const user = User.reconstruct(
+				new UserId(ulid()),
+				new UserEmail("test@example.com"),
+				undefined,
+			);
+
+			expect(user.authenticated("anyPassword")).toBe(false);
+		});
 	});
 });

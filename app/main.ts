@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import FastifyCookie from "@fastify/cookie";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
 import websocket from "@fastify/websocket";
@@ -10,6 +11,8 @@ import { authController } from "@presentation/controllers/auth_controller";
 import { chatController } from "@presentation/controllers/chat_controller";
 import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
+import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
+import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
 import {
 	JoinChatUsecase,
@@ -41,6 +44,8 @@ const start = async () => {
 			spa: true,
 		});
 
+		await app.register(FastifyCookie);
+
 		const redisUrl = process.env.REDIS_URL;
 		if (!redisUrl) {
 			app.log.error("REDIS_URL is not set");
@@ -52,10 +57,15 @@ const start = async () => {
 		const repo = new Repository(prisma, app.redis);
 		const tx = new Transaction(prisma, app.redis);
 		const registerUserUsecase = new RegisterUserUsecase(tx);
+		const loginUserUsecase = new LoginUserUsecase(tx);
+		const logoutUserUsecase = new LogoutUserUsecase(tx);
+		await app.register(
+			authController(registerUserUsecase, loginUserUsecase, logoutUserUsecase),
+			{ prefix: "/api" },
+		);
 		const updateUserUsecase = new UpdateUserUsecase(tx);
 		const deleteUserUsecase = new DeleteUserUsecase(tx);
 
-		await app.register(authController(registerUserUsecase), { prefix: "/api" });
 		await app.register(
 			profileController(updateUserUsecase, deleteUserUsecase),
 			{ prefix: "/api" },

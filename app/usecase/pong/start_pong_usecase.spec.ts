@@ -4,6 +4,7 @@ import type {
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
+	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
 import { ulid } from "ulid";
@@ -20,6 +21,7 @@ const repo = {
 	newPongBallRepository: () => pongBallRepo,
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
+	newSessionRepository: () => mock<ISessionRepository>(),
 };
 
 describe("StartPongUsecase", () => {

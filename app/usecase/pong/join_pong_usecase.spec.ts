@@ -5,6 +5,7 @@ import type {
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
+	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
 import type { IPongClient } from "@domain/service/pong_client";
@@ -23,6 +24,7 @@ const repo = {
 	newPongBallRepository: () => mock<IPongBallRepository>(),
 	newPongClientRepository: () => pongClientRepo,
 	newPongLoopRepository: () => pongLoopRepo,
+	newSessionRepository: () => mock<ISessionRepository>(),
 };
 
 describe("JoinPongUsecase", () => {

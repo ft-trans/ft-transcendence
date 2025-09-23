@@ -1,10 +1,11 @@
 import { ErrBadRequest, ErrInternalServer } from "@domain/error";
-import { User, UserEmail } from "@domain/model";
+import { Password, User, UserEmail } from "@domain/model";
 import { UserService } from "@domain/service";
 import type { ITransaction } from "@usecase/transaction";
 
 export type RegisterUserUsecaseInput = {
 	email: string;
+	password: string;
 };
 
 export class RegisterUserUsecase {
@@ -12,7 +13,9 @@ export class RegisterUserUsecase {
 
 	async execute(input: RegisterUserUsecaseInput): Promise<User> {
 		const email = new UserEmail(input.email);
-		const newUser = User.create(email);
+		const password = new Password(input.password);
+		const passwordDigest = password.hash();
+		const newUser = User.create(email, passwordDigest);
 
 		const user = await this.tx.exec(async (repo) => {
 			const userRepo = repo.newUserRepository();
