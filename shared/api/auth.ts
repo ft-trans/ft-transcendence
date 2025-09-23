@@ -3,6 +3,7 @@ import { z } from "zod";
 export const registerUserFormSchema = z
 	.object({
 		email: z.email("有効なメールアドレスを入力してください"),
+		username: z.string().min(1, "ユーザー名を入力してください"),
 		password: z.string().min(8, "パスワードは8文字以上である必要があります"),
 		passwordConfirm: z.string(),
 	})
@@ -19,6 +20,7 @@ export const loginUserFormSchema = z.object({
 export type RegisterUserRequest = {
 	user: {
 		email: string;
+		username: string;
 		password: string;
 	};
 };
@@ -27,6 +29,9 @@ export type RegisterUserResponse = {
 	user: {
 		id: string;
 		email: string;
+		username: string;
+		avatar: string;
+		status: string;
 	};
 };
 
