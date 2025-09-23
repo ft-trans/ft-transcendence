@@ -27,7 +27,7 @@ export class SendChatMessageUsecase {
 				type: MESSAGE_TYPES.NEW_MESSAGE,
 				payload: {
 					senderId: message.sender.id.value,
-					senderEmail: message.sender.email.value,
+					senderName: message.sender.username.value,
 					content: message.content,
 					timestamp: message.sentAt.toISOString(),
 				},

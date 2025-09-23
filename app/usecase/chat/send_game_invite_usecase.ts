@@ -38,6 +38,7 @@ export class SendGameInviteUsecase {
 				type: MESSAGE_TYPES.GAME_INVITE,
 				payload: {
 					senderId: sender.id.value,
+					senderName: sender.username.value,
 				},
 			});
 		}
