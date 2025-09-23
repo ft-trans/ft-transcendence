@@ -5,18 +5,14 @@ import FastifyVite from "@fastify/vite";
 import websocket from "@fastify/websocket";
 import { prisma } from "@infra/database/prisma";
 import { Transaction } from "@infra/database/transaction";
-import {
-	InMemoryChatClientRepository,
-	InMemoryRepository,
-} from "@infra/in_memory";
-import { KVSRepository } from "@infra/kvs";
+import { InMemoryChatClientRepository } from "@infra/in_memory/chat_client_repository";
 import { Repository } from "@infra/repository";
-import { apiChatController } from "@presentation/controllers/api_chat_controller";
+import { chatController as apiChatController } from "@presentation/controllers/api/chat_controller";
 import { authController } from "@presentation/controllers/auth_controller";
 import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
 import { relationshipController } from "@presentation/controllers/relationship_controller";
-import { webSocketChatController } from "@presentation/controllers/ws_chat_controller";
+import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
 import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";

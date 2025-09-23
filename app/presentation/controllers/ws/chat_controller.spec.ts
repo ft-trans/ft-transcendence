@@ -1,7 +1,7 @@
 // test/controllers/webSocketController.test.ts
 
 import fastifyWebsocket from "@fastify/websocket";
-import { webSocketChatController } from "@presentation/controllers/ws_chat_controller";
+import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
 import type { JoinChatUsecase } from "@usecase/chat/join_chat_usecase";
 import type { LeaveChatUsecase } from "@usecase/chat/leave_chat_usecase";
 import type { SendChatMessageUsecase } from "@usecase/chat/send_chat_message_usecase";

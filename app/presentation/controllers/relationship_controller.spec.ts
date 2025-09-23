@@ -1,4 +1,11 @@
-import { User, UserEmail, UserId } from "@domain/model/user";
+import {
+	User,
+	UserAvatar,
+	UserEmail,
+	UserId,
+	Username,
+	UserStatusValue,
+} from "@domain/model/user";
 import { relationshipController } from "@presentation/controllers/relationship_controller";
 import type { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
 import type { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
@@ -44,6 +51,9 @@ describe("relationshipController", () => {
 				User.reconstruct(
 					new UserId("01K24DQHXAJ2NFYKPZ812F4HBC"),
 					new UserEmail("friend1@example.com"),
+					new Username("friend1"),
+					new UserAvatar(""),
+					new UserStatusValue("online"),
 				),
 			];
 			getFriendsUsecase.execute.mockResolvedValue(friends);

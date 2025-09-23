@@ -8,7 +8,7 @@ import type { SendGameInviteUsecase } from "@usecase/chat/send_game_invite_useca
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import type WebSocket from "ws";
 
-export const webSocketChatController = (
+export const chatController = (
 	joinChatUsecase: JoinChatUsecase,
 	leaveChatUsecase: LeaveChatUsecase,
 	sendChatMessageUsecase: SendChatMessageUsecase,
