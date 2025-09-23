@@ -5,7 +5,7 @@ import type { Client } from "./prisma";
 export class SessionRepository implements ISessionRepository {
 	constructor(private readonly prisma: Client) {}
 
-	async create(session: Session): Promise<Session | undefined> {
+	async create(session: Session): Promise<Session> {
 		const createdSession = await this.prisma.session.create({
 			data: {
 				id: session.id.value,
