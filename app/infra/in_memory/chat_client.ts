@@ -3,19 +3,20 @@ import type { ServerMessage } from "@shared/api/chat";
 import type WebSocket from "ws";
 
 export class InMemoryChatClient implements IChatClient {
-	private userId: string | undefined;
+	private userId: string;
 
-	constructor(private readonly client: WebSocket) {}
+	constructor(
+		private readonly client: WebSocket,
+		userId: string,
+	) {
+		this.userId = userId;
+	}
 
 	send(message: ServerMessage): void {
 		this.client.send(JSON.stringify(message));
 	}
 
-	setUserId(userId: string): void {
-		this.userId = userId;
-	}
-
-	getUserId(): string | undefined {
+	getUserId(): string {
 		return this.userId;
 	}
 }

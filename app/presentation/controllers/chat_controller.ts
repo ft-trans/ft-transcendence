@@ -1,5 +1,6 @@
 import { InMemoryChatClient } from "@infra/in_memory/chat_client";
 import type { ClientMessage } from "@shared/api/chat";
+import { MESSAGE_TYPES } from "@shared/api/chat";
 import type { JoinChatUsecase } from "@usecase/chat/join_chat_usecase";
 import type { LeaveChatUsecase } from "@usecase/chat/leave_chat_usecase";
 import type { SendChatMessageUsecase } from "@usecase/chat/send_chat_message_usecase";
@@ -41,8 +42,7 @@ const onConnectClient = (
 			return;
 		}
 
-		const chatClient = new InMemoryChatClient(socket);
-		chatClient.setUserId(userId);
+		const chatClient = new InMemoryChatClient(socket, userId);
 
 		joinChatUsecase.execute(chatClient);
 
@@ -51,13 +51,13 @@ const onConnectClient = (
 				const message: ClientMessage = JSON.parse(event.data.toString());
 
 				switch (message.type) {
-					case "sendMessage":
+					case MESSAGE_TYPES.SEND_MESSAGE:
 						await sendChatMessageUsecase.execute({
 							senderId: userId,
 							...message.payload,
 						});
 						break;
-					case "sendGameInvite":
+					case MESSAGE_TYPES.SEND_GAME_INVITE:
 						await sendGameInviteUsecase.execute({
 							senderId: userId,
 							...message.payload,

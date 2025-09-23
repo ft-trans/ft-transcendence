@@ -2,6 +2,7 @@ import { DirectMessage } from "@domain/model/direct_message";
 import { User, UserEmail } from "@domain/model/user";
 import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
 import type { IChatClient } from "@domain/service/chat_client";
+import { MESSAGE_TYPES } from "@shared/api/chat";
 import type { SendDirectMessageUsecase } from "@usecase/chat/send_direct_message_usecase";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
@@ -39,7 +40,7 @@ describe("SendChatMessageUsecase", () => {
 		expect(sendDirectMessageUsecase.execute).toHaveBeenCalledWith(input);
 		expect(chatClientRepo.findByUserId).toHaveBeenCalledWith(receiver.id);
 		expect(receiverClient.send).toHaveBeenCalledWith({
-			type: "newMessage",
+			type: MESSAGE_TYPES.NEW_MESSAGE,
 			payload: {
 				senderId: sender.id.value,
 				senderEmail: sender.email.value,

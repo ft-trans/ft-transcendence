@@ -1,5 +1,6 @@
 import { UserId } from "@domain/model";
 import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
+import { MESSAGE_TYPES } from "@shared/api/chat";
 import type { SendDirectMessageUsecase } from "@usecase/chat/send_direct_message_usecase";
 
 type ISendChatMessageUsecase = {
@@ -23,7 +24,7 @@ export class SendChatMessageUsecase {
 
 		if (receiverClient) {
 			receiverClient.send({
-				type: "newMessage",
+				type: MESSAGE_TYPES.NEW_MESSAGE,
 				payload: {
 					senderId: message.sender.id.value,
 					senderEmail: message.sender.email.value,

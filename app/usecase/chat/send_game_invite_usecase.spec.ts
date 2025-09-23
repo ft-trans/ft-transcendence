@@ -3,6 +3,7 @@ import { User, UserEmail } from "@domain/model/user";
 import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
 import type { IChatClient } from "@domain/service/chat_client";
+import { MESSAGE_TYPES } from "@shared/api/chat";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { SendGameInviteUsecase } from "./send_game_invite_usecase";
@@ -34,10 +35,9 @@ describe("SendGameInviteUsecase", () => {
 		expect(userRepo.findById).toHaveBeenCalledWith(sender.id);
 		expect(chatClientRepo.findByUserId).toHaveBeenCalledWith(receiver.id);
 		expect(receiverClient.send).toHaveBeenCalledWith({
-			type: "gameInvite",
+			type: MESSAGE_TYPES.GAME_INVITE,
 			payload: {
 				senderId: sender.id.value,
-				senderEmail: sender.email.value,
 			},
 		});
 	});

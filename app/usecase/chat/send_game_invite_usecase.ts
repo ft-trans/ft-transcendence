@@ -2,6 +2,7 @@ import { ErrBadRequest, ErrNotFound } from "@domain/error";
 import { UserId } from "@domain/model";
 import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
+import { MESSAGE_TYPES } from "@shared/api/chat";
 
 type ISendGameInviteUsecase = {
 	senderId: string;
@@ -34,10 +35,9 @@ export class SendGameInviteUsecase {
 
 		if (receiverClient) {
 			receiverClient.send({
-				type: "gameInvite",
+				type: MESSAGE_TYPES.GAME_INVITE,
 				payload: {
 					senderId: sender.id.value,
-					senderEmail: sender.email.value,
 				},
 			});
 		}
