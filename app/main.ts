@@ -2,13 +2,10 @@ import { resolve } from "node:path";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
 import websocket from "@fastify/websocket";
-import { Transaction, UserRepository } from "@infra/database";
 import { prisma } from "@infra/database/prisma";
-import {
-	InMemoryChatClientRepository,
-	InMemoryRepository,
-} from "@infra/in_memory";
-import { KVSRepository } from "@infra/kvs";
+import { Transaction } from "@infra/database/transaction";
+import { Repository } from "@infra/repository";
+import { InMemoryChatClientRepository } from "@infra/in_memory/chat_client_repository";
 import { authController } from "@presentation/controllers/auth_controller";
 import { chatController } from "@presentation/controllers/chat_controller";
 import { pongController } from "@presentation/controllers/pong_controller";
@@ -52,9 +49,8 @@ const start = async () => {
 
 		await app.register(websocket);
 		await app.register(FastifyRedis, { url: redisUrl });
-		const kvsRepo = new KVSRepository(app.redis);
-		const inMemRepo = new InMemoryRepository();
-		const tx = new Transaction(prisma);
+		const repo = new Repository(prisma, app.redis);
+		const tx = new Transaction(prisma, app.redis);
 		const registerUserUsecase = new RegisterUserUsecase(tx);
 		const updateUserUsecase = new UpdateUserUsecase(tx);
 		const deleteUserUsecase = new DeleteUserUsecase(tx);
@@ -64,9 +60,9 @@ const start = async () => {
 			profileController(updateUserUsecase, deleteUserUsecase),
 			{ prefix: "/api" },
 		);
-		const joinPongUsecase = new JoinPongUsecase(inMemRepo, kvsRepo);
-		const leavePongUsecase = new LeavePongUsecase(inMemRepo, kvsRepo);
-		const startPongUsecase = new StartPongUsecase(kvsRepo);
+		const joinPongUsecase = new JoinPongUsecase(repo);
+		const leavePongUsecase = new LeavePongUsecase(repo);
+		const startPongUsecase = new StartPongUsecase(repo);
 		app.register(
 			pongController(joinPongUsecase, leavePongUsecase, startPongUsecase),
 			{ prefix: "/ws" },
@@ -78,9 +74,8 @@ const start = async () => {
 			sendDirectMessageUsecase,
 			chatClientRepository,
 		);
-		const userRepository = new UserRepository(prisma);
 		const sendGameInviteUsecase = new SendGameInviteUsecase(
-			userRepository,
+			repo.newUserRepository(),
 			chatClientRepository,
 		);
 		const joinChatUsecase = new JoinChatUsecase(chatClientRepository);

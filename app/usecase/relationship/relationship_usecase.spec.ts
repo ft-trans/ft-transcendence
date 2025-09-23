@@ -2,6 +2,11 @@
 import { ErrBadRequest, ErrForbidden, ErrNotFound } from "@domain/error";
 import { Friendship } from "@domain/model/friendship";
 import { User, UserEmail } from "@domain/model/user";
+import type {
+	IPongBallRepository,
+	IPongClientRepository,
+	IPongLoopRepository,
+} from "@domain/repository";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
@@ -27,6 +32,9 @@ const mockRepos = {
 	newUserRepository: () => userRepo,
 	newFriendshipRepository: () => friendshipRepo,
 	newDirectMessageRepository: () => directMessageRepo,
+	newPongBallRepository: () => mock<IPongBallRepository>(),
+	newPongClientRepository: () => mock<IPongClientRepository>(),
+	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 };
 tx.exec.mockImplementation(async (callback) => callback(mockRepos));
 
