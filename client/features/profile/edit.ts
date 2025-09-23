@@ -1,4 +1,5 @@
 import {
+	type GetProfileResponse,
 	type UpdateProfileRequest,
 	type UpdateProfileResponse,
 	updateProfileFormSchema,
@@ -14,7 +15,22 @@ import {
 import { annotateZodErrors } from "client/components/form/error";
 
 export class EditProfile extends Component {
-	onLoad(): void {
+	private currentUser: GetProfileResponse["user"] | null = null;
+
+	async onLoad(): Promise<void> {
+		// 現在のユーザー情報を取得
+		try {
+			const response = await new ApiClient().get<GetProfileResponse>("/api/profile");
+			this.currentUser = response.user;
+			this.populateForm();
+		} catch (error) {
+			console.error("Failed to load user profile:", error);
+			new FloatingBanner({
+				message: "プロフィール情報の読み込みに失敗しました",
+				type: "error",
+			}).show();
+		}
+
 		const form = document.getElementById("profile-form");
 		if (form && form instanceof HTMLFormElement) {
 			form.addEventListener("submit", async (e) => {
@@ -22,6 +38,8 @@ export class EditProfile extends Component {
 				const formData = new FormData(form);
 				const rawData = {
 					email: formData.get("email"),
+					username: formData.get("username"),
+					avatar: formData.get("avatar"),
 				};
 
 				const input = updateProfileFormSchema.safeParse(rawData);
@@ -36,7 +54,13 @@ export class EditProfile extends Component {
 				// TODO: APIエラーのハンドリング
 				await new ApiClient().put<UpdateProfileRequest, UpdateProfileResponse>(
 					"/api/profile",
-					{ user: { email: input.data.email } },
+					{ 
+						user: { 
+							email: input.data.email,
+							username: input.data.username,
+							avatar: input.data.avatar,
+						} 
+					},
 				);
 			});
 		}
@@ -52,6 +76,18 @@ export class EditProfile extends Component {
 		}
 	}
 
+	private populateForm(): void {
+		if (!this.currentUser) return;
+
+		const emailInput = document.getElementById("email") as HTMLInputElement;
+		const usernameInput = document.getElementById("username") as HTMLInputElement;
+		const avatarInput = document.getElementById("avatar") as HTMLInputElement;
+
+		if (emailInput) emailInput.value = this.currentUser.email || "";
+		if (usernameInput) usernameInput.value = this.currentUser.username || "";
+		if (avatarInput) avatarInput.value = this.currentUser.avatar || "";
+	}
+
 	render(): string {
 		return `
 <div>
@@ -64,6 +100,19 @@ export class EditProfile extends Component {
 							type: "email",
 							autocomplete: "email",
 							labelText: "メールアドレス",
+						}).render()}
+            ${new FormInput({
+							id: "username",
+							name: "username",
+							type: "text",
+							autocomplete: "username",
+							labelText: "ユーザー名",
+						}).render()}
+            ${new FormInput({
+							id: "avatar",
+							name: "avatar",
+							type: "url",
+							labelText: "アバターURL",
 						}).render()}
             <div class="flex justify-center">
                 ${new Button({
