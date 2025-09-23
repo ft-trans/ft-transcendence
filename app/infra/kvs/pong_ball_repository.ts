@@ -1,9 +1,9 @@
 import type { MatchId, PongBall } from "@domain/model";
 import type { IPongBallRepository } from "@domain/repository";
-import type { Client } from "./repository";
+import type { KvsClient } from "../repository";
 
 export class PongBallRepository implements IPongBallRepository {
-	constructor(private readonly client: Client) {}
+	constructor(private readonly client: KvsClient) {}
 
 	async set(matchId: MatchId, ball: PongBall): Promise<PongBall> {
 		await this.client.set(this.getKey(matchId), JSON.stringify(ball));

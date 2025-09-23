@@ -1,6 +1,6 @@
 import { Session, SessionId, type SessionToken, UserId } from "@domain/model";
 import type { ISessionRepository } from "@domain/repository";
-import type { Client } from "./repository";
+import type { Client } from "./prisma";
 
 export class SessionRepository implements ISessionRepository {
 	constructor(private readonly prisma: Client) {}

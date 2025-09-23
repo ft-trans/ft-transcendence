@@ -4,6 +4,9 @@ import { User, UserEmail } from "@domain/model";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IPongBallRepository,
+	IPongClientRepository,
+	IPongLoopRepository,
 	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
@@ -13,6 +16,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { UpdateUserUsecase } from "./update_user_usecase";
 
+const mockUserRepo = mock<IUserRepository>();
+const repo = {
+	newUserRepository: () => mockUserRepo,
+	newFriendshipRepository: () => mock<IFriendshipRepository>(),
+	newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+	newPongBallRepository: () => mock<IPongBallRepository>(),
+	newPongClientRepository: () => mock<IPongClientRepository>(),
+	newPongLoopRepository: () => mock<IPongLoopRepository>(),
+	newSessionRepository: () => mock<ISessionRepository>(),
+};
+
+const mockTx = mock<ITransaction>();
+mockTx.exec.mockImplementation(async (callback) => {
+	return callback(repo);
+});
+
 describe("UpdateUserUsecase", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -21,7 +40,6 @@ describe("UpdateUserUsecase", () => {
 	it("should update a user and return it", async () => {
 		const currentUser = User.create(new UserEmail("current@example.com"));
 		const expectedUser = User.create(new UserEmail("edit@example.com"));
-		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.update.mockResolvedValue(expectedUser);
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		mockUserRepo.findByEmail.mockResolvedValue(undefined);
@@ -31,6 +49,9 @@ describe("UpdateUserUsecase", () => {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 				newSessionRepository: () => mock<ISessionRepository>(),
 			};
 			return callback(repo);
@@ -46,7 +67,6 @@ describe("UpdateUserUsecase", () => {
 
 	it("should return current user without update when no changes", async () => {
 		const currentUser = User.create(new UserEmail("same@example.com"));
-		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		// don't call update
 		mockUserRepo.update.mockResolvedValue(undefined);
@@ -57,6 +77,9 @@ describe("UpdateUserUsecase", () => {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 				newSessionRepository: () => mock<ISessionRepository>(),
 			};
 			return callback(repo);
@@ -75,7 +98,6 @@ describe("UpdateUserUsecase", () => {
 		const currentUser = User.create(new UserEmail("current@example.com"));
 		const existingUser = User.create(new UserEmail("edit@example.com"));
 
-		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		mockUserRepo.findByEmail.mockResolvedValue(existingUser);
 
@@ -85,6 +107,9 @@ describe("UpdateUserUsecase", () => {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 				newSessionRepository: () => mock<ISessionRepository>(),
 			};
 			return callback(repo);
@@ -104,7 +129,6 @@ describe("UpdateUserUsecase", () => {
 	});
 
 	it("should throw NotFoundError if user does not exist", async () => {
-		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findById.mockResolvedValue(undefined);
 
 		const mockTx = mock<ITransaction>();
@@ -113,6 +137,9 @@ describe("UpdateUserUsecase", () => {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 				newSessionRepository: () => mock<ISessionRepository>(),
 			};
 			return callback(repo);

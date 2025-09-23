@@ -2,6 +2,11 @@ import { ErrBadRequest, ErrForbidden, ErrNotFound } from "@domain/error";
 import { DirectMessage } from "@domain/model/direct_message";
 import { Friendship } from "@domain/model/friendship";
 import { User, UserEmail } from "@domain/model/user";
+import type {
+	IPongBallRepository,
+	IPongClientRepository,
+	IPongLoopRepository,
+} from "@domain/repository";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
 import type { ISessionRepository } from "@domain/repository/session_repository";
@@ -24,6 +29,9 @@ const mockRepos = {
 	newDirectMessageRepository: () => messageRepo,
 	newFriendshipRepository: () => friendshipRepo,
 	newSessionRepository: () => mock<ISessionRepository>(),
+	newPongBallRepository: () => mock<IPongBallRepository>(),
+	newPongClientRepository: () => mock<IPongClientRepository>(),
+	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 };
 tx.exec.mockImplementation(async (callback) => callback(mockRepos));
 

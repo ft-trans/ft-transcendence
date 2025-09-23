@@ -7,17 +7,16 @@ import type { ISessionRepository } from "./session_repository";
 import type { IUserRepository } from "./user_repository";
 
 export interface IRepository {
+	// database repositories
 	newUserRepository(): IUserRepository;
 	newFriendshipRepository(): IFriendshipRepository;
 	newDirectMessageRepository(): IDirectMessageRepository;
 	newSessionRepository(): ISessionRepository;
-}
 
-export interface IKVSRepository {
+	// KVS repositories
 	newPongBallRepository(): IPongBallRepository;
-}
 
-export interface IInMemoryRepository {
+	// in-memory repositories
 	newPongClientRepository(): IPongClientRepository;
 	newPongLoopRepository(): IPongLoopRepository;
 }

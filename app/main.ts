@@ -3,10 +3,9 @@ import FastifyCookie from "@fastify/cookie";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
 import websocket from "@fastify/websocket";
-import { Transaction } from "@infra/database";
 import { prisma } from "@infra/database/prisma";
-import { InMemoryRepository } from "@infra/in_memory";
-import { KVSRepository } from "@infra/kvs";
+import { Transaction } from "@infra/database/transaction";
+import { Repository } from "@infra/repository";
 import { authController } from "@presentation/controllers/auth_controller";
 import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
@@ -46,9 +45,8 @@ const start = async () => {
 
 		await app.register(websocket);
 		await app.register(FastifyRedis, { url: redisUrl });
-		const kvsRepo = new KVSRepository(app.redis);
-		const inMemRepo = new InMemoryRepository();
-		const tx = new Transaction(prisma);
+		const repo = new Repository(prisma, app.redis);
+		const tx = new Transaction(prisma, app.redis);
 		const registerUserUsecase = new RegisterUserUsecase(tx);
 		const loginUserUsecase = new LoginUserUsecase(tx);
 		const logoutUserUsecase = new LogoutUserUsecase(tx);
@@ -63,9 +61,9 @@ const start = async () => {
 			profileController(updateUserUsecase, deleteUserUsecase),
 			{ prefix: "/api" },
 		);
-		const joinPongUsecase = new JoinPongUsecase(inMemRepo, kvsRepo);
-		const leavePongUsecase = new LeavePongUsecase(inMemRepo, kvsRepo);
-		const startPongUsecase = new StartPongUsecase(kvsRepo);
+		const joinPongUsecase = new JoinPongUsecase(repo);
+		const leavePongUsecase = new LeavePongUsecase(repo);
+		const startPongUsecase = new StartPongUsecase(repo);
 		app.register(
 			pongController(joinPongUsecase, leavePongUsecase, startPongUsecase),
 			{ prefix: "/ws" },

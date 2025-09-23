@@ -1,6 +1,6 @@
 import { User, UserEmail, UserId } from "@domain/model";
 import type { IUserRepository } from "@domain/repository";
-import type { Client } from "./repository";
+import type { Client } from "./prisma";
 
 export class UserRepository implements IUserRepository {
 	constructor(private readonly client: Client) {}

@@ -1,6 +1,5 @@
 import type { PongGameStateResponse } from "@shared/api/pong";
-import { Component, SectionTitle } from "client/components";
-
+import { Component, type RouteParams, SectionTitle } from "client/components";
 import { PongGame } from "client/components/pong_game";
 
 export class MatchesPong extends Component {
@@ -11,16 +10,16 @@ export class MatchesPong extends Component {
 		this.pongGame = new PongGame();
 	}
 
-	addEventListeners(): void {
+	onLoad(params: RouteParams): void {
 		const pongCourt = document.getElementById("pong-court");
 		if (pongCourt) {
 			this.pongGame.appendTo(pongCourt);
 		}
 
-		// TODO: 正しい方法でURLからmatch_idを取得
-		const url = new URL(window.location.href);
-		const matchId = url.pathname.split("/").pop() || "";
-
+		const matchId = params.match_id;
+		if (!matchId) {
+			throw new Error("Match ID is required");
+		}
 		const socket = new WebSocket(`/ws/pong/matches/${matchId}`);
 
 		socket.onmessage = (event) => {
