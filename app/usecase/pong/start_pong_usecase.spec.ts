@@ -5,6 +5,7 @@ import type {
 	IPongClientRepository,
 	IPongLoopRepository,
 	IPongPaddleRepository,
+	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
 import { ulid } from "ulid";
@@ -22,6 +23,7 @@ const repo = {
 	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
+	newSessionRepository: () => mock<ISessionRepository>(),
 };
 
 describe("StartPongUsecase", () => {

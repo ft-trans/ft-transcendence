@@ -14,7 +14,7 @@ import {
 import { annotateZodErrors } from "client/components/form/error";
 
 export class Register extends Component {
-	addEventListeners(): void {
+	onLoad(): void {
 		const form = document.getElementById("register-form");
 		if (form && form instanceof HTMLFormElement) {
 			form.addEventListener("submit", async (e) => {
@@ -22,6 +22,8 @@ export class Register extends Component {
 				const formData = new FormData(form);
 				const rawData = {
 					email: formData.get("email"),
+					password: formData.get("password"),
+					passwordConfirm: formData.get("passwordConfirm"),
 				};
 
 				const input = registerUserFormSchema.safeParse(rawData);
@@ -36,7 +38,7 @@ export class Register extends Component {
 				// TODO: APIエラーのハンドリング
 				await new ApiClient().post<RegisterUserRequest, RegisterUserResponse>(
 					"/api/auth/register",
-					{ user: { email: input.data.email } },
+					{ user: { email: input.data.email, password: input.data.password } },
 				);
 			});
 		}
@@ -54,6 +56,18 @@ export class Register extends Component {
 							type: "email",
 							autocomplete: "email",
 							labelText: "メールアドレス",
+						}).render()}
+            ${new FormInput({
+							id: "password",
+							name: "password",
+							type: "password",
+							labelText: "パスワード",
+						}).render()}
+            ${new FormInput({
+							id: "passwordConfirm",
+							name: "passwordConfirm",
+							type: "password",
+							labelText: "パスワード確認",
 						}).render()}
             <div class="flex justify-center">
               ${new Button({

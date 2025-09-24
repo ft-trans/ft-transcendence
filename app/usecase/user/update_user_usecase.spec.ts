@@ -8,6 +8,7 @@ import type {
 	IPongClientRepository,
 	IPongLoopRepository,
 	IPongPaddleRepository,
+	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -25,6 +26,7 @@ const repo = {
 	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
+	newSessionRepository: () => mock<ISessionRepository>(),
 };
 
 const mockTx = mock<ITransaction>();
@@ -43,6 +45,19 @@ describe("UpdateUserUsecase", () => {
 		mockUserRepo.update.mockResolvedValue(expectedUser);
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		mockUserRepo.findByEmail.mockResolvedValue(undefined);
+		const mockTx = mock<ITransaction>();
+		mockTx.exec.mockImplementation(async (callback) => {
+			const repo = {
+				newUserRepository: () => mockUserRepo,
+				newFriendshipRepository: () => mock<IFriendshipRepository>(),
+				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
+			};
+			return callback(repo);
+		});
 
 		const usecase = new UpdateUserUsecase(mockTx);
 		const input = { id: currentUser.id.value, email: "edit@example.com" };
@@ -57,6 +72,20 @@ describe("UpdateUserUsecase", () => {
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		// don't call update
 		mockUserRepo.update.mockResolvedValue(undefined);
+
+		const mockTx = mock<ITransaction>();
+		mockTx.exec.mockImplementation(async (callback) => {
+			const repo = {
+				newUserRepository: () => mockUserRepo,
+				newFriendshipRepository: () => mock<IFriendshipRepository>(),
+				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
+			};
+			return callback(repo);
+		});
 
 		const usecase = new UpdateUserUsecase(mockTx);
 		const input = { id: currentUser.id.value, email: currentUser.email.value };
@@ -74,6 +103,20 @@ describe("UpdateUserUsecase", () => {
 		mockUserRepo.findById.mockResolvedValue(currentUser);
 		mockUserRepo.findByEmail.mockResolvedValue(existingUser);
 
+		const mockTx = mock<ITransaction>();
+		mockTx.exec.mockImplementation(async (callback) => {
+			const repo = {
+				newUserRepository: () => mockUserRepo,
+				newFriendshipRepository: () => mock<IFriendshipRepository>(),
+				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
+			};
+			return callback(repo);
+		});
+
 		const usecase = new UpdateUserUsecase(mockTx);
 		const input = { id: currentUser.id.value, email: existingUser.email.value };
 
@@ -89,6 +132,20 @@ describe("UpdateUserUsecase", () => {
 
 	it("should throw NotFoundError if user does not exist", async () => {
 		mockUserRepo.findById.mockResolvedValue(undefined);
+
+		const mockTx = mock<ITransaction>();
+		mockTx.exec.mockImplementation(async (callback) => {
+			const repo = {
+				newUserRepository: () => mockUserRepo,
+				newFriendshipRepository: () => mock<IFriendshipRepository>(),
+				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
+			};
+			return callback(repo);
+		});
 
 		const usecase = new UpdateUserUsecase(mockTx);
 		const input = { id: ulid(), email: "edit@example.com" };

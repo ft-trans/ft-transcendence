@@ -1,6 +1,6 @@
 import { User, UserEmail, UserId } from "@domain/model";
 import type { IUserRepository } from "@domain/repository";
-import type { Client } from "../repository";
+import type { Client } from "./prisma";
 
 export class UserRepository implements IUserRepository {
 	constructor(private readonly client: Client) {}
@@ -10,11 +10,13 @@ export class UserRepository implements IUserRepository {
 			data: {
 				id: user.id.value,
 				email: user.email.value,
+				passwordDigest: user.passwordDigest,
 			},
 		});
 		return User.reconstruct(
 			new UserId(createdUser.id),
 			new UserEmail(createdUser.email),
+			createdUser.passwordDigest,
 		);
 	}
 
@@ -25,11 +27,13 @@ export class UserRepository implements IUserRepository {
 			},
 			data: {
 				email: user.email.value,
+				passwordDigest: user.passwordDigest,
 			},
 		});
 		return User.reconstruct(
 			new UserId(updatedUser.id),
 			new UserEmail(updatedUser.email),
+			updatedUser.passwordDigest,
 		);
 	}
 
@@ -42,6 +46,7 @@ export class UserRepository implements IUserRepository {
 		return User.reconstruct(
 			new UserId(deletedUser.id),
 			new UserEmail(deletedUser.email),
+			deletedUser.passwordDigest,
 		);
 	}
 
@@ -54,7 +59,11 @@ export class UserRepository implements IUserRepository {
 		if (!user) {
 			return undefined;
 		}
-		return User.reconstruct(new UserId(user.id), new UserEmail(user.email));
+		return User.reconstruct(
+			new UserId(user.id),
+			new UserEmail(user.email),
+			user.passwordDigest,
+		);
 	}
 
 	async findByEmail(email: UserEmail): Promise<User | undefined> {
@@ -66,6 +75,10 @@ export class UserRepository implements IUserRepository {
 		if (!user) {
 			return undefined;
 		}
-		return User.reconstruct(new UserId(user.id), new UserEmail(user.email));
+		return User.reconstruct(
+			new UserId(user.id),
+			new UserEmail(user.email),
+			user.passwordDigest,
+		);
 	}
 }

@@ -8,6 +8,7 @@ import type {
 	IPongClientRepository,
 	IPongLoopRepository,
 	IPongPaddleRepository,
+	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -33,6 +34,7 @@ describe("DeleteUserUsecase", () => {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
 				newPongBallRepository: () => mock<IPongBallRepository>(),
 				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
@@ -60,6 +62,7 @@ describe("DeleteUserUsecase", () => {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
 				newPongBallRepository: () => mock<IPongBallRepository>(),
 				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),

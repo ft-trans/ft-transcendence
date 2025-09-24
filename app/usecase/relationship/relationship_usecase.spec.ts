@@ -10,6 +10,7 @@ import type {
 } from "@domain/repository";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
+import type { ISessionRepository } from "@domain/repository/session_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
 import type { ITransaction } from "@usecase/transaction";
 import { ulid } from "ulid";
@@ -33,6 +34,7 @@ const mockRepos = {
 	newUserRepository: () => userRepo,
 	newFriendshipRepository: () => friendshipRepo,
 	newDirectMessageRepository: () => directMessageRepo,
+	newSessionRepository: () => mock<ISessionRepository>(),
 	newPongBallRepository: () => mock<IPongBallRepository>(),
 	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 	newPongClientRepository: () => mock<IPongClientRepository>(),

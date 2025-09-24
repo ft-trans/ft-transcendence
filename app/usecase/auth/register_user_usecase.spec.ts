@@ -8,6 +8,7 @@ import type {
 	IPongClientRepository,
 	IPongLoopRepository,
 	IPongPaddleRepository,
+	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -31,6 +32,7 @@ describe("RegisterUserUsecase", () => {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
 				newPongBallRepository: () => mock<IPongBallRepository>(),
 				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
@@ -40,10 +42,33 @@ describe("RegisterUserUsecase", () => {
 		});
 
 		const usecase = new RegisterUserUsecase(mockTx);
-		const input = { email: "test@example.com" };
+		const input = { email: "test@example.com", password: "ValidPass123" };
 		const user = await usecase.execute(input);
 
 		expect(user.email).toEqual(expectedUser.email);
+	});
+
+	it("should throw BadRequestError if password is too short", async () => {
+		const mockUserRepo = mock<IUserRepository>();
+		mockUserRepo.findByEmail.mockResolvedValue(undefined);
+		const mockTx = mock<ITransaction>();
+		mockTx.exec.mockImplementation(async (callback) => {
+			const repo = {
+				newUserRepository: () => mockUserRepo,
+				newFriendshipRepository: () => mock<IFriendshipRepository>(),
+				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+			};
+			return callback(repo);
+		});
+
+		const usecase = new RegisterUserUsecase(mockTx);
+		const input = { email: "test@example.com", password: "short" };
+
+		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 	});
 
 	it("should throw BadRequestError if email is already used", async () => {
@@ -56,6 +81,7 @@ describe("RegisterUserUsecase", () => {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
 				newPongBallRepository: () => mock<IPongBallRepository>(),
 				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
@@ -65,7 +91,7 @@ describe("RegisterUserUsecase", () => {
 		});
 
 		const usecase = new RegisterUserUsecase(mockTx);
-		const input = { email: "test@example.com" };
+		const input = { email: "test@example.com", password: "ValidPass123" };
 
 		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 	});

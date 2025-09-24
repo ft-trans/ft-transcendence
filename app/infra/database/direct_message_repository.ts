@@ -1,7 +1,7 @@
 import { DirectMessage } from "@domain/model/direct_message";
 import { User, UserEmail, UserId } from "@domain/model/user";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
-import type { Client } from "../repository";
+import type { Client } from "./prisma";
 
 // PrismaのUserモデルからドメインのUserモデルへ変換
 const toUserDomain = (prismaUser: { id: string; email: string }): User => {
