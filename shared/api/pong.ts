@@ -25,18 +25,20 @@ export type PongGameStateResponse = {
 	payload: PongGameStatePayload;
 };
 
-export const pongCommandStart = "pong:start";
-export const pongCommandPaddle1Up = "pong:paddle1:up";
-export const pongCommandPaddle1Down = "pong:paddle1:down";
-export const pongCommandPaddle2Up = "pong:paddle2:up";
-export const pongCommandPaddle2Down = "pong:paddle2:down";
+export const PONG_COMMAND = {
+	START: "pong:start",
+	PADDLE1_UP: "pong:paddle1:up",
+	PADDLE1_DOWN: "pong:paddle1:down",
+	PADDLE2_UP: "pong:paddle2:up",
+	PADDLE2_DOWN: "pong:paddle2:down",
+} as const;
 
 export type PongCommand =
-	| typeof pongCommandStart
-	| typeof pongCommandPaddle1Up
-	| typeof pongCommandPaddle1Down
-	| typeof pongCommandPaddle2Up
-	| typeof pongCommandPaddle2Down;
+	| typeof PONG_COMMAND.START
+	| typeof PONG_COMMAND.PADDLE1_UP
+	| typeof PONG_COMMAND.PADDLE1_DOWN
+	| typeof PONG_COMMAND.PADDLE2_UP
+	| typeof PONG_COMMAND.PADDLE2_DOWN;
 
 export const PongField = {
 	width: 600,

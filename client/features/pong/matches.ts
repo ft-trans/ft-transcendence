@@ -1,11 +1,4 @@
-import {
-	type PongGameStateResponse,
-	pongCommandPaddle1Down,
-	pongCommandPaddle1Up,
-	pongCommandPaddle2Down,
-	pongCommandPaddle2Up,
-	pongCommandStart,
-} from "@shared/api/pong";
+import { PONG_COMMAND, type PongGameStateResponse } from "@shared/api/pong";
 import { Component, type RouteParams, SectionTitle } from "client/components";
 import { PongGame } from "client/components/pong_game";
 
@@ -38,19 +31,19 @@ export class MatchesPong extends Component {
 		document.addEventListener("keydown", (event) => {
 			switch (event.code) {
 				case "Space":
-					socket.send(pongCommandStart);
+					socket.send(PONG_COMMAND.START);
 					break;
 				case "KeyW":
-					socket.send(pongCommandPaddle1Up);
+					socket.send(PONG_COMMAND.PADDLE1_UP);
 					break;
 				case "KeyS":
-					socket.send(pongCommandPaddle1Down);
+					socket.send(PONG_COMMAND.PADDLE1_DOWN);
 					break;
 				case "ArrowUp":
-					socket.send(pongCommandPaddle2Up);
+					socket.send(PONG_COMMAND.PADDLE2_UP);
 					break;
 				case "ArrowDown":
-					socket.send(pongCommandPaddle2Down);
+					socket.send(PONG_COMMAND.PADDLE2_DOWN);
 					break;
 				default:
 					return;
