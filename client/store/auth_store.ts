@@ -6,14 +6,13 @@ type User = {
 
 type AuthState = {
 	isAuthenticated: boolean;
-	user: User | null;
+	user?: User;
 	loading: boolean;
 };
 
 class AuthStore {
 	private state: AuthState = {
 		isAuthenticated: false,
-		user: null,
 		loading: true,
 	};
 
@@ -44,7 +43,6 @@ class AuthStore {
 	clearUser(): void {
 		this.state = {
 			isAuthenticated: false,
-			user: null,
 			loading: false,
 		};
 		this.notify();
