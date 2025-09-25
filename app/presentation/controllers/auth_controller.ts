@@ -132,9 +132,7 @@ const onLogoutUser = (usecase: LogoutUserUsecase) => {
 			path: "/",
 		});
 
-		reply.send({
-			user: req.authenticatedUser,
-		});
+		reply.send();
 	};
 };
 
