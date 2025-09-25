@@ -43,3 +43,10 @@ export type LoginUserResponse = {
 		email: string;
 	};
 };
+
+export type AuthStatusResponse = {
+	user?: {
+		id: string;
+		email: string;
+	};
+};
