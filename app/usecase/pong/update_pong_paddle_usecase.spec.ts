@@ -1,4 +1,4 @@
-import { MatchId, PongPaddle, pongPaddleDy } from "@domain/model/pong";
+import { PongPaddle, pongPaddleDy } from "@domain/model/pong";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
@@ -6,6 +6,7 @@ import type {
 	IPongClientRepository,
 	IPongLoopRepository,
 	IPongPaddleRepository,
+	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
 import { ulid } from "ulid";
@@ -26,6 +27,7 @@ const repo = {
 	newPongPaddleRepository: () => pongPaddleRepo,
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
+	newSessionRepository: () => mock<ISessionRepository>(),
 };
 
 describe("UpdatePongPaddleUsecase", () => {
@@ -35,7 +37,7 @@ describe("UpdatePongPaddleUsecase", () => {
 
 	it("should update paddle position", async () => {
 		const matchId = ulid();
-		const paddle = new PongPaddle({ x: 10, y: 100, player: "player1" });
+		const paddle = new PongPaddle({ x: 10, y: 100 });
 		pongPaddleRepo.get.mockResolvedValue(paddle);
 
 		const usecase = new UpdatePongPaddleUsecase(repo);
@@ -49,7 +51,6 @@ describe("UpdatePongPaddleUsecase", () => {
 		expect(pongPaddleRepo.set).toHaveBeenCalledOnce();
 		expect(ret.y).toBe(paddle.y - pongPaddleDy);
 		expect(ret.x).toBe(paddle.x);
-		expect(ret.player).toBe(paddle.player);
 	});
 
 	it("should return undefined if paddle not found", async () => {

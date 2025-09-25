@@ -16,14 +16,8 @@ export class PongGameEngineService {
 	// this function is called in setInterval
 	async processFrame() {
 		const ball = await this.pongBallRepo.get(this.matchId);
-		if (!ball) {
-			return;
-		}
 		const paddle1 = await this.pongPaddleRepo.get(this.matchId, "player1");
 		const paddle2 = await this.pongPaddleRepo.get(this.matchId, "player2");
-		if (!paddle1 || !paddle2) {
-			return;
-		}
 		const pongGame = new PongGame(ball, { player1: paddle1, player2: paddle2 });
 		const newPongGame = pongGame.calculateFrame();
 

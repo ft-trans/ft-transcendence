@@ -1,4 +1,4 @@
-import type { MatchId, PongBall } from "@domain/model";
+import { type MatchId, PongBall } from "@domain/model";
 import type { IPongBallRepository } from "@domain/repository";
 import type { KvsClient } from "./client";
 
@@ -12,7 +12,7 @@ export class PongBallRepository implements IPongBallRepository {
 
 	async get(matchId: MatchId): Promise<PongBall | undefined> {
 		const data = await this.client.get(this.getKey(matchId));
-		return data ? JSON.parse(data) : undefined;
+		return data ? new PongBall(JSON.parse(data)) : undefined;
 	}
 
 	async delete(matchId: MatchId): Promise<void> {

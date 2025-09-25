@@ -1,6 +1,6 @@
 import { type MatchId, PongPaddle, type PongPlayer } from "@domain/model";
 import type { IPongPaddleRepository } from "@domain/repository";
-import type { KvsClient } from "../repository";
+import type { KvsClient } from "./client";
 
 export class PongPaddleRepository implements IPongPaddleRepository {
 	constructor(private readonly client: KvsClient) {}

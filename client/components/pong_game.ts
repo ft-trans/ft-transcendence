@@ -46,7 +46,7 @@ export class PongGame {
 	private drawBall({ x, y }: { x: number; y: number }) {
 		this.context.fillStyle = "white";
 		this.context.beginPath();
-		this.context.arc(x, y, 5, 0, Math.PI * 2);
+		this.context.arc(x, y, 8, 0, Math.PI * 2);
 		this.context.fill();
 	}
 

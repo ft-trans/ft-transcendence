@@ -1,4 +1,3 @@
-import type { PongGameStateResponse } from "@shared/api/pong";
 import {
 	type PongGameStateResponse,
 	pongCommandPaddle1Down,

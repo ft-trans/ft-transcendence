@@ -59,6 +59,7 @@ describe("RegisterUserUsecase", () => {
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
 				newSessionRepository: () => mock<ISessionRepository>(),
 				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 			};
