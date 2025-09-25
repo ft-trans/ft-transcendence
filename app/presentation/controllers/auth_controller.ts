@@ -1,6 +1,7 @@
 import { ErrBadRequest } from "@domain/error";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import {
+	type AuthStatusResponse,
 	type LoginUserRequest,
 	loginUserFormSchema,
 	type RegisterUserRequest,
@@ -26,6 +27,7 @@ export const authController = (
 			{ preHandler: authPrehandler },
 			onLogoutUser(logoutUserUsecase),
 		);
+		fastify.get("/auth/status", { preHandler: authPrehandler }, onAuthStatus());
 	};
 };
 
@@ -133,5 +135,25 @@ const onLogoutUser = (usecase: LogoutUserUsecase) => {
 		reply.send({
 			user: req.authenticatedUser,
 		});
+	};
+};
+
+const onAuthStatus = () => {
+	return async (
+		req: FastifyRequest,
+		reply: FastifyReply<{
+			Reply: AuthStatusResponse;
+		}>,
+	) => {
+		if (req.authenticatedUser) {
+			reply.send({
+				user: {
+					id: req.authenticatedUser.id,
+					email: req.authenticatedUser.email,
+				},
+			});
+		} else {
+			reply.send({});
+		}
 	};
 };
