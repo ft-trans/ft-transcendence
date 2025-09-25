@@ -1,4 +1,4 @@
-import { MatchId, PongGame, PongPaddle } from "@domain/model";
+import { MatchId, PongGame } from "@domain/model";
 import type { IRepository } from "@domain/repository";
 
 export type StartPongUsecaseInput = {

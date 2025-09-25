@@ -1,15 +1,13 @@
-import { PongField, type PongGameStateResponse } from "@shared/api/pong";
+import type { PongGameStateResponse } from "@shared/api/pong";
 
 export class PongGame {
 	private readonly canvas: HTMLCanvasElement;
 	private readonly context: CanvasRenderingContext2D;
-	readonly width = PongField.width;
-	readonly height = PongField.height;
 
-	constructor() {
+	constructor({ width, height } = { width: 600, height: 400 }) {
 		this.canvas = document.createElement("canvas");
-		this.canvas.width = this.width;
-		this.canvas.height = this.height;
+		this.canvas.width = width;
+		this.canvas.height = height;
 		const ctx = this.canvas.getContext("2d");
 		if (!ctx) {
 			// TODO ユーザーに通知
@@ -24,6 +22,9 @@ export class PongGame {
 	}
 
 	draw(gameState: PongGameStateResponse) {
+		this.canvas.width = gameState.payload.field.width;
+		this.canvas.height = gameState.payload.field.height;
+
 		this.drawField();
 		if (gameState.payload.ball !== undefined) {
 			this.drawBall(gameState.payload.ball);

@@ -39,8 +39,3 @@ export type PongCommand =
 	| typeof PONG_COMMAND.PADDLE1_DOWN
 	| typeof PONG_COMMAND.PADDLE2_UP
 	| typeof PONG_COMMAND.PADDLE2_DOWN;
-
-export const PongField = {
-	width: 600,
-	height: 400,
-};
