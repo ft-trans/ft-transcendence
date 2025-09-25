@@ -25,7 +25,9 @@ export class PongGame {
 
 	draw(gameState: PongGameStateResponse) {
 		this.drawField();
-		this.drawBall(gameState.payload.ball);
+		if (gameState.payload.ball !== undefined) {
+			this.drawBall(gameState.payload.ball);
+		}
 		this.drawPaddle(gameState.payload.paddles.player1);
 		this.drawPaddle(gameState.payload.paddles.player2);
 	}

@@ -107,16 +107,15 @@ export class PongPaddle {
 		let newDy = ball.dy;
 		if (Math.abs(centerRate) < 0.3) {
 			newDx = Math.sign(newDx) * 2;
-			newDy = newDy * 0.1;
+			newDy = newDy * 0.2;
 		} else if (Math.abs(centerRate) < 0.6) {
-			newDx = Math.sign(newDx) * 3;
-			newDy = Math.sign(newDy) * 3;
+			newDx = Math.sign(newDx) * 10;
 		} else if (Math.abs(centerRate) < 0.8) {
 			newDx = Math.sign(newDx) * 3;
 			newDy = Math.sign(centerRate) * 5;
 		} else {
 			newDx = Math.sign(newDx) * 3;
-			newDy = Math.sign(centerRate) * 10;
+			newDy = Math.sign(centerRate) * 8;
 		}
 		newDx *= 1 + rallyTime * 0.15;
 		newDy *= 1 + rallyTime * 0.1;
@@ -205,6 +204,15 @@ export class PongField {
 		}
 		return undefined;
 	}
+
+	scorePoint(ball: PongBall, player: PongPlayer): boolean {
+		const nextBall = ball.next();
+		if (player === "player1") {
+			return nextBall.x < 0;
+		} else {
+			return this.width < nextBall.x;
+		}
+	}
 }
 
 export class PongGame {
@@ -244,7 +252,14 @@ export class PongGame {
 			return new PongGame(newBallField, this.paddles, this.rallyTime);
 		}
 
-		// TODO 点数計算
+		if (this.field.scorePoint(this.ball, "player1")) {
+			// TODO スコア計算
+			return new PongGame(undefined, this.paddles);
+		}
+		if (this.field.scorePoint(this.ball, "player2")) {
+			// TODO スコア計算
+			return new PongGame(undefined, this.paddles);
+		}
 
 		return new PongGame(this.ball.next(), this.paddles, this.rallyTime);
 	}
@@ -252,8 +267,10 @@ export class PongGame {
 	static initialBall(): PongBall {
 		const x = pongFieldSize.width / 2;
 		const y = pongFieldSize.height * Math.random();
-		const dx = 20 * (0.5 - Math.random());
-		const dy = 20 * (0.5 - Math.random());
+		// TODO 点を取られた方に向かって出るようにする。
+		// TODO 最初はplayer1に向かうようにする
+		const dx = -3;
+		const dy = 8 * (0.5 - Math.random());
 		return new PongBall({ x, y, dx, dy });
 	}
 }

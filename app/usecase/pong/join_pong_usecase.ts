@@ -1,4 +1,4 @@
-import { MatchId } from "@domain/model";
+import { MatchId, PongPaddle } from "@domain/model";
 import type { IRepository } from "@domain/repository";
 import { PongLoopService } from "@domain/service";
 import type { IPongClient } from "@domain/service/pong_client";
@@ -16,6 +16,19 @@ export class JoinPongUsecase {
 		const matchId = new MatchId(input.matchId);
 
 		this.repo.newPongClientRepository().add(matchId, input.client);
+
+		const pongPaddleRepo = this.repo.newPongPaddleRepository();
+		await pongPaddleRepo.set(
+			matchId,
+			"player1",
+			PongPaddle.createInitial("player1"),
+		);
+		await pongPaddleRepo.set(
+			matchId,
+			"player2",
+			PongPaddle.createInitial("player2"),
+		);
+
 		this.startLoop(matchId);
 		return matchId;
 	}

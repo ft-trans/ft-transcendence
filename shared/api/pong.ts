@@ -2,7 +2,7 @@ export type PongGameEvent = "gameState";
 
 export type PongGameStatePayload = {
 	field: { width: number; height: number };
-	ball: { x: number; y: number; dx: number; dy: number };
+	ball: { x: number; y: number; dx: number; dy: number } | undefined;
 	paddles: {
 		player1: {
 			x: number;

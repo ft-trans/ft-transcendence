@@ -88,7 +88,7 @@ describe("PongPaddle", () => {
 		expect(newBall.x).toBe(paddle.x + paddle.width + 5);
 		expect(newBall.dx).toBe(3);
 		expect(newBall.y).toBe(paddle.y - 5);
-		expect(newBall.dy).toBe(-10);
+		expect(newBall.dy).toBe(-8);
 	});
 
 	it("should collide with the ball(bottom) by player1", () => {
@@ -104,7 +104,7 @@ describe("PongPaddle", () => {
 		expect(newBall.x).toBe(paddle.x + paddle.width + 5);
 		expect(newBall.dx).toBe(3);
 		expect(newBall.y).toBe(paddle.y + paddle.height - 5);
-		expect(newBall.dy).toBe(10);
+		expect(newBall.dy).toBe(8);
 	});
 
 	it("should collide with the ball(top) by player2", () => {
@@ -120,7 +120,7 @@ describe("PongPaddle", () => {
 		expect(newBall.x).toBe(paddle.x - 5);
 		expect(newBall.dx).toBe(-3);
 		expect(newBall.y).toBe(paddle.y - 5);
-		expect(newBall.dy).toBe(-10);
+		expect(newBall.dy).toBe(-8);
 	});
 
 	it("should collide with the ball(bottom) by player2", () => {
@@ -136,7 +136,7 @@ describe("PongPaddle", () => {
 		expect(newBall.x).toBe(paddle.x - 5);
 		expect(newBall.dx).toBe(-3);
 		expect(newBall.y).toBe(paddle.y + paddle.height - 5);
-		expect(newBall.dy).toBe(10);
+		expect(newBall.dy).toBe(8);
 	});
 });
 

@@ -28,7 +28,11 @@ export class PongGameEngineService {
 			client.send(JSON.stringify(this.toResponse(newPongGame)));
 		});
 
-		await this.pongBallRepo.set(this.matchId, newPongGame.ball);
+		if (newPongGame.ball !== undefined) {
+			await this.pongBallRepo.set(this.matchId, newPongGame.ball);
+		} else {
+			await this.pongBallRepo.delete(this.matchId);
+		}
 	}
 
 	private toResponse(pongGame: PongGame): PongGameStateResponse {
