@@ -71,42 +71,33 @@ describe("SessionToken", () => {
 			expect(hashedToken.length).toBeGreaterThan(0);
 		});
 
-		it("should generate different hashes for same token", () => {
+		it("should generate same hash for same token", () => {
 			const token1 = new SessionToken("a".repeat(32));
 			const token2 = new SessionToken("a".repeat(32));
 			const hash1 = token1.hash();
 			const hash2 = token2.hash();
 
-			expect(hash1).not.toBe(hash2);
+			expect(hash1).toBe(hash2);
 		});
 	});
 
-	describe("isCorrect", () => {
-		it("should return true for correct token", () => {
+	describe("matchesWith", () => {
+		it("should return true for matching hashed token", () => {
 			const plainToken = "a".repeat(32);
 			const sessionToken = new SessionToken(plainToken);
 			const hashedToken = sessionToken.hash();
 
-			expect(
-				SessionToken.isCorrect({
-					plainToken,
-					hashedToken,
-				}),
-			).toBe(true);
+			expect(sessionToken.matchesWith(hashedToken)).toBe(true);
 		});
 
-		it("should return false for incorrect token", () => {
+		it("should return false for non-matching hashed token", () => {
 			const plainToken = "a".repeat(32);
 			const wrongToken = "b".repeat(32);
 			const sessionToken = new SessionToken(plainToken);
-			const hashedToken = sessionToken.hash();
+			const wrongSessionToken = new SessionToken(wrongToken);
+			const wrongHashedToken = wrongSessionToken.hash();
 
-			expect(
-				SessionToken.isCorrect({
-					plainToken: wrongToken,
-					hashedToken,
-				}),
-			).toBe(false);
+			expect(sessionToken.matchesWith(wrongHashedToken)).toBe(false);
 		});
 	});
 });

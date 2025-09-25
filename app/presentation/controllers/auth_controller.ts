@@ -1,4 +1,5 @@
 import { ErrBadRequest } from "@domain/error";
+import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import {
 	type LoginUserRequest,
 	loginUserFormSchema,
@@ -15,11 +16,16 @@ export const authController = (
 	registerUserUsecase: RegisterUserUsecase,
 	loginUserUsecase: LoginUserUsecase,
 	logoutUserUsecase: LogoutUserUsecase,
+	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
 		fastify.post("/auth/register", onRegisterUser(registerUserUsecase));
 		fastify.post("/auth/login", onLoginUser(loginUserUsecase));
-		fastify.post("/auth/logout", onLogoutUser(logoutUserUsecase));
+		fastify.delete(
+			"/auth/logout",
+			{ preHandler: authPrehandler },
+			onLogoutUser(logoutUserUsecase),
+		);
 	};
 };
 
@@ -106,7 +112,7 @@ const onLoginUser = (usecase: LoginUserUsecase) => {
 
 const onLogoutUser = (usecase: LogoutUserUsecase) => {
 	return async (req: FastifyRequest, reply: FastifyReply) => {
-		const sessionToken = req.cookies.sessionToken;
+		const sessionToken = req.cookies[cookieName];
 		if (!sessionToken) {
 			throw new ErrBadRequest({
 				userMessage: "セッションが見つかりません",
@@ -124,6 +130,8 @@ const onLogoutUser = (usecase: LogoutUserUsecase) => {
 			path: "/",
 		});
 
-		reply.send();
+		reply.send({
+			user: req.authenticatedUser,
+		});
 	};
 };
