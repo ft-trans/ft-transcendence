@@ -5,6 +5,7 @@ import {
 	MatchId,
 	PongBall,
 	PongGame,
+	PongMatchState,
 	PongPaddle,
 	pongFieldSize,
 	pongPaddleDy,
@@ -145,11 +146,21 @@ describe("PongGame", () => {
 		const ball = new PongBall({ x: 50, y: 50, dx: 5, dy: 3 });
 		const paddle1 = new PongPaddle({ x: 0, y: 40 });
 		const paddle2 = new PongPaddle({ x: 590, y: 40 });
-		const pongGame = new PongGame(ball, { player1: paddle1, player2: paddle2 });
+		const state = PongMatchState.init();
+		const pongGame = new PongGame(
+			ball,
+			{ player1: paddle1, player2: paddle2 },
+			state,
+		);
 		const newPongGame = pongGame.calculateFrame();
 		expect(newPongGame.ball.x).toBe(55);
 		expect(newPongGame.ball.y).toBe(53);
 		expect(newPongGame.ball.dx).toBe(5);
 		expect(newPongGame.ball.dy).toBe(3);
+		expect(newPongGame.paddles.player1.x).toBe(paddle1.x);
+		expect(newPongGame.paddles.player1.y).toBe(paddle1.y);
+		expect(newPongGame.paddles.player2.x).toBe(paddle2.x);
+		expect(newPongGame.paddles.player2.y).toBe(paddle2.y);
+		expect(newPongGame.state.rallyTime).toBe(state.rallyTime);
 	});
 });

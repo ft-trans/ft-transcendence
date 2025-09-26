@@ -70,7 +70,7 @@ export class PongPaddle {
 	//
 	// Note:
 	// To simplify collision detection for the top and bottom surfaces of the paddle,
-	// collision is detected using lines in the paddle.
+	// collision is detected using vertical lines in the paddle.
 	detectCollision(ball: PongBall, rallyTime: number): PongBall | undefined {
 		let lines = [0, 0.25, 0.5, 0.75, 1];
 		if (ball.dx < 0) {
@@ -215,6 +215,27 @@ export class PongField {
 	}
 }
 
+export class PongMatchState {
+	// readonly gameState: "waiting" | "playing" | "ended"
+	// readonly score: { player1: number; player2: number },
+	readonly rallyTime: number = 0;
+
+	constructor({ rallyTime = 0 }: { rallyTime: number }) {
+		this.rallyTime = rallyTime;
+	}
+
+	initRallyTime(): PongMatchState {
+		return new PongMatchState({ rallyTime: 0 });
+	}
+	incrementRally(): PongMatchState {
+		return new PongMatchState({ rallyTime: this.rallyTime + 1 });
+	}
+
+	static init(): PongMatchState {
+		return new PongMatchState({ rallyTime: 0 });
+	}
+}
+
 export class PongGame {
 	readonly field = new PongField();
 
@@ -224,8 +245,7 @@ export class PongGame {
 			player1: PongPaddle | undefined;
 			player2: PongPaddle | undefined;
 		},
-		// readonly score: { player1: number; player2: number },
-		readonly rallyTime: number = 0,
+		readonly state: PongMatchState,
 	) {}
 
 	calculateFrame(): PongGame {
@@ -235,33 +255,33 @@ export class PongGame {
 
 		const newBallP1 = this.paddles.player1.detectCollision(
 			this.ball,
-			this.rallyTime,
+			this.state.rallyTime,
 		);
 		if (newBallP1) {
-			return new PongGame(newBallP1, this.paddles, this.rallyTime + 1);
+			return new PongGame(newBallP1, this.paddles, this.state.incrementRally());
 		}
 		const newBallP2 = this.paddles.player2.detectCollision(
 			this.ball,
-			this.rallyTime,
+			this.state.rallyTime,
 		);
 		if (newBallP2) {
-			return new PongGame(newBallP2, this.paddles, this.rallyTime + 1);
+			return new PongGame(newBallP2, this.paddles, this.state.incrementRally());
 		}
 		const newBallField = this.field.detectCollision(this.ball);
 		if (newBallField) {
-			return new PongGame(newBallField, this.paddles, this.rallyTime);
+			return new PongGame(newBallField, this.paddles, this.state);
 		}
 
 		if (this.field.scorePoint(this.ball, "player1")) {
 			// TODO スコア計算
-			return new PongGame(undefined, this.paddles);
+			return new PongGame(undefined, this.paddles, this.state);
 		}
 		if (this.field.scorePoint(this.ball, "player2")) {
 			// TODO スコア計算
-			return new PongGame(undefined, this.paddles);
+			return new PongGame(undefined, this.paddles, this.state);
 		}
 
-		return new PongGame(this.ball.next(), this.paddles, this.rallyTime);
+		return new PongGame(this.ball.next(), this.paddles, this.state);
 	}
 
 	static initialBall(): PongBall {

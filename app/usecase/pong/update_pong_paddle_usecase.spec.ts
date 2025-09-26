@@ -5,6 +5,7 @@ import type {
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
+	IPongMatchStateRepository,
 	IPongPaddleRepository,
 	ISessionRepository,
 	IUserRepository,
@@ -28,6 +29,7 @@ const repo = {
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 	newSessionRepository: () => mock<ISessionRepository>(),
+	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 };
 
 describe("UpdatePongPaddleUsecase", () => {

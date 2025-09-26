@@ -5,6 +5,7 @@ import type {
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
+	IPongMatchStateRepository,
 	IPongPaddleRepository,
 	ISessionRepository,
 	IUserRepository,
@@ -27,6 +28,7 @@ const repo = {
 	newPongClientRepository: () => pongClientRepo,
 	newPongLoopRepository: () => pongLoopRepo,
 	newSessionRepository: () => mock<ISessionRepository>(),
+	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 };
 
 describe("JoinPongUsecase", () => {

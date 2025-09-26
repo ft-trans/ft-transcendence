@@ -7,6 +7,7 @@ import type {
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
+	IPongMatchStateRepository,
 	IPongPaddleRepository,
 	ISessionRepository,
 	IUserRepository,
@@ -37,6 +38,7 @@ describe("RegisterUserUsecase", () => {
 				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 			};
 			return callback(repo);
 		});
@@ -62,6 +64,7 @@ describe("RegisterUserUsecase", () => {
 				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 			};
 			return callback(repo);
 		});
@@ -87,6 +90,7 @@ describe("RegisterUserUsecase", () => {
 				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 			};
 			return callback(repo);
 		});

@@ -2,6 +2,7 @@ import type { PongGameStateResponse } from "@shared/api/pong";
 import { type MatchId, PongGame } from "../model/pong";
 import type { IPongBallRepository } from "../repository/pong_ball_repository";
 import type { IPongClientRepository } from "../repository/pong_client_repository";
+import type { IPongMatchStateRepository } from "../repository/pong_match_state_repository";
 import type { IPongPaddleRepository } from "../repository/pong_paddle_repository";
 
 export class PongGameEngineService {
@@ -10,6 +11,7 @@ export class PongGameEngineService {
 		private readonly pongBallRepo: IPongBallRepository,
 		private readonly pongPaddleRepo: IPongPaddleRepository,
 		private readonly pongClientRepo: IPongClientRepository,
+		private readonly pongMatchStateRepo: IPongMatchStateRepository,
 	) {}
 
 	// Processing one frame
@@ -18,7 +20,12 @@ export class PongGameEngineService {
 		const ball = await this.pongBallRepo.get(this.matchId);
 		const paddle1 = await this.pongPaddleRepo.get(this.matchId, "player1");
 		const paddle2 = await this.pongPaddleRepo.get(this.matchId, "player2");
-		const pongGame = new PongGame(ball, { player1: paddle1, player2: paddle2 });
+		const state = this.pongMatchStateRepo.get(this.matchId);
+		const pongGame = new PongGame(
+			ball,
+			{ player1: paddle1, player2: paddle2 },
+			state,
+		);
 		const newPongGame = pongGame.calculateFrame();
 
 		this.pongClientRepo.get(this.matchId)?.forEach((client) => {
@@ -28,6 +35,7 @@ export class PongGameEngineService {
 			client.send(JSON.stringify(this.toResponse(newPongGame)));
 		});
 
+		this.pongMatchStateRepo.set(this.matchId, newPongGame.state);
 		if (newPongGame.ball !== undefined) {
 			await this.pongBallRepo.set(this.matchId, newPongGame.ball);
 		} else {
