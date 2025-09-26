@@ -107,10 +107,10 @@ export class PongPaddle {
 		let newDy = ball.dy;
 		if (Math.abs(centerRate) < 0.3) {
 			newDx = Math.sign(newDx) * 2;
-			newDy = newDy * 0.2;
+			newDy = newDy * 0.3;
 		} else if (Math.abs(centerRate) < 0.6) {
-			newDx = Math.sign(newDx) * 10;
-		} else if (Math.abs(centerRate) < 0.8) {
+			newDx = Math.sign(newDx) * 8;
+		} else if (Math.abs(centerRate) < 0.85) {
 			newDx = Math.sign(newDx) * 3;
 			newDy = Math.sign(centerRate) * 5;
 		} else {
