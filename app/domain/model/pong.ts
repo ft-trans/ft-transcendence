@@ -205,12 +205,11 @@ export class PongField {
 		return undefined;
 	}
 
-	scorePoint(ball: PongBall, player: PongPlayer): boolean {
-		const nextBall = ball.next();
+	isScoredPoint(ball: PongBall, player: PongPlayer): boolean {
 		if (player === "player1") {
-			return nextBall.x < 0;
+			return ball.x < 0;
 		} else {
-			return this.width < nextBall.x;
+			return this.width < ball.x;
 		}
 	}
 }
@@ -272,16 +271,16 @@ export class PongGame {
 			return new PongGame(newBallField, this.paddles, this.state);
 		}
 
-		if (this.field.scorePoint(this.ball, "player1")) {
+		const nextBall = this.ball.next();
+		if (this.field.isScoredPoint(nextBall, "player1")) {
 			// TODO スコア計算
 			return new PongGame(undefined, this.paddles, this.state);
 		}
-		if (this.field.scorePoint(this.ball, "player2")) {
+		if (this.field.isScoredPoint(nextBall, "player2")) {
 			// TODO スコア計算
 			return new PongGame(undefined, this.paddles, this.state);
 		}
-
-		return new PongGame(this.ball.next(), this.paddles, this.state);
+		return new PongGame(nextBall, this.paddles, this.state);
 	}
 
 	static initialBall(): PongBall {

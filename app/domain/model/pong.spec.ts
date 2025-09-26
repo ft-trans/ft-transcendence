@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
 	MatchId,
 	PongBall,
+	PongField,
 	PongGame,
 	PongMatchState,
 	PongPaddle,
@@ -39,6 +40,62 @@ describe("PongBall", () => {
 		expect(ball.y).toBe(2);
 		expect(ball.dx).toBe(3);
 		expect(ball.dy).toBe(4);
+	});
+});
+
+describe("PongField", () => {
+	it("should create a field with valid size", () => {
+		const fieldWidth = pongFieldSize.width;
+		const fieldHeight = pongFieldSize.height;
+
+		expect(fieldWidth).toBe(600);
+		expect(fieldHeight).toBe(400);
+	});
+
+	it("should detect wall collision", () => {
+		const field = new PongField();
+		const ball1 = new PongBall({ x: 10, y: 5, dx: -10, dy: -10 });
+		const ball2 = new PongBall({
+			x: 10,
+			y: pongFieldSize.height - 5,
+			dx: 10,
+			dy: 10,
+		});
+		const ball3 = new PongBall({ x: 10, y: 200, dx: -10, dy: -10 });
+
+		const newBall1 = field.detectCollision(ball1);
+		expect(newBall1).toBeDefined();
+		expect(newBall1.x).toBe(0);
+		expect(newBall1.y).toBe(5);
+		expect(newBall1.dx).toBe(-10);
+		expect(newBall1.dy).toBe(10);
+		const newBall2 = field.detectCollision(ball2);
+		expect(newBall2).toBeDefined();
+		expect(newBall2.x).toBe(20);
+		expect(newBall2.y).toBe(pongFieldSize.height - 5);
+		expect(newBall2.dx).toBe(10);
+		expect(newBall2.dy).toBe(-10);
+		const newBall3 = field.detectCollision(ball3);
+		expect(newBall3).toBeUndefined();
+	});
+
+	it("should score point correctly", () => {
+		const field = new PongField();
+		const ball1 = new PongBall({ x: -5, y: 200, dx: -10, dy: 10 });
+		const ball2 = new PongBall({
+			x: pongFieldSize.width + 5,
+			y: 200,
+			dx: 10,
+			dy: 10,
+		});
+		const ball3 = new PongBall({ x: 300, y: 200, dx: 0, dy: 0 });
+
+		expect(field.isScoredPoint(ball1, "player1")).toBe(true);
+		expect(field.isScoredPoint(ball1, "player2")).toBe(false);
+		expect(field.isScoredPoint(ball2, "player1")).toBe(false);
+		expect(field.isScoredPoint(ball2, "player2")).toBe(true);
+		expect(field.isScoredPoint(ball3, "player1")).toBe(false);
+		expect(field.isScoredPoint(ball3, "player2")).toBe(false);
 	});
 });
 
