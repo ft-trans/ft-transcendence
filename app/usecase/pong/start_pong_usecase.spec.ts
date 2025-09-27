@@ -4,6 +4,8 @@ import type {
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
+	IPongMatchStateRepository,
+	IPongPaddleRepository,
 	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
@@ -19,9 +21,11 @@ const repo = {
 	newFriendshipRepository: () => mock<IFriendshipRepository>(),
 	newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
 	newPongBallRepository: () => pongBallRepo,
+	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 	newSessionRepository: () => mock<ISessionRepository>(),
+	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 };
 
 describe("StartPongUsecase", () => {

@@ -7,6 +7,8 @@ import type {
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
+	IPongMatchStateRepository,
+	IPongPaddleRepository,
 	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
@@ -35,8 +37,10 @@ describe("DeleteUserUsecase", () => {
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
 				newSessionRepository: () => mock<ISessionRepository>(),
 				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 			};
 			return callback(repo);
 		});
@@ -62,8 +66,10 @@ describe("DeleteUserUsecase", () => {
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
 				newSessionRepository: () => mock<ISessionRepository>(),
 				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 			};
 			return callback(repo);
 		});

@@ -6,6 +6,8 @@ import type {
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
+	IPongMatchStateRepository,
+	IPongPaddleRepository,
 } from "@domain/repository";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
@@ -30,8 +32,10 @@ const mockRepos = {
 	newFriendshipRepository: () => friendshipRepo,
 	newSessionRepository: () => mock<ISessionRepository>(),
 	newPongBallRepository: () => mock<IPongBallRepository>(),
+	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
+	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 };
 tx.exec.mockImplementation(async (callback) => callback(mockRepos));
 

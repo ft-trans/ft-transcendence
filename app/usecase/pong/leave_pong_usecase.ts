@@ -14,14 +14,17 @@ export class LeavePongUsecase {
 	async execute(input: LeavePongUsecaseInput): Promise<MatchId> {
 		const matchId = new MatchId(input.matchId);
 		const pongClientRepo = this.repo.newPongClientRepository();
-		const pongLoopRepo = this.repo.newPongLoopRepository();
-		const pongLoopService = new PongLoopService(pongLoopRepo);
-		const pongBallRepo = this.repo.newPongBallRepository();
-
 		const clients = pongClientRepo.delete(matchId, input.client);
 		if (!clients) {
+			const pongLoopRepo = this.repo.newPongLoopRepository();
+			const pongLoopService = new PongLoopService(pongLoopRepo);
 			pongLoopService.stop(matchId);
+
+			const pongBallRepo = this.repo.newPongBallRepository();
+			const pongPaddleRepo = this.repo.newPongPaddleRepository();
 			await pongBallRepo.delete(matchId);
+			await pongPaddleRepo.delete(matchId, "player1");
+			await pongPaddleRepo.delete(matchId, "player2");
 		}
 
 		return matchId;
