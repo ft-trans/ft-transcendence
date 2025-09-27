@@ -61,4 +61,4 @@ USER app
 
 EXPOSE 3000
 
-CMD ["node", "dist/app/server.js"]
+CMD ["node", "--import", "./dist/app/observability/otel.js", "dist/app/main.js"]

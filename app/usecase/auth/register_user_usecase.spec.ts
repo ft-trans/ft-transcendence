@@ -1,9 +1,13 @@
 // ==> app/usecase/auth/register_user_usecase.spec.ts <==
 import { ErrBadRequest } from "@domain/error";
-import { User, UserEmail } from "@domain/model";
+import { User, UserEmail, Username } from "@domain/model";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IPongBallRepository,
+	IPongClientRepository,
+	IPongLoopRepository,
+	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -17,9 +21,42 @@ describe("RegisterUserUsecase", () => {
 	});
 
 	it("should create a new user and return it", async () => {
-		const expectedUser = User.create(new UserEmail("test@example.com"));
+		const expectedUser = User.create(
+			new UserEmail("test@example.com"),
+			new Username("testuser"),
+		);
 		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.create.mockResolvedValue(expectedUser);
+		mockUserRepo.findByEmail.mockResolvedValue(undefined);
+		mockUserRepo.findByUsername.mockResolvedValue(undefined);
+		const mockTx = mock<ITransaction>();
+		mockTx.exec.mockImplementation(async (callback) => {
+			const repo = {
+				newUserRepository: () => mockUserRepo,
+				newFriendshipRepository: () => mock<IFriendshipRepository>(),
+				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+			};
+			return callback(repo);
+		});
+
+		const usecase = new RegisterUserUsecase(mockTx);
+		const input = {
+			email: "test@example.com",
+			username: "testuser",
+			password: "ValidPass123",
+		};
+		const user = await usecase.execute(input);
+
+		expect(user.email).toEqual(expectedUser.email);
+		expect(user.username).toEqual(expectedUser.username);
+	});
+
+	it("should throw BadRequestError if password is too short", async () => {
+		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findByEmail.mockResolvedValue(undefined);
 		const mockTx = mock<ITransaction>();
 		mockTx.exec.mockImplementation(async (callback) => {
@@ -27,33 +64,52 @@ describe("RegisterUserUsecase", () => {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 			};
 			return callback(repo);
 		});
 
 		const usecase = new RegisterUserUsecase(mockTx);
-		const input = { email: "test@example.com" };
-		const user = await usecase.execute(input);
+		const input = {
+			email: "test@example.com",
+			username: "testuser",
+			password: "short",
+		};
 
-		expect(user.email).toEqual(expectedUser.email);
+		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 	});
 
 	it("should throw BadRequestError if email is already used", async () => {
-		const existingUser = User.create(new UserEmail("test@example.com"));
+		const existingUser = User.create(
+			new UserEmail("test@example.com"),
+			new Username("testuser"),
+		);
 		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findByEmail.mockResolvedValue(existingUser);
+		mockUserRepo.findByUsername.mockResolvedValue(undefined);
 		const mockTx = mock<ITransaction>();
 		mockTx.exec.mockImplementation(async (callback) => {
 			const repo = {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 			};
 			return callback(repo);
 		});
 
 		const usecase = new RegisterUserUsecase(mockTx);
-		const input = { email: "test@example.com" };
+		const input = {
+			email: "test@example.com",
+			username: "testuser",
+			password: "ValidPass123",
+		};
 
 		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 	});

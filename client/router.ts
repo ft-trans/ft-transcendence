@@ -1,7 +1,8 @@
 import { pathToRegexp } from "path-to-regexp";
-import { Navigation } from "./components";
-import { Register } from "./features/auth";
+import { createRouteParams, Navigation } from "./components";
+import { Login, Register } from "./features/auth";
 import { Home } from "./features/home";
+import { MatchesPong } from "./features/pong/matches";
 import { EditProfile } from "./features/profile";
 
 export const router = async () => {
@@ -13,6 +14,10 @@ export const router = async () => {
 			component: new Navigation({ child: new Home() }),
 		},
 		{
+			path: "/auth/login",
+			component: new Navigation({ child: new Login() }),
+		},
+		{
 			path: "/auth/register",
 			component: new Navigation({ child: new Register() }),
 		},
@@ -20,17 +25,27 @@ export const router = async () => {
 			path: "/profile/edit",
 			component: new Navigation({ child: new EditProfile() }),
 		},
+		{
+			path: "/pong/matches/:match_id",
+			component: new Navigation({ child: new MatchesPong() }),
+		},
 	];
 
 	const path = window.location.pathname;
 	for (const route of routes) {
-		const { regexp } = pathToRegexp(route.path);
+		const { regexp, keys } = pathToRegexp(route.path);
 		const match = regexp.exec(path);
 
 		if (match) {
 			container.innerHTML = route.component.render();
-			route.component.addEventListeners();
-			return;
+			if (keys.length === 0) {
+				route.component.onLoad();
+				return;
+			} else {
+				const params = createRouteParams(keys, match);
+				route.component.onLoad(params);
+				return;
+			}
 		}
 	}
 

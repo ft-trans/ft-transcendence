@@ -1,9 +1,15 @@
 import { ErrBadRequest, ErrForbidden, ErrNotFound } from "@domain/error";
 import { DirectMessage } from "@domain/model/direct_message";
 import { Friendship } from "@domain/model/friendship";
-import { User, UserEmail } from "@domain/model/user";
+import { User, UserEmail, Username } from "@domain/model/user";
+import type {
+	IPongBallRepository,
+	IPongClientRepository,
+	IPongLoopRepository,
+} from "@domain/repository";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
+import type { ISessionRepository } from "@domain/repository/session_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
 import type { ITransaction } from "@usecase/transaction";
 import { ulid } from "ulid";
@@ -22,6 +28,10 @@ const mockRepos = {
 	newUserRepository: () => userRepo,
 	newDirectMessageRepository: () => messageRepo,
 	newFriendshipRepository: () => friendshipRepo,
+	newSessionRepository: () => mock<ISessionRepository>(),
+	newPongBallRepository: () => mock<IPongBallRepository>(),
+	newPongClientRepository: () => mock<IPongClientRepository>(),
+	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 };
 tx.exec.mockImplementation(async (callback) => callback(mockRepos));
 
@@ -33,8 +43,14 @@ beforeEach(() => {
 
 describe("SendDirectMessageUsecase", () => {
 	const usecase = new SendDirectMessageUsecase(tx);
-	const sender = User.create(new UserEmail("sender@test.com"));
-	const receiver = User.create(new UserEmail("receiver@test.com"));
+	const sender = User.create(
+		new UserEmail("sender@test.com"),
+		new Username("sender"),
+	);
+	const receiver = User.create(
+		new UserEmail("receiver@test.com"),
+		new Username("receiver"),
+	);
 
 	it("should send a message successfully", async () => {
 		userRepo.findById
@@ -136,9 +152,14 @@ describe("SendDirectMessageUsecase", () => {
 
 describe("GetDirectMessagesUsecase", () => {
 	const usecase = new GetDirectMessagesUsecase(tx);
-	const user1 = User.create(new UserEmail("user1@test.com"));
-	const user2 = User.create(new UserEmail("user2@test.com"));
-
+	const user1 = User.create(
+		new UserEmail("user1@test.com"),
+		new Username("user1"),
+	);
+	const user2 = User.create(
+		new UserEmail("user2@test.com"),
+		new Username("user2"),
+	);
 	beforeEach(() => {
 		userRepo.findById.mockReset();
 	});

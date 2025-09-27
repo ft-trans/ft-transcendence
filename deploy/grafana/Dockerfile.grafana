@@ -1,0 +1,5 @@
+FROM grafana/grafana:latest
+
+COPY datasources /etc/grafana/provisioning/datasources
+COPY dashboard-settings /etc/grafana/provisioning/dashboards
+COPY dashboards /var/lib/grafana/dashboards

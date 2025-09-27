@@ -1,9 +1,13 @@
 // ==> app/usecase/user/delete_user_usecase.spec.ts <==
 import { ErrNotFound } from "@domain/error";
-import { User, UserEmail } from "@domain/model";
+import { User, UserEmail, Username } from "@domain/model";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IPongBallRepository,
+	IPongClientRepository,
+	IPongLoopRepository,
+	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -18,7 +22,10 @@ describe("DeleteUserUsecase", () => {
 	});
 
 	it("should delete a user and return it", async () => {
-		const currentUser = User.create(new UserEmail("current@example.com"));
+		const currentUser = User.create(
+			new UserEmail("current@example.com"),
+			new Username("current"),
+		);
 		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.delete.mockResolvedValue(currentUser);
 		mockUserRepo.findById.mockResolvedValue(currentUser);
@@ -29,6 +36,10 @@ describe("DeleteUserUsecase", () => {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 			};
 			return callback(repo);
 		});
@@ -52,6 +63,10 @@ describe("DeleteUserUsecase", () => {
 				newUserRepository: () => mockUserRepo,
 				newFriendshipRepository: () => mock<IFriendshipRepository>(),
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+				newSessionRepository: () => mock<ISessionRepository>(),
+				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongClientRepository: () => mock<IPongClientRepository>(),
+				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 			};
 			return callback(repo);
 		});

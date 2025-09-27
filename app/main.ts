@@ -1,24 +1,36 @@
 import { readFileSync } from "node:fs";
 
 import { resolve } from "node:path";
-
+import FastifyCookie from "@fastify/cookie";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
-import { Transaction } from "@infra/database";
-import { PrismaClient } from "@infra/database/generated";
+import websocket from "@fastify/websocket";
+import { prisma } from "@infra/database/prisma";
+import { Transaction } from "@infra/database/transaction";
+import { InMemoryChatClientRepository } from "@infra/in_memory/chat_client_repository";
+import { Repository } from "@infra/repository";
 import { authController } from "@presentation/controllers/auth_controller";
+import { chatController } from "@presentation/controllers/chat_controller";
+import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
+import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
+import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
+import {
+	JoinChatUsecase,
+	LeaveChatUsecase,
+	SendChatMessageUsecase,
+	SendDirectMessageUsecase,
+	SendGameInviteUsecase,
+} from "@usecase/chat";
+import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
+import { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
+import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import Fastify from "fastify";
-
-// import { PrismaClient } from "./infra/database/generated/index.js";
-
-import {
-	otelInstrumentation,
-	prometheusExporter,
-} from "./observability/otel.js";
+import { otelInstrumentation } from "./observability/otel.js";
 
 // const app = Fastify({ logger: true });
 
@@ -66,25 +78,7 @@ const app = Fastify({
 const start = async () => {
 	app.log.info("Testing logger to ES");
 	try {
-		const prisma = new PrismaClient();
-
-		app.get("/api/health", async (_req, _reply) => {
-			return { message: "OK" };
-		});
-
-		app.get("/metrics/otel", async (req, reply) => {
-			reply.hijack?.();
-			prometheusExporter.getMetricsRequestHandler(req.raw, reply.raw);
-		});
-
-		app.get("/metrics", async (_req, _reply) => {
-			const otelRes = await fetch("http://127.0.0.1:3000/metrics/otel");
-			const otelText = await otelRes.text();
-			const prismaText = await prisma.$metrics.prometheus();
-			_reply
-				.type("text/plain; version=0.0.4; charset=utf-8")
-				.send([otelText, prismaText].join("\n"));
-		});
+		app.get("/api/health", async () => ({ message: "OK" }));
 
 		await app.register(otelInstrumentation.plugin());
 
@@ -95,36 +89,76 @@ const start = async () => {
 			spa: true,
 		});
 
-		const redis_url = process.env.REDIS_URL;
-		if (!redis_url) {
-			app.log.error(
-				"REDIS_URL environment variable is missing. Please set it before starting the application.",
-			);
+		await app.register(FastifyCookie);
+
+		const redisUrl = process.env.REDIS_URL;
+		if (!redisUrl) {
+			app.log.error("REDIS_URL is not set");
 			process.exit(1);
 		}
-		await app.register(FastifyRedis, {
-			url: redis_url,
-		});
 
-		const tx = new Transaction(new PrismaClient());
-
+		await app.register(websocket);
+		await app.register(FastifyRedis, { url: redisUrl });
+		const repo = new Repository(prisma, app.redis);
+		const tx = new Transaction(prisma, app.redis);
 		const registerUserUsecase = new RegisterUserUsecase(tx);
-		await app.register(authController(registerUserUsecase), { prefix: "/api" });
+		const loginUserUsecase = new LoginUserUsecase(tx);
+		const logoutUserUsecase = new LogoutUserUsecase(tx);
+		const authPrehandler = createAuthPrehandler(
+			repo.newSessionRepository(),
+			repo.newUserRepository(),
+		);
+		await app.register(
+			authController(
+				registerUserUsecase,
+				loginUserUsecase,
+				logoutUserUsecase,
+				authPrehandler,
+			),
+			{ prefix: "/api" },
+		);
 		const updateUserUsecase = new UpdateUserUsecase(tx);
 		const deleteUserUsecase = new DeleteUserUsecase(tx);
+
 		await app.register(
 			profileController(updateUserUsecase, deleteUserUsecase),
-			{
-				prefix: "/api",
-			},
+			{ prefix: "/api" },
+		);
+		const joinPongUsecase = new JoinPongUsecase(repo);
+		const leavePongUsecase = new LeavePongUsecase(repo);
+		const startPongUsecase = new StartPongUsecase(repo);
+		app.register(
+			pongController(joinPongUsecase, leavePongUsecase, startPongUsecase),
+			{ prefix: "/ws" },
 		);
 
-		app.get("/*", (_req, reply) => {
-			return reply.html();
-		});
+		const chatClientRepository = new InMemoryChatClientRepository();
+		const sendDirectMessageUsecase = new SendDirectMessageUsecase(tx);
+		const sendChatMessageUsecase = new SendChatMessageUsecase(
+			sendDirectMessageUsecase,
+			chatClientRepository,
+		);
+		const sendGameInviteUsecase = new SendGameInviteUsecase(
+			repo.newUserRepository(),
+			chatClientRepository,
+		);
+		const joinChatUsecase = new JoinChatUsecase(chatClientRepository);
+		const leaveChatUsecase = new LeaveChatUsecase(chatClientRepository);
+		app.register(
+			chatController(
+				joinChatUsecase,
+				leaveChatUsecase,
+				sendChatMessageUsecase,
+				sendGameInviteUsecase,
+			),
+			{ prefix: "/ws" },
+		);
+
+		app.get("/*", (_req, reply) => reply.html());
 
 		await app.vite.ready();
 		await app.listen({ host: "0.0.0.0", port: 3000 });
+		app.log.info("HTTP app listening on :3000");
 	} catch (err) {
 		app.log.error(err);
 		process.exit(1);
