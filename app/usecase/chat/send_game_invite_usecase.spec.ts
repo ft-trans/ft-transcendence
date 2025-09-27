@@ -1,5 +1,5 @@
 import { ErrBadRequest, ErrNotFound } from "@domain/error";
-import { User, UserEmail } from "@domain/model/user";
+import { User, UserEmail, Username } from "@domain/model/user";
 import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
 import type { IChatClient } from "@domain/service/chat_client";
@@ -18,8 +18,14 @@ beforeEach(() => {
 
 describe("SendGameInviteUsecase", () => {
 	const usecase = new SendGameInviteUsecase(userRepo, chatClientRepo);
-	const sender = User.create(new UserEmail("sender@test.com"));
-	const receiver = User.create(new UserEmail("receiver@test.com"));
+	const sender = User.create(
+		new UserEmail("sender@test.com"),
+		new Username("sender"),
+	);
+	const receiver = User.create(
+		new UserEmail("receiver@test.com"),
+		new Username("receiver"),
+	);
 
 	const input = {
 		senderId: sender.id.value,

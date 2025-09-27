@@ -40,6 +40,7 @@ const onRegisterUser = (usecase: RegisterUserUsecase) => {
 	) => {
 		const input = registerUserFormSchema.safeParse({
 			email: req.body.user.email,
+			username: req.body.user.username,
 			password: req.body.user.password,
 			passwordConfirm: req.body.user.password,
 		});
@@ -49,6 +50,7 @@ const onRegisterUser = (usecase: RegisterUserUsecase) => {
 				userMessage: "入力に誤りがあります",
 				details: {
 					email: flattened.fieldErrors.email?.join(", "),
+					username: flattened.fieldErrors.username?.join(", "),
 					password: flattened.fieldErrors.password?.join(", "),
 					passwordConfirm: flattened.fieldErrors.passwordConfirm?.join(", "),
 				},
@@ -56,12 +58,16 @@ const onRegisterUser = (usecase: RegisterUserUsecase) => {
 		}
 		const output = await usecase.execute({
 			email: input.data.email,
+			username: input.data.username,
 			password: input.data.password,
 		});
 		reply.send({
 			user: {
 				id: output.id.value,
 				email: output.email.value,
+				username: output.username.value,
+				avatar: output.avatar.value,
+				status: output.status.value,
 			},
 		});
 	};
