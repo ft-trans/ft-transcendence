@@ -12,11 +12,12 @@ CREATE TABLE "new_User" (
     "email" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "avatar" TEXT NOT NULL DEFAULT '',
+    "passwordDigest" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'offline',
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
-INSERT INTO "new_User" ("createdAt", "email", "id", "status", "updatedAt") SELECT "createdAt", "email", "id", "status", "updatedAt" FROM "User";
+INSERT INTO "new_User" ("createdAt", "email", "id", "passwordDigest", "status", "updatedAt") SELECT "createdAt", "email", "id", "passwordDigest", "status", "updatedAt" FROM "User";
 DROP TABLE "User";
 ALTER TABLE "new_User" RENAME TO "User";
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
