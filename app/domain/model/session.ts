@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import bcrypt from "bcrypt";
 import { isValid, ulid } from "ulid";
 import { ErrBadRequest } from "../error";
 import type { UserId } from "./user";
@@ -19,7 +18,6 @@ export class SessionId extends ValueObject<string, "SessionId"> {
 
 export class SessionToken extends ValueObject<string, "SessionToken"> {
 	static readonly MIN_LENGTH = 32;
-	static readonly SALT_ROUNDS = 10;
 
 	protected validate(value: string): void {
 		if (!value || value.length < SessionToken.MIN_LENGTH) {
@@ -37,17 +35,11 @@ export class SessionToken extends ValueObject<string, "SessionToken"> {
 	}
 
 	hash(): string {
-		return bcrypt.hashSync(this.value, SessionToken.SALT_ROUNDS);
+		return crypto.createHash("sha256").update(this.value).digest("hex");
 	}
 
-	static isCorrect({
-		plainToken,
-		hashedToken,
-	}: {
-		plainToken: string;
-		hashedToken: string;
-	}): boolean {
-		return bcrypt.compareSync(plainToken, hashedToken);
+	matchesWith(hashedToken: string): boolean {
+		return this.hash() === hashedToken;
 	}
 }
 
@@ -87,9 +79,6 @@ export class Session {
 		if (this.isExpired()) {
 			return false;
 		}
-		return SessionToken.isCorrect({
-			plainToken: token.value,
-			hashedToken: this.tokenDigest,
-		});
+		return token.matchesWith(this.tokenDigest);
 	}
 }

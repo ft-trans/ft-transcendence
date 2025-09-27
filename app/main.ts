@@ -11,6 +11,7 @@ import { authController } from "@presentation/controllers/auth_controller";
 import { chatController } from "@presentation/controllers/chat_controller";
 import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
+import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
 import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
@@ -59,8 +60,17 @@ const start = async () => {
 		const registerUserUsecase = new RegisterUserUsecase(tx);
 		const loginUserUsecase = new LoginUserUsecase(tx);
 		const logoutUserUsecase = new LogoutUserUsecase(tx);
+		const authPrehandler = createAuthPrehandler(
+			repo.newSessionRepository(),
+			repo.newUserRepository(),
+		);
 		await app.register(
-			authController(registerUserUsecase, loginUserUsecase, logoutUserUsecase),
+			authController(
+				registerUserUsecase,
+				loginUserUsecase,
+				logoutUserUsecase,
+				authPrehandler,
+			),
 			{ prefix: "/api" },
 		);
 		const updateUserUsecase = new UpdateUserUsecase(tx);

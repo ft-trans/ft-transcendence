@@ -1,5 +1,7 @@
 import { ErrBadRequest } from "@domain/error";
+import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import {
+	type AuthStatusResponse,
 	type LoginUserRequest,
 	loginUserFormSchema,
 	type RegisterUserRequest,
@@ -15,11 +17,17 @@ export const authController = (
 	registerUserUsecase: RegisterUserUsecase,
 	loginUserUsecase: LoginUserUsecase,
 	logoutUserUsecase: LogoutUserUsecase,
+	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
 		fastify.post("/auth/register", onRegisterUser(registerUserUsecase));
 		fastify.post("/auth/login", onLoginUser(loginUserUsecase));
-		fastify.post("/auth/logout", onLogoutUser(logoutUserUsecase));
+		fastify.delete(
+			"/auth/logout",
+			{ preHandler: authPrehandler },
+			onLogoutUser(logoutUserUsecase),
+		);
+		fastify.get("/auth/status", { preHandler: authPrehandler }, onAuthStatus());
 	};
 };
 
@@ -106,7 +114,7 @@ const onLoginUser = (usecase: LoginUserUsecase) => {
 
 const onLogoutUser = (usecase: LogoutUserUsecase) => {
 	return async (req: FastifyRequest, reply: FastifyReply) => {
-		const sessionToken = req.cookies.sessionToken;
+		const sessionToken = req.cookies[cookieName];
 		if (!sessionToken) {
 			throw new ErrBadRequest({
 				userMessage: "セッションが見つかりません",
@@ -125,5 +133,25 @@ const onLogoutUser = (usecase: LogoutUserUsecase) => {
 		});
 
 		reply.send();
+	};
+};
+
+const onAuthStatus = () => {
+	return async (
+		req: FastifyRequest,
+		reply: FastifyReply<{
+			Reply: AuthStatusResponse;
+		}>,
+	) => {
+		if (req.authenticatedUser) {
+			reply.send({
+				user: {
+					id: req.authenticatedUser.id,
+					email: req.authenticatedUser.email,
+				},
+			});
+		} else {
+			reply.send({});
+		}
 	};
 };
