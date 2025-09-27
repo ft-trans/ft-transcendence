@@ -12,6 +12,8 @@ const prismaQueryDuration = meter.createHistogram(
 	{ description: "Duration of Prisma Client queries (ms)", unit: "ms" },
 );
 
+export type Client = Prisma.DefaultPrismaClient | Prisma.TransactionClient;
+
 const base = new PrismaClient();
 
 const extended = base.$extends({

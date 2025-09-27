@@ -1,12 +1,31 @@
 import { resolve } from "node:path";
+import FastifyCookie from "@fastify/cookie";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
-import { Transaction } from "@infra/database";
+import websocket from "@fastify/websocket";
 import { prisma } from "@infra/database/prisma";
+import { Transaction } from "@infra/database/transaction";
+import { InMemoryChatClientRepository } from "@infra/in_memory/chat_client_repository";
+import { Repository } from "@infra/repository";
 import { authController } from "@presentation/controllers/auth_controller";
+import { chatController } from "@presentation/controllers/chat_controller";
+import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
 import { matchmakingController } from "@presentation/controllers/matchmaking_controller";
+import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
+import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
+import {
+	JoinChatUsecase,
+	LeaveChatUsecase,
+	SendChatMessageUsecase,
+	SendDirectMessageUsecase,
+	SendGameInviteUsecase,
+} from "@usecase/chat";
+import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
+import { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
+import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
@@ -33,15 +52,34 @@ const start = async () => {
 			spa: true,
 		});
 
+		await app.register(FastifyCookie);
+
 		const redisUrl = process.env.REDIS_URL;
 		if (!redisUrl) {
 			app.log.error("REDIS_URL is not set");
 			process.exit(1);
 		}
-		await app.register(FastifyRedis, { url: redisUrl });
 
-		const tx = new Transaction(prisma);
+		await app.register(websocket);
+		await app.register(FastifyRedis, { url: redisUrl });
+		const repo = new Repository(prisma, app.redis);
+		const tx = new Transaction(prisma, app.redis);
 		const registerUserUsecase = new RegisterUserUsecase(tx);
+		const loginUserUsecase = new LoginUserUsecase(tx);
+		const logoutUserUsecase = new LogoutUserUsecase(tx);
+		const authPrehandler = createAuthPrehandler(
+			repo.newSessionRepository(),
+			repo.newUserRepository(),
+		);
+		await app.register(
+			authController(
+				registerUserUsecase,
+				loginUserUsecase,
+				logoutUserUsecase,
+				authPrehandler,
+			),
+			{ prefix: "/api" },
+		);
 		const updateUserUsecase = new UpdateUserUsecase(tx);
 		const deleteUserUsecase = new DeleteUserUsecase(tx);
 		const userRepo = new UserRepository(prisma);
@@ -53,10 +91,38 @@ const start = async () => {
 			tx, matchRepo, queueRepo
 		);
 
-		await app.register(authController(registerUserUsecase), { prefix: "/api" });
 		await app.register(
 			profileController(updateUserUsecase, deleteUserUsecase),
 			{ prefix: "/api" },
+		);
+		const joinPongUsecase = new JoinPongUsecase(repo);
+		const leavePongUsecase = new LeavePongUsecase(repo);
+		const startPongUsecase = new StartPongUsecase(repo);
+		app.register(
+			pongController(joinPongUsecase, leavePongUsecase, startPongUsecase),
+			{ prefix: "/ws" },
+		);
+
+		const chatClientRepository = new InMemoryChatClientRepository();
+		const sendDirectMessageUsecase = new SendDirectMessageUsecase(tx);
+		const sendChatMessageUsecase = new SendChatMessageUsecase(
+			sendDirectMessageUsecase,
+			chatClientRepository,
+		);
+		const sendGameInviteUsecase = new SendGameInviteUsecase(
+			repo.newUserRepository(),
+			chatClientRepository,
+		);
+		const joinChatUsecase = new JoinChatUsecase(chatClientRepository);
+		const leaveChatUsecase = new LeaveChatUsecase(chatClientRepository);
+		app.register(
+			chatController(
+				joinChatUsecase,
+				leaveChatUsecase,
+				sendChatMessageUsecase,
+				sendGameInviteUsecase,
+			),
+			{ prefix: "/ws" },
 		);
 
 		const joinUserUsecase = new JoinMatchmakingUseCase(userRepo, matchmakingService);

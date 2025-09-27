@@ -10,11 +10,11 @@
     ```typescript
     export abstract class Component {
         abstract render(props: unknown): string;
-        addEventListeners(): void {}
+        onLoad(params?: RouteParams): void {}
     }
     ```
 -   **レンダリング**: `render()` メソッドは、コンポーネントのHTML構造を文字列として返します。
--   **イベントリスナー**: `addEventListeners()` メソッドは、コンポーネントがDOMにレンダリングされた後に、そのコンポーネント内の要素にイベントリスナーをアタッチするために使用されます。
+-   **オンロード**: `onLoad()` メソッドは、コンポーネントがDOMにレンダリングされた後に、そのコンポーネント内の要素にイベントリスナーをアタッチなどの処理をするために使用されます。
 -   **共通コンポーネント**: `client/components` ディレクトリ直下には、アプリケーション全体で再利用される共通のUIコンポーネント（例: ボタン、入力フィールド、タイトルなど）が配置されます。
 
 #### 2. ルーティングの設定
