@@ -43,7 +43,6 @@ export class Navigation extends Component {
               <nav class="space-x-6">
                 ${new Link({ href: "/auth/register", text: "登録" }).render()}
                 ${new Link({ href: "/profile/edit", text: "変更" }).render()}
-                ${new Link({ href: "/matchmaking", text: "マッチ" }).render()}
               <nav class="space-x-6 flex items-center">
                 ${navContent}
               </nav>
