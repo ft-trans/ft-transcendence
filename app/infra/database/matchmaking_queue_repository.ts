@@ -1,95 +1,86 @@
 import type { IMatchmakingQueueRepository } from "@domain/repository/matchmaking_queue_repository";
-import type { User } from "@domain/model/user";
+import { type User, UserId } from "@domain/model/user";
 import type { FastifyRedis } from "@fastify/redis";
 
 type Options = {
-  prefix?: string;                     // 例: "mm" → mm:queue / mm:inq / mm:user:<id>
-  enqueueDirection?: "left" | "right"; // 既定: "right" (rpush + lpop で FIFO)
+	prefix?: string;
+	enqueueDirection?: "left" | "right";
 };
 
 export class MatchmakingQueueRepository implements IMatchmakingQueueRepository {
-  private readonly queueKey: string;
-  private readonly inqKey: string;
-  private readonly prefix: string;
-  private readonly enqueueDir: "left" | "right";
+	private readonly queueKey: string;
+	private readonly inqKey: string;
+	private readonly prefix: string;
+	private readonly enqueueDir: "left" | "right";
 
-  constructor(private readonly redis: FastifyRedis, opts?: Options) {
-    this.prefix = opts?.prefix ?? "mm";
-    this.queueKey = `${this.prefix}:queue`;
-    this.inqKey = `${this.prefix}:inq`;
-    this.enqueueDir = opts?.enqueueDirection ?? "right";
-  }
+	constructor(private readonly redis: FastifyRedis, opts?: Options) {
+		this.prefix = opts?.prefix ?? "mm";
+		this.queueKey = `${this.prefix}:queue`;
+		this.inqKey = `${this.prefix}:inq`;
+		this.enqueueDir = opts?.enqueueDirection ?? "right";
+		console.log(`[QueueRepo] Initialized with key: ${this.queueKey}`);
+	}
 
-  private userKey = (id: string) => `${this.prefix}:user:${id}`;
+	async add(user: User): Promise<void> {
+		const id = user.id.value;
+		try {
+			console.log(`[QueueRepo ADD] UserID: ${id}. Checking if already in queue...`);
+			const added = await this.redis.sadd(this.inqKey, id);
+			if (added === 0) {
+				console.log(`[QueueRepo ADD] UserID: ${id} is already in queue. Skipping.`);
+				return;
+			}
+			console.log(`[QueueRepo ADD] UserID: ${id} added to 'inq' set.`);
 
-  // ---- キュー参加 ----------------------------------------------------------
-  async add(user: User): Promise<void> {
-    const id = user.id.value;
+			if (this.enqueueDir === "right") {
+				await this.redis.rpush(this.queueKey, id);
+			} else {
+				await this.redis.lpush(this.queueKey, id);
+			}
+			const length = await this.redis.llen(this.queueKey);
+			console.log(`[QueueRepo ADD] UserID: ${id} pushed to queue. New length: ${length}.`);
+		} catch (error) {
+			console.error(`[QueueRepo ADD] FATAL ERROR for UserID: ${id}`, error);
+			throw error;
+		}
+	}
 
-    // 既に待機中なら何もしない（sadd は追加件数を返す）
-    const added = await this.redis.sadd(this.inqKey, id);
-    if (added === 0) return;
+	async remove(userId: string): Promise<void> {
+		// (このメソッドは今回の問題とは無関係なので、ログは省略)
+		const removed = await this.redis.srem(this.inqKey, userId);
+		if (removed > 0) {
+			await this.redis.lrem(this.queueKey, 0, userId);
+		}
+	}
 
-    // 必要最小限の情報を保存（必要なら拡張）
-    const stored = { id: { value: id } };
-    await this.redis.set(this.userKey(id), JSON.stringify(stored));
+	async pop(): Promise<[UserId, UserId] | undefined> {
+		try {
+			const length = await this.redis.llen(this.queueKey);
+			console.log(`[QueueRepo POP] Pop called. Current queue length: ${length}.`);
+			if (length < 2) {
+				return undefined;
+			}
 
-    // FIFO: 末尾に積む（rpush）/ 取り出しは先頭（lpop）
-    if (this.enqueueDir === "right") {
-      await this.redis.rpush(this.queueKey, id);
-    } else {
-      await this.redis.lpush(this.queueKey, id);
-    }
-  }
+			console.log("[QueueRepo POP] Attempting to pop 2 user IDs...");
+			const id1 = await this.redis.lpop(this.queueKey);
+			const id2 = await this.redis.lpop(this.queueKey);
+			console.log(`[QueueRepo POP] Popped IDs: id1=${id1}, id2=${id2}`);
 
-  // ---- キュー離脱 ----------------------------------------------------------
-  async remove(userId: string): Promise<void> {
-    const removed = await this.redis.srem(this.inqKey, userId);
-    if (removed > 0) {
-      // キュー中のすべての該当要素を削除（count=0 は全削除）
-      await this.redis.lrem(this.queueKey, 0, userId);
-    }
-    await this.redis.del(this.userKey(userId));
-  }
+			if (!id1 || !id2) {
+				console.log("[QueueRepo POP] Not enough users popped. Pushing back...");
+				if (id1) await this.redis.lpush(this.queueKey, id1);
+				if (id2) await this.redis.lpush(this.queueKey, id2);
+				return undefined;
+			}
 
-  // ---- 2人ポップ（マッチ成立判定） -----------------------------------------
-  async pop(): Promise<[User, User] | undefined> {
-    // pipeline は型がややこしいので使わず、順に2回取り出す
-    const id1 = (await this.redis.lpop(this.queueKey)) as string | null;
-    const id2 = (await this.redis.lpop(this.queueKey)) as string | null;
+			console.log(`[QueueRepo POP] Successfully popped ${id1} and ${id2}. Removing from 'inq' set.`);
+			await this.redis.srem(this.inqKey, id1, id2);
+			console.log("[QueueRepo POP] Returning UserId pair.");
 
-    if (!id1 || !id2) {
-      // 片方だけ取れたら末尾に戻す（best-effort）
-      if (id1 && !id2) {
-        await this.redis.rpush(this.queueKey, id1);
-      }
-      return undefined;
-    }
-
-    // in-queue セットから除去（ioredis は可変長OK）
-    await this.redis.srem(this.inqKey, id1, id2);
-
-    // ユーザ情報取得（mget は可変長）
-    const [u1Json, u2Json] = (await this.redis.mget(
-      this.userKey(id1),
-      this.userKey(id2),
-    )) as (string | null)[];
-
-    if (!u1Json || !u2Json) {
-      // 情報欠落 → キュー & inq に戻す
-      await this.redis.rpush(this.queueKey, id1);
-      await this.redis.rpush(this.queueKey, id2);
-      await this.redis.sadd(this.inqKey, id1, id2);
-      return undefined;
-    }
-
-    // 後片付け（キャッシュ削除）
-    await this.redis.del(this.userKey(id1), this.userKey(id2));
-
-    // 復元（必要なら UserId/User コンストラクタで厳密化）
-    const u1 = JSON.parse(u1Json) as User;
-    const u2 = JSON.parse(u2Json) as User;
-
-    return [u1, u2];
-  }
+			return [new UserId(id1), new UserId(id2)];
+		} catch (error) {
+			console.error("[QueueRepo POP] FATAL ERROR during pop operation", error);
+			throw error;
+		}
+	}
 }

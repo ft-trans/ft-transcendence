@@ -1,62 +1,68 @@
 import type { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import type { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 
 export const matchmakingController = (
 	joinMatchmakingUseCase: JoinMatchmakingUseCase,
 	leaveMatchmakingUseCase: LeaveMatchmakingUseCase,
+	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
+		const routeOptions = {
+			preHandler: [authPrehandler],
+		};
+
 		fastify.post(
 			"/matchmaking/join",
+			routeOptions,
 			onJoinMatchmaking(joinMatchmakingUseCase),
 		);
 
 		fastify.post(
 			"/matchmaking/leave",
+			routeOptions,
 			onLeaveMatchmaking(leaveMatchmakingUseCase),
 		);
 	};
 };
 
 const onJoinMatchmaking = (usecase: JoinMatchmakingUseCase) => {
-	return async (_req: FastifyRequest, reply: FastifyReply) => {
-		// TODO: セッションからuserIdを取得する
-		// **********************************************************
-		const userId = "01K53G4RVBKV6NKJ71S8AGQASX"; // 仮のユーザーID
-		// **********************************************************
+	return async (request: FastifyRequest, reply: FastifyReply) => {
+		try {
+			const userId = request.authenticatedUser!.id;
+			const match = await usecase.execute(userId);
 
-		const match = await usecase.execute(userId);
-
-		// ここでマッチング成立するのか, APIでは待機レスポンスだけ送ってマッチ成立の通知はwebsocketで行うのかは要検討
-		if (match) {
-			reply.status(200).send({
-				message: "マッチしました！",
-				match: {
-					id: match.id,
-					participants: match.participants.map((p) => ({ id: p.id.value })),
-					status: match.status,
-					gameType: match.gameType,
-					createdAt: match.createdAt,
-				},
-			});
-		} else {
-			reply.status(202).send({
-				message: "マッチング待機中です。別のプレイヤーをお待ちください。",
-			});
+			if (match) {
+				return reply.status(200).send({
+					message: "マッチしました！",
+					match: {
+						id: match.id,
+						participants: match.participants.map((p) => ({ id: p.id.value })),
+						status: match.status,
+						gameType: match.gameType,
+						createdAt: match.createdAt,
+					},
+				});
+			} else {
+				return reply.status(202).send({
+					message: "マッチング待機中です。別のプレイヤーをお待ちください。",
+				});
+			}
+		} catch (error) {
+			throw error;
 		}
 	};
 };
 
 const onLeaveMatchmaking = (usecase: LeaveMatchmakingUseCase) => {
-	return async (_req: FastifyRequest, reply: FastifyReply) => {
-		// TODO: セッションからuserIdを取得する
-		// **********************************************************
-		const userId = "01K53G4RVBKV6NKJ71S8AGQASX"; // 仮のユーザーID
-		// **********************************************************
-
-		await usecase.execute(userId);
-
-		reply.status(204).send();
+	return async (request: FastifyRequest, reply: FastifyReply) => {
+		try {
+			const userId = request.authenticatedUser!.id;
+			await usecase.execute(userId);
+			return reply.status(204).send();
+		} catch (error) {
+			throw error;
+		}
 	};
 };

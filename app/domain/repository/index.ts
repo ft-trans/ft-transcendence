@@ -6,3 +6,4 @@ export * from "./pong_loop_repository";
 export * from "./repository";
 export * from "./session_repository";
 export * from "./user_repository";
+export * from "./match_repository";

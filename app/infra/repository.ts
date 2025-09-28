@@ -7,6 +7,7 @@ import type {
 	IRepository,
 	ISessionRepository,
 	IUserRepository,
+	IMatchRepository,
 } from "@domain/repository";
 import { DirectMessageRepository } from "./database/direct_message_repository";
 import { FriendshipRepository } from "./database/friendship_repository";
@@ -17,6 +18,7 @@ import { PongClientRepository } from "./in_memory/pong_client_repository";
 import { PongLoopRepository } from "./in_memory/pong_loop_repository";
 import type { KvsClient } from "./kvs/client";
 import { PongBallRepository } from "./kvs/pong_ball_repository";
+import { MatchRepository } from "./database/match_repository";
 
 export class Repository implements IRepository {
 	constructor(
@@ -52,5 +54,8 @@ export class Repository implements IRepository {
 	}
 	newPongLoopRepository(): IPongLoopRepository {
 		return new PongLoopRepository();
+	}
+	newMatchRepository(): IMatchRepository {
+		return new MatchRepository(this.client);
 	}
 }

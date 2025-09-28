@@ -85,11 +85,17 @@ const start = async () => {
 		const userRepo = new UserRepository(prisma);
 		const matchRepo = new MatchRepository(prisma);
 		const queueRepo = new MatchmakingQueueRepository(app.redis, {
-		  prefix: "mm",
+		    prefix: "mm",
 		});
 		const matchmakingService = new MatchmakingService(
-			tx, matchRepo, queueRepo
+			tx, 
+			queueRepo,
 		);
+		const joinMatchmakingUseCase = new JoinMatchmakingUseCase(
+			repo.newUserRepository(),
+			matchmakingService,
+		);
+		const leaveMatchmakingUseCase = new LeaveMatchmakingUseCase(matchmakingService);
 
 		await app.register(
 			profileController(updateUserUsecase, deleteUserUsecase),
@@ -125,14 +131,17 @@ const start = async () => {
 			{ prefix: "/ws" },
 		);
 
-		const joinUserUsecase = new JoinMatchmakingUseCase(userRepo, matchmakingService);
-		const leaveUserUsecase = new LeaveMatchmakingUseCase(matchmakingService);
 		await app.register(
-			matchmakingController(joinUserUsecase, leaveUserUsecase),
-			{
-				prefix: "/api"
-			},
-		);
+		matchmakingController(
+			joinMatchmakingUseCase,
+			leaveMatchmakingUseCase,
+			authPrehandler,
+		),
+		{
+			prefix: "/api",
+		},
+);
+
 
 		app.get("/*", (_req, reply) => {
 			return reply.html();

@@ -26,9 +26,63 @@ type ViewState =
   | { phase: "leaving" }
   | { phase: "error"; error: string };
 
+function isAxiosLikeError(e: unknown): e is {
+  response?: { status?: number; data?: { message?: string } };
+  message?: string;
+} {
+  if (typeof e !== "object" || e === null) return false;
+  const msgOk = typeof (e as { message?: unknown }).message === "string" || (e as { message?: unknown }).message === undefined;
+  if (!msgOk) return false;
+  const resp = (e as { response?: unknown }).response;
+  if (resp === undefined) return true;
+  if (typeof resp !== "object" || resp === null) return false;
+  const status = (resp as { status?: unknown }).status;
+  const data = (resp as { data?: unknown }).data;
+  return (typeof status === "number" || status === undefined) &&
+         (typeof data === "object" || data === undefined);
+}
+
 export class Matchmaking extends Component {
   private state: ViewState = { phase: "idle" };
   private readonly api = new ApiClient();
+
+  private static delegated = false;
+
+  constructor() {
+    super();
+    if (!Matchmaking.delegated) {
+      document.addEventListener("click", this.onDocClick, { passive: false });
+      Matchmaking.delegated = true;
+    }
+  }
+
+  private onDocClick = (ev: MouseEvent) => {
+    const root = document.querySelector<HTMLElement>("#matchmaking-root");
+    if (!root) return;
+    const target = ev.target as HTMLElement | null;
+    if (!target || !root.contains(target)) return;
+
+    const join = target.closest<HTMLButtonElement>("#join-btn");
+    if (join) {
+      ev.preventDefault();
+      void this.handleJoin();
+      return;
+    }
+
+    const leave = target.closest<HTMLButtonElement>("#leave-btn, #leave-btn2");
+    if (leave) {
+      ev.preventDefault();
+      void this.handleLeave();
+      return;
+    }
+
+    const back = target.closest<HTMLButtonElement>("#back-btn");
+    if (back) {
+      ev.preventDefault();
+      this.setState({ phase: "idle" });
+      return;
+    }
+  };
 
   private setState(next: ViewState): void {
     this.state = next;
@@ -40,7 +94,6 @@ export class Matchmaking extends Component {
   private pathJoin(): string {
     return "/api/matchmaking/join";
   }
-
   private pathLeave(): string {
     return "/api/matchmaking/leave";
   }
@@ -51,46 +104,69 @@ export class Matchmaking extends Component {
 
     const joinBtn = root.querySelector<HTMLButtonElement>("#join-btn");
     if (joinBtn) {
-      joinBtn.addEventListener("click", async () => {
-        this.setState({ phase: "joining", note: "サーバへ参加リクエストを送信中..." });
-        try {
-          const res = await this.api.post<unknown, MatchResponse>(this.pathJoin(), {});
-          if (res.message === "マッチしました！") {
-            this.setState({ phase: "matched", match: res.match });
-            new FloatingBanner({ message: "🎉 マッチが成立しました！", type: "info" }).show();
-          } else {
-            this.setState({
-              phase: "waiting",
-              note: "キューに参加しました。",
-              lastMessage: res.message,
-            });
-            new FloatingBanner({ message: "待機中です。別のプレイヤーを待っています。", type: "info" }).show();
-          }
-        } catch (e: any) {
-          this.setState({ phase: "error", error: e?.message ?? "参加に失敗しました" });
-          new FloatingBanner({ message: "参加に失敗しました", type: "error" }).show();
-        }
-      });
+      const clone = joinBtn.cloneNode(true) as HTMLButtonElement;
+      joinBtn.replaceWith(clone);
+      clone.addEventListener("click", () => { void this.handleJoin(); });
     }
 
     const leaveBtn = root.querySelector<HTMLButtonElement>("#leave-btn, #leave-btn2");
     if (leaveBtn) {
-      leaveBtn.addEventListener("click", async () => {
-        this.setState({ phase: "leaving" });
-        try {
-          await this.api.post(this.pathLeave(), {});
-          this.setState({ phase: "idle" });
-          new FloatingBanner({ message: "キューから離脱しました", type: "info" }).show();
-        } catch (e: any) {
-          this.setState({ phase: "error", error: e?.message ?? "離脱に失敗しました" });
-          new FloatingBanner({ message: "離脱に失敗しました", type: "error" }).show();
-        }
-      });
+      const clone = leaveBtn.cloneNode(true) as HTMLButtonElement;
+      leaveBtn.replaceWith(clone);
+      clone.addEventListener("click", () => { void this.handleLeave(); });
     }
 
     const backBtn = root.querySelector<HTMLButtonElement>("#back-btn");
     if (backBtn) {
-      backBtn.addEventListener("click", () => this.setState({ phase: "idle" }));
+      const clone = backBtn.cloneNode(true) as HTMLButtonElement;
+      backBtn.replaceWith(clone);
+      clone.addEventListener("click", () => this.setState({ phase: "idle" }));
+    }
+  }
+
+  // ---- アクション ----
+  private async handleJoin(): Promise<void> {
+    this.setState({ phase: "joining", note: "サーバへ参加リクエストを送信中..." });
+    try {
+      const res = await this.api.post<unknown, MatchResponse>(this.pathJoin(), {});
+      if (res.message === "マッチしました！") {
+        this.setState({ phase: "matched", match: res.match });
+        new FloatingBanner({ message: "🎉 マッチが成立しました！", type: "info" }).show();
+      } else {
+        this.setState({
+          phase: "waiting",
+          note: "キューに参加しました。",
+          lastMessage: res.message,
+        });
+        new FloatingBanner({ message: "待機中です。別のプレイヤーを待っています。", type: "info" }).show();
+      }
+    } catch (e: unknown) {
+      let msg = "参加に失敗しました";
+      if (isAxiosLikeError(e)) {
+        const status = e.response?.status;
+        msg = e.response?.data?.message ?? e.message ?? msg;
+        if (status === 401) {
+          this.setState({ phase: "error", error: "未ログインです。ログイン後に再度お試しください。" });
+          new FloatingBanner({ message: "未ログインです。ログインしてください。", type: "error" }).show();
+          return;
+        }
+      }
+      this.setState({ phase: "error", error: msg });
+      new FloatingBanner({ message: "参加に失敗しました", type: "error" }).show();
+    }
+  }
+
+  private async handleLeave(): Promise<void> {
+    this.setState({ phase: "leaving" });
+    try {
+      await this.api.post(this.pathLeave(), {});
+      this.setState({ phase: "idle" });
+      new FloatingBanner({ message: "キューから離脱しました", type: "info" }).show();
+    } catch (e: unknown) {
+      const msg =
+        isAxiosLikeError(e) ? (e.response?.data?.message ?? e.message ?? "離脱に失敗しました") : "離脱に失敗しました";
+      this.setState({ phase: "error", error: msg });
+      new FloatingBanner({ message: "離脱に失敗しました", type: "error" }).show();
     }
   }
 
@@ -191,7 +267,7 @@ export class Matchmaking extends Component {
         ${new SectionTitle({ text: "Matchmaking" }).render()}
         <div class="max-w-2xl mx-auto rounded-2xl shadow p-6 space-y-4">
           <div class="rounded-xl border px-4 py-3 bg-red-50">
-            エラー: ${(this.state as any).error ?? "不明なエラー"}
+            エラー: ${(this.state as ViewState & { error?: string }).error ?? "不明なエラー"}
           </div>
           <div class="flex justify-center">
             ${new Button({ id: "back-btn", text: "戻る", type: "button" }).render()}

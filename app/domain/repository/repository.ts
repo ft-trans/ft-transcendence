@@ -5,6 +5,7 @@ import type { IPongClientRepository } from "./pong_client_repository";
 import type { IPongLoopRepository } from "./pong_loop_repository";
 import type { ISessionRepository } from "./session_repository";
 import type { IUserRepository } from "./user_repository";
+import type { IMatchRepository } from "./match_repository";
 
 export interface IRepository {
 	// database repositories
@@ -19,4 +20,6 @@ export interface IRepository {
 	// in-memory repositories
 	newPongClientRepository(): IPongClientRepository;
 	newPongLoopRepository(): IPongLoopRepository;
+
+	newMatchRepository(): IMatchRepository;
 }
