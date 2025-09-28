@@ -4,6 +4,7 @@ import { User, UserEmail, Username } from "@domain/model";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IMatchRepository,
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
@@ -40,6 +41,7 @@ describe("DeleteUserUsecase", () => {
 				newPongBallRepository: () => mock<IPongBallRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newMatchRepository: () => mock<IMatchRepository>(),
 			};
 			return callback(repo);
 		});
@@ -67,6 +69,7 @@ describe("DeleteUserUsecase", () => {
 				newPongBallRepository: () => mock<IPongBallRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newMatchRepository: () => mock<IMatchRepository>(),
 			};
 			return callback(repo);
 		});
