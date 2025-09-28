@@ -5,7 +5,6 @@ import { Match } from "../model/match";
 import type { User } from "../model/user";
 import type { IMatchmakingQueueRepository } from "../repository/matchmaking_queue_repository";
 
-
 export class MatchmakingService {
 	constructor(
 		private readonly transaction: ITransaction,

@@ -1,7 +1,15 @@
-import { User, UserEmail, UserId } from "@domain/model";
+import {
+	User,
+	UserAvatar,
+	UserEmail,
+	UserId,
+	Username,
+	type UserStatus,
+	UserStatusValue,
+} from "@domain/model";
 import { Match } from "@domain/model/match";
 import type { IMatchRepository } from "@domain/repository/match_repository";
-import type { Client } from "./repository";
+import type { Client } from "./prisma";
 
 export class MatchRepository implements IMatchRepository {
 	constructor(private readonly client: Client) {}
@@ -19,14 +27,26 @@ export class MatchRepository implements IMatchRepository {
 		const users = ids.length
 			? await this.client.user.findMany({
 					where: { id: { in: ids } },
-					select: { id: true, email: true },
+					select: {
+						id: true,
+						email: true,
+						username: true,
+						avatar: true,
+						status: true,
+					},
 				})
 			: [];
 
 		const map = new Map(
 			users.map((u) => [
 				u.id,
-				User.reconstruct(new UserId(u.id), new UserEmail(u.email)),
+				User.reconstruct(
+					new UserId(u.id),
+					new UserEmail(u.email),
+					new Username(u.username),
+					new UserAvatar(u.avatar),
+					new UserStatusValue(u.status as UserStatus),
+				),
 			]),
 		);
 
@@ -34,7 +54,13 @@ export class MatchRepository implements IMatchRepository {
 			const u = map.get(id);
 			return (
 				u ??
-				User.reconstruct(new UserId(id), new UserEmail("unknown@example.com"))
+				User.reconstruct(
+					new UserId(id),
+					new UserEmail("unknown@example.com"),
+					new Username("unknown"),
+					new UserAvatar(""),
+					new UserStatusValue("offline"),
+				)
 			);
 		});
 

@@ -1,13 +1,13 @@
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IMatchRepository,
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
 	IRepository,
 	ISessionRepository,
 	IUserRepository,
-	IMatchRepository,
 } from "@domain/repository";
 import { DirectMessageRepository } from "./database/direct_message_repository";
 import { FriendshipRepository } from "./database/friendship_repository";

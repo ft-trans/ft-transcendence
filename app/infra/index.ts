@@ -1,3 +1,5 @@
+export * from "./database/match_repository";
+export * from "./database/matchmaking_queue_repository";
 export * from "./database/transaction";
 export * from "./database/user_repository";
 export * from "./in_memory/chat_client_repository";
