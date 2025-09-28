@@ -1,9 +1,10 @@
+import type { IMatchmakingClientRepository } from "../../infra/in_memory/matchmaking_client_repository";
 import type { ITransaction } from "../../usecase/transaction";
 import { ErrBadRequest, ErrNotFound } from "../error";
 import { Match } from "../model/match";
 import type { User } from "../model/user";
 import type { IMatchmakingQueueRepository } from "../repository/matchmaking_queue_repository";
-import type { IMatchmakingClientRepository } from "../../infra/in_memory/matchmaking_client_repository";
+
 
 export class MatchmakingService {
 	constructor(

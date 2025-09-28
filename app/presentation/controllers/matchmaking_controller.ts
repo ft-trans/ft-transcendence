@@ -1,7 +1,7 @@
+import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import type { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 
 export const matchmakingController = (
 	joinMatchmakingUseCase: JoinMatchmakingUseCase,
@@ -56,7 +56,10 @@ const onJoinMatchmaking = (usecase: JoinMatchmakingUseCase) => {
 
 const onLeaveMatchmaking = (usecase: LeaveMatchmakingUseCase) => {
 	return async (request: FastifyRequest, reply: FastifyReply) => {
-		const userId = request.authenticatedUser!.id;
+		const userId = request.authenticatedUser?.id;
+		if (!userId) {
+			return reply.status(401).send({ message: "Unauthorized" });
+		}
 		await usecase.execute(userId);
 		return reply.status(204).send();
 	};

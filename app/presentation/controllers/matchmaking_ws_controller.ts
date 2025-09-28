@@ -1,6 +1,6 @@
-import type { FastifyInstance } from "fastify";
-import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { IMatchmakingClientRepository } from "@infra/in_memory/matchmaking_client_repository";
+import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import type { FastifyInstance } from "fastify";
 
 export const matchmakingWsController = (
 	authPrehandler: AuthPrehandler,
@@ -11,7 +11,7 @@ export const matchmakingWsController = (
 			"/matchmaking",
 			{ websocket: true, preHandler: [authPrehandler] },
 			(connection, req) => {
-				const userId = req.authenticatedUser!.id;
+				const userId = req.authenticatedUser?.id;
 				console.log(`[WS Matchmaking] Client connected: ${userId}`);
 				clientRepository.add(userId, connection, req);
 

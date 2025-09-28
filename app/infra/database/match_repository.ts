@@ -1,5 +1,5 @@
-import { Match } from "@domain/model/match";
 import { User, UserEmail, UserId } from "@domain/model";
+import { Match } from "@domain/model/match";
 import type { IMatchRepository } from "@domain/repository/match_repository";
 import type { Client } from "./repository";
 

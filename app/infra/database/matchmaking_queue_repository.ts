@@ -1,5 +1,5 @@
-import type { IMatchmakingQueueRepository } from "@domain/repository/matchmaking_queue_repository";
 import { type User, UserId } from "@domain/model/user";
+import type { IMatchmakingQueueRepository } from "@domain/repository/matchmaking_queue_repository";
 import type { FastifyRedis } from "@fastify/redis";
 
 type Options = {

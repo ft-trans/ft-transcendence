@@ -2,9 +2,9 @@ import { pathToRegexp } from "path-to-regexp";
 import { createRouteParams, Navigation } from "./components";
 import { Login, Register } from "./features/auth";
 import { Home } from "./features/home";
+import { Matchmaking } from "./features/matchmaking";
 import { MatchesPong } from "./features/pong/matches";
 import { EditProfile } from "./features/profile";
-import { Matchmaking } from "./features/matchmaking";
 
 export const router = async () => {
 	// biome-ignore lint/style/noNonNullAssertion: app container は必ず存在する

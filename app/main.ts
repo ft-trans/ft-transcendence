@@ -1,8 +1,10 @@
 import { resolve } from "node:path";
+import { MatchmakingService } from "@domain/service/matchmaking_service";
 import FastifyCookie from "@fastify/cookie";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
 import websocket from "@fastify/websocket";
+import { MatchmakingQueueRepository } from "@infra/database/matchmaking_queue_repository";
 import { prisma } from "@infra/database/prisma";
 import { Transaction } from "@infra/database/transaction";
 import { InMemoryChatClientRepository } from "@infra/in_memory/chat_client_repository";
@@ -10,10 +12,10 @@ import { InMemoryMatchmakingClientRepository } from "@infra/in_memory/matchmakin
 import { Repository } from "@infra/repository";
 import { authController } from "@presentation/controllers/auth_controller";
 import { chatController } from "@presentation/controllers/chat_controller";
-import { pongController } from "@presentation/controllers/pong_controller";
-import { profileController } from "@presentation/controllers/profile_controller";
 import { matchmakingController } from "@presentation/controllers/matchmaking_controller";
 import { matchmakingWsController } from "@presentation/controllers/matchmaking_ws_controller";
+import { pongController } from "@presentation/controllers/pong_controller";
+import { profileController } from "@presentation/controllers/profile_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
 import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
@@ -33,10 +35,6 @@ import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
 import Fastify from "fastify";
-import { MatchmakingService } from "@domain/service/matchmaking_service";
-import { UserRepository } from "@infra/database/user_repository";
-import { MatchRepository } from "@infra/database/match_repository";
-import { MatchmakingQueueRepository } from "@infra/database/matchmaking_queue_repository";
 import { otelInstrumentation } from "./observability/otel.js";
 
 const app = Fastify({ logger: true });

@@ -11,6 +11,7 @@ import type {
 } from "@domain/repository";
 import { DirectMessageRepository } from "./database/direct_message_repository";
 import { FriendshipRepository } from "./database/friendship_repository";
+import { MatchRepository } from "./database/match_repository";
 import type { Client } from "./database/prisma";
 import { SessionRepository } from "./database/session_repository";
 import { UserRepository } from "./database/user_repository";
@@ -18,7 +19,6 @@ import { PongClientRepository } from "./in_memory/pong_client_repository";
 import { PongLoopRepository } from "./in_memory/pong_loop_repository";
 import type { KvsClient } from "./kvs/client";
 import { PongBallRepository } from "./kvs/pong_ball_repository";
-import { MatchRepository } from "./database/match_repository";
 
 export class Repository implements IRepository {
 	constructor(
