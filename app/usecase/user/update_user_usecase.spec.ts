@@ -4,6 +4,7 @@ import { User, UserEmail, Username } from "@domain/model";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IMatchRepository,
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
@@ -25,6 +26,7 @@ const repo = {
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 	newSessionRepository: () => mock<ISessionRepository>(),
+	newMatchRepository: () => mock<IMatchRepository>(),
 };
 
 const mockTx = mock<ITransaction>();

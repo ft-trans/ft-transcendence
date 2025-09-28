@@ -2,6 +2,7 @@ import { MatchId, type PongLoopId } from "@domain/model/pong";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IMatchRepository,
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
@@ -25,6 +26,7 @@ const repo = {
 	newPongClientRepository: () => pongClientRepo,
 	newPongLoopRepository: () => pongLoopRepo,
 	newSessionRepository: () => mock<ISessionRepository>(),
+	newMatchRepository: () => mock<IMatchRepository>(),
 };
 
 describe("JoinPongUsecase", () => {

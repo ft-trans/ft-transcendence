@@ -9,6 +9,7 @@ import type {
 } from "@domain/repository";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
+import type { IMatchRepository } from "@domain/repository/match_repository";
 import type { ISessionRepository } from "@domain/repository/session_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -32,6 +33,7 @@ const mockRepos = {
 	newPongBallRepository: () => mock<IPongBallRepository>(),
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
+	newMatchRepository: () => mock<IMatchRepository>(),
 };
 tx.exec.mockImplementation(async (callback) => callback(mockRepos));
 

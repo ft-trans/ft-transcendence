@@ -1,49 +1,82 @@
+import type { IMatchmakingClientRepository } from "../../infra/in_memory/matchmaking_client_repository";
 import type { ITransaction } from "../../usecase/transaction";
-import { ErrBadRequest } from "../error";
+import { ErrBadRequest, ErrNotFound } from "../error";
 import { Match } from "../model/match";
 import type { User } from "../model/user";
-import type { IMatchRepository } from "../repository/match_repository";
 import type { IMatchmakingQueueRepository } from "../repository/matchmaking_queue_repository";
 
 export class MatchmakingService {
 	constructor(
 		private readonly transaction: ITransaction,
-		private readonly matchRepository: IMatchRepository,
 		private readonly matchmakingQueueRepository: IMatchmakingQueueRepository,
+		private readonly matchmakingClientRepository: IMatchmakingClientRepository,
 	) {}
 
 	async join(user: User): Promise<Match | undefined> {
-		// 既に進行中の試合がないか確認
-		const existingMatch =
-			await this.matchRepository.findInProgressMatchByUserId(user.id.value);
-		if (existingMatch) {
-			throw new ErrBadRequest({
-				userMessage: "ユーザーは既に試合に参加しています。",
-			});
-		}
+		const newMatch = await this.transaction.exec(async (repo) => {
+			const matchRepository = repo.newMatchRepository();
+			const userRepository = repo.newUserRepository();
 
-		await this.matchmakingQueueRepository.add(user);
-		const matchedUsers = await this.matchmakingQueueRepository.pop();
-
-		if (matchedUsers) {
-			const newMatch: Match | undefined = await this.transaction.exec(
-				async () => {
-					const match = Match.create(matchedUsers);
-					const savedMatch = await this.matchRepository.save(match);
-					// キューからマッチしたユーザーを削除
-					await this.matchmakingQueueRepository.remove(
-						matchedUsers[0].id.value,
-					);
-					await this.matchmakingQueueRepository.remove(
-						matchedUsers[1].id.value,
-					);
-					return savedMatch;
-				},
+			const existingMatch = await matchRepository.findInProgressMatchByUserId(
+				user.id.value,
 			);
-			// WebSocketなどでマッチング成功を通知する
-			return newMatch;
-		}
-		return undefined;
+			if (existingMatch) {
+				throw new ErrBadRequest({
+					userMessage: "ユーザーは既に試合に参加しています。",
+				});
+			}
+
+			await this.matchmakingQueueRepository.add(user);
+			const matchedUserIds = await this.matchmakingQueueRepository.pop();
+
+			if (matchedUserIds) {
+				const [user1Id, user2Id] = matchedUserIds;
+
+				const user1 = await userRepository.findById(user1Id);
+				const user2 = await userRepository.findById(user2Id);
+
+				if (!user1 || !user2) {
+					throw new ErrNotFound();
+				}
+
+				const match = Match.create([user1, user2]);
+				const savedMatch = await matchRepository.save(match);
+				const participants = [user1, user2];
+
+				for (const participant of participants) {
+					const client = this.matchmakingClientRepository.findByUserId(
+						participant.id.value,
+					);
+					if (client) {
+						console.log(
+							`[WS Matchmaking] Sending matchFound to ${participant.id.value}`,
+						);
+						const payload = {
+							event: "matchFound",
+							data: {
+								id: savedMatch.id,
+								participants: savedMatch.participants.map((p) => ({
+									id: p.id.value,
+								})),
+								status: savedMatch.status,
+								gameType: savedMatch.gameType,
+								createdAt: savedMatch.createdAt,
+							},
+						};
+						client.send(JSON.stringify(payload));
+					}
+				}
+
+				await this.matchmakingQueueRepository.remove(user1Id.value);
+				await this.matchmakingQueueRepository.remove(user2Id.value);
+
+				return savedMatch;
+			}
+
+			return undefined;
+		});
+
+		return newMatch;
 	}
 
 	async leave(userId: string): Promise<void> {
