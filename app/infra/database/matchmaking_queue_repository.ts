@@ -13,7 +13,10 @@ export class MatchmakingQueueRepository implements IMatchmakingQueueRepository {
 	private readonly prefix: string;
 	private readonly enqueueDir: "left" | "right";
 
-	constructor(private readonly redis: FastifyRedis, opts?: Options) {
+	constructor(
+		private readonly redis: FastifyRedis,
+		opts?: Options,
+	) {
 		this.prefix = opts?.prefix ?? "mm";
 		this.queueKey = `${this.prefix}:queue`;
 		this.inqKey = `${this.prefix}:inq`;
@@ -24,10 +27,14 @@ export class MatchmakingQueueRepository implements IMatchmakingQueueRepository {
 	async add(user: User): Promise<void> {
 		const id = user.id.value;
 		try {
-			console.log(`[QueueRepo ADD] UserID: ${id}. Checking if already in queue...`);
+			console.log(
+				`[QueueRepo ADD] UserID: ${id}. Checking if already in queue...`,
+			);
 			const added = await this.redis.sadd(this.inqKey, id);
 			if (added === 0) {
-				console.log(`[QueueRepo ADD] UserID: ${id} is already in queue. Skipping.`);
+				console.log(
+					`[QueueRepo ADD] UserID: ${id} is already in queue. Skipping.`,
+				);
 				return;
 			}
 			console.log(`[QueueRepo ADD] UserID: ${id} added to 'inq' set.`);
@@ -38,7 +45,9 @@ export class MatchmakingQueueRepository implements IMatchmakingQueueRepository {
 				await this.redis.lpush(this.queueKey, id);
 			}
 			const length = await this.redis.llen(this.queueKey);
-			console.log(`[QueueRepo ADD] UserID: ${id} pushed to queue. New length: ${length}.`);
+			console.log(
+				`[QueueRepo ADD] UserID: ${id} pushed to queue. New length: ${length}.`,
+			);
 		} catch (error) {
 			console.error(`[QueueRepo ADD] FATAL ERROR for UserID: ${id}`, error);
 			throw error;
@@ -56,7 +65,9 @@ export class MatchmakingQueueRepository implements IMatchmakingQueueRepository {
 	async pop(): Promise<[UserId, UserId] | undefined> {
 		try {
 			const length = await this.redis.llen(this.queueKey);
-			console.log(`[QueueRepo POP] Pop called. Current queue length: ${length}.`);
+			console.log(
+				`[QueueRepo POP] Pop called. Current queue length: ${length}.`,
+			);
 			if (length < 2) {
 				return undefined;
 			}
@@ -73,7 +84,9 @@ export class MatchmakingQueueRepository implements IMatchmakingQueueRepository {
 				return undefined;
 			}
 
-			console.log(`[QueueRepo POP] Successfully popped ${id1} and ${id2}. Removing from 'inq' set.`);
+			console.log(
+				`[QueueRepo POP] Successfully popped ${id1} and ${id2}. Removing from 'inq' set.`,
+			);
 			await this.redis.srem(this.inqKey, id1, id2);
 			console.log("[QueueRepo POP] Returning UserId pair.");
 

@@ -15,10 +15,10 @@ export const matchmakingWsController = (
 				console.log(`[WS Matchmaking] Client connected: ${userId}`);
 				clientRepository.add(userId, connection, req);
 
-                connection.on("close", () => {
-                    console.log(`[WS Matchmaking] Client disconnected: ${userId}`);
-                    clientRepository.remove(userId);
-                });
+				connection.on("close", () => {
+					console.log(`[WS Matchmaking] Client disconnected: ${userId}`);
+					clientRepository.remove(userId);
+				});
 			},
 		);
 	};

@@ -27,8 +27,8 @@ export const router = async () => {
 			component: new Navigation({ child: new EditProfile() }),
 		},
 		{
-			path: "/matchmaking", 
-			component: new Navigation({ child: new Matchmaking() }) 
+			path: "/matchmaking",
+			component: new Navigation({ child: new Matchmaking() }),
 		},
 		{
 			path: "/pong/matches/:match_id",

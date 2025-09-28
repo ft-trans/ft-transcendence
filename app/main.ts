@@ -33,7 +33,7 @@ import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
 import Fastify from "fastify";
-import { MatchmakingService } from "@domain/service/matchmaking_service";		
+import { MatchmakingService } from "@domain/service/matchmaking_service";
 import { UserRepository } from "@infra/database/user_repository";
 import { MatchRepository } from "@infra/database/match_repository";
 import { MatchmakingQueueRepository } from "@infra/database/matchmaking_queue_repository";
@@ -84,15 +84,14 @@ const start = async () => {
 		);
 		const updateUserUsecase = new UpdateUserUsecase(tx);
 		const deleteUserUsecase = new DeleteUserUsecase(tx);
-		const userRepo = new UserRepository(prisma);
-		const matchRepo = new MatchRepository(prisma);
 		const queueRepo = new MatchmakingQueueRepository(app.redis, {
-		    prefix: "mm",
+			prefix: "mm",
 		});
-		const matchmakingClientRepository = new InMemoryMatchmakingClientRepository();
+		const matchmakingClientRepository =
+			new InMemoryMatchmakingClientRepository();
 
 		const matchmakingService = new MatchmakingService(
-			tx, 
+			tx,
 			queueRepo,
 			matchmakingClientRepository,
 		);
@@ -100,7 +99,9 @@ const start = async () => {
 			repo.newUserRepository(),
 			matchmakingService,
 		);
-		const leaveMatchmakingUseCase = new LeaveMatchmakingUseCase(matchmakingService);
+		const leaveMatchmakingUseCase = new LeaveMatchmakingUseCase(
+			matchmakingService,
+		);
 
 		await app.register(
 			profileController(updateUserUsecase, deleteUserUsecase),
@@ -137,10 +138,10 @@ const start = async () => {
 		);
 
 		await app.register(
-		matchmakingController(
-			joinMatchmakingUseCase,
-			leaveMatchmakingUseCase,
-			authPrehandler,
+			matchmakingController(
+				joinMatchmakingUseCase,
+				leaveMatchmakingUseCase,
+				authPrehandler,
 			),
 			{
 				prefix: "/api",
@@ -148,13 +149,9 @@ const start = async () => {
 		);
 
 		await app.register(
-			matchmakingWsController(
-				authPrehandler,
-				matchmakingClientRepository,
-			),
+			matchmakingWsController(authPrehandler, matchmakingClientRepository),
 			{ prefix: "/ws" },
 		);
-
 
 		app.get("/*", (_req, reply) => {
 			return reply.html();
