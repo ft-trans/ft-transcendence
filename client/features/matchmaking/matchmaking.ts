@@ -86,7 +86,6 @@ export class Matchmaking extends Component {
   };
 
   private setState(next: ViewState): void {
-    // 状態が変化するときに、不要なWebSocket接続を閉じる処理を追加
     if (this.ws && (next.phase !== 'waiting')) {
       this.cleanupWebSocket();
     }

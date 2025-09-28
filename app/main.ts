@@ -152,7 +152,7 @@ const start = async () => {
 				authPrehandler,
 				matchmakingClientRepository,
 			),
-			{ prefix: "/ws" }, // WebSocketなので /ws プレフィックス
+			{ prefix: "/ws" },
 		);
 
 
