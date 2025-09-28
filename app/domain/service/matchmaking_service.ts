@@ -3,11 +3,13 @@ import { ErrBadRequest, ErrNotFound } from "../error";
 import { Match } from "../model/match";
 import type { User } from "../model/user";
 import type { IMatchmakingQueueRepository } from "../repository/matchmaking_queue_repository";
+import type { IMatchmakingClientRepository } from "../../infra/in_memory/matchmaking_client_repository"; 
 
 export class MatchmakingService {
 	constructor(
 		private readonly transaction: ITransaction,
 		private readonly matchmakingQueueRepository: IMatchmakingQueueRepository,
+		private readonly matchmakingClientRepository: IMatchmakingClientRepository,
 	) {}
 
 	async join(user: User): Promise<Match | undefined> {
@@ -37,6 +39,25 @@ export class MatchmakingService {
 
 				const match = Match.create([user1, user2]);
 				const savedMatch = await matchRepository.save(match);
+				const participants = [user1, user2]; 
+				
+				for (const participant of participants) {
+					const client = this.matchmakingClientRepository.findByUserId(participant.id.value);
+					if (client) {
+						console.log(`[WS Matchmaking] Sending matchFound to ${participant.id.value}`);
+						const payload = {
+							event: "matchFound",
+							data: {
+								id: savedMatch.id,
+								participants: savedMatch.participants.map(p => ({ id: p.id.value })),
+								status: savedMatch.status, 
+								gameType: savedMatch.gameType, 
+								createdAt: savedMatch.createdAt,  
+							},
+						};
+						client.send(JSON.stringify(payload));
+					}
+				}
 				
 				await this.matchmakingQueueRepository.remove(user1Id.value);
 				await this.matchmakingQueueRepository.remove(user2Id.value);

@@ -45,6 +45,7 @@ function isAxiosLikeError(e: unknown): e is {
 export class Matchmaking extends Component {
   private state: ViewState = { phase: "idle" };
   private readonly api = new ApiClient();
+  private ws: WebSocket | null = null;
 
   private static delegated = false;
 
@@ -85,6 +86,10 @@ export class Matchmaking extends Component {
   };
 
   private setState(next: ViewState): void {
+    // 状態が変化するときに、不要なWebSocket接続を閉じる処理を追加
+    if (this.ws && (next.phase !== 'waiting')) {
+      this.cleanupWebSocket();
+    }
     this.state = next;
     const host = document.querySelector<HTMLElement>("#matchmaking-root");
     if (host) host.innerHTML = this.inner();
@@ -124,7 +129,6 @@ export class Matchmaking extends Component {
     }
   }
 
-  // ---- アクション ----
   private async handleJoin(): Promise<void> {
     this.setState({ phase: "joining", note: "サーバへ参加リクエストを送信中..." });
     try {
@@ -138,6 +142,7 @@ export class Matchmaking extends Component {
           note: "キューに参加しました。",
           lastMessage: res.message,
         });
+        this.setupWebSocket();
         new FloatingBanner({ message: "待機中です。別のプレイヤーを待っています。", type: "info" }).show();
       }
     } catch (e: unknown) {
@@ -157,6 +162,7 @@ export class Matchmaking extends Component {
   }
 
   private async handleLeave(): Promise<void> {
+    this.cleanupWebSocket();
     this.setState({ phase: "leaving" });
     try {
       await this.api.post(this.pathLeave(), {});
@@ -167,6 +173,55 @@ export class Matchmaking extends Component {
         isAxiosLikeError(e) ? (e.response?.data?.message ?? e.message ?? "離脱に失敗しました") : "離脱に失敗しました";
       this.setState({ phase: "error", error: msg });
       new FloatingBanner({ message: "離脱に失敗しました", type: "error" }).show();
+    }
+  }
+
+  private setupWebSocket(): void {
+    if (this.ws) return;
+
+    const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${location.host}/ws/matchmaking`;
+
+    console.log(`[WS] Connecting to ${wsUrl}`);
+    this.ws = new WebSocket(wsUrl);
+
+    this.ws.addEventListener('open', () => {
+      console.log('[WS] Connection established.');
+    });
+
+    this.ws.addEventListener('message', (event) => {
+      console.log('[WS] Message received:', event.data);
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.event === 'matchFound') {
+          this.setState({ phase: "matched", match: payload.data });
+          new FloatingBanner({ message: "🎉 マッチが成立しました！（通知）", type: "info" }).show();
+        }
+      } catch (error) {
+        console.error('[WS] Failed to parse message:', error);
+      }
+    });
+
+    this.ws.addEventListener('close', () => {
+      console.log('[WS] Connection closed.');
+      this.ws = null;
+    });
+
+    this.ws.addEventListener('error', (error) => {
+      console.error('[WS] WebSocket error:', error);
+      this.setState({ phase: "error", error: "リアルタイム接続でエラーが発生しました。" });
+    });
+  }
+
+  private cleanupWebSocket(): void {
+    if (this.ws) {
+      console.log('[WS] Cleaning up WebSocket connection.');
+      this.ws.onopen = null;
+      this.ws.onmessage = null;
+      this.ws.onclose = null;
+      this.ws.onerror = null;
+      this.ws.close();
+      this.ws = null;
     }
   }
 
@@ -241,9 +296,6 @@ export class Matchmaking extends Component {
               <li>createdAt: ${new Date(m.createdAt).toLocaleString()}</li>
               <li>participants:<ul class="list-disc pl-6">${participants}</ul></li>
             </ul>
-            <div class="flex justify-center">
-              ${new Button({ id: "leave-btn2", text: "キューから離脱する", type: "button" }).render()}
-            </div>
             ${busy}
           </div>
         </div>
