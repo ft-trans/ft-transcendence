@@ -207,31 +207,54 @@ export class PongField {
 
 	isScoredPoint(ball: PongBall, player: PongPlayer): boolean {
 		if (player === "player1") {
-			return ball.x < 0;
-		} else {
 			return this.width < ball.x;
+		} else {
+			return ball.x < 0;
 		}
 	}
 }
 
 export class PongMatchState {
 	// readonly gameState: "waiting" | "playing" | "ended"
-	// readonly score: { player1: number; player2: number },
+	readonly score: { player1: number; player2: number };
 	readonly rallyTime: number = 0;
 
-	constructor({ rallyTime = 0 }: { rallyTime: number }) {
+	constructor({
+		rallyTime = 0,
+		score = { player1: 0, player2: 0 },
+	}: { rallyTime: number; score: { player1: number; player2: number } }) {
 		this.rallyTime = rallyTime;
+		this.score = score;
 	}
 
 	initRallyTime(): PongMatchState {
-		return new PongMatchState({ rallyTime: 0 });
+		return new PongMatchState({ rallyTime: 0, score: this.score });
 	}
 	incrementRally(): PongMatchState {
-		return new PongMatchState({ rallyTime: this.rallyTime + 1 });
+		return new PongMatchState({
+			rallyTime: this.rallyTime + 1,
+			score: this.score,
+		});
+	}
+	scorePoint(player: PongPlayer): PongMatchState {
+		if (player === "player1") {
+			return new PongMatchState({
+				rallyTime: this.rallyTime,
+				score: { player1: this.score.player1 + 1, player2: this.score.player2 },
+			});
+		} else {
+			return new PongMatchState({
+				rallyTime: this.rallyTime,
+				score: { player1: this.score.player1, player2: this.score.player2 + 1 },
+			});
+		}
 	}
 
 	static init(): PongMatchState {
-		return new PongMatchState({ rallyTime: 0 });
+		return new PongMatchState({
+			rallyTime: 0,
+			score: { player1: 0, player2: 0 },
+		});
 	}
 }
 
@@ -273,12 +296,18 @@ export class PongGame {
 
 		const nextBall = this.ball.next();
 		if (this.field.isScoredPoint(nextBall, "player1")) {
-			// TODO スコア計算
-			return new PongGame(undefined, this.paddles, this.state);
+			return new PongGame(
+				undefined,
+				this.paddles,
+				this.state.scorePoint("player1"),
+			);
 		}
 		if (this.field.isScoredPoint(nextBall, "player2")) {
-			// TODO スコア計算
-			return new PongGame(undefined, this.paddles, this.state);
+			return new PongGame(
+				undefined,
+				this.paddles,
+				this.state.scorePoint("player2"),
+			);
 		}
 		return new PongGame(nextBall, this.paddles, this.state);
 	}

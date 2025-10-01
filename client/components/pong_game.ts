@@ -3,6 +3,7 @@ import type { PongGameStateResponse } from "@shared/api/pong";
 export class PongGame {
 	private readonly canvas: HTMLCanvasElement;
 	private readonly context: CanvasRenderingContext2D;
+	private readonly scoreFont: string;
 
 	constructor({ width, height } = { width: 600, height: 400 }) {
 		this.canvas = document.createElement("canvas");
@@ -14,6 +15,7 @@ export class PongGame {
 			throw new Error("Failed to get 2D context");
 		}
 		this.context = ctx;
+		this.scoreFont = "180px 'Jersey 10', monospace";
 	}
 
 	appendTo(parent: HTMLElement) {
@@ -26,6 +28,7 @@ export class PongGame {
 		this.canvas.height = gameState.payload.field.height;
 
 		this.drawField();
+		this.drawScore(gameState.payload.state.score);
 		if (gameState.payload.ball !== undefined) {
 			this.drawBall(gameState.payload.ball);
 		}
@@ -66,5 +69,13 @@ export class PongGame {
 	}) {
 		this.context.fillStyle = "white";
 		this.context.fillRect(x, y, width, height);
+	}
+
+	private drawScore(score: { player1: number; player2: number }) {
+		this.context.fillStyle = "#ccc";
+		this.context.font = this.scoreFont;
+		this.context.textAlign = "center";
+		this.context.fillText(`${score.player1}`, this.canvas.width / 4, 120);
+		this.context.fillText(`${score.player2}`, (this.canvas.width / 4) * 3, 120);
 	}
 }

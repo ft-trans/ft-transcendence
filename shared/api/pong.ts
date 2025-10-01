@@ -17,7 +17,7 @@ export type PongGameStatePayload = {
 			height: number;
 		};
 	};
-	//   score: { player1: number; player2: number };
+	state: { rallyTime: number; score: { player1: number; player2: number } };
 };
 
 export type PongGameStateResponse = {

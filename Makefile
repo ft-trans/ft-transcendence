@@ -28,10 +28,6 @@ db.studio:
 
 .PHONY: run
 run:
-	pnpm run dev
-
-.PHONY: run.tsx
-run.tsx:
 	pnpm run dev:tsx
 
 .PHONY: up

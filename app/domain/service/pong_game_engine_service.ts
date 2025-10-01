@@ -50,7 +50,7 @@ export class PongGameEngineService {
 				field: pongGame.field,
 				ball: pongGame.ball,
 				paddles: pongGame.paddles,
-				// score: this.score,
+				state: pongGame.state,
 			},
 		};
 	}
