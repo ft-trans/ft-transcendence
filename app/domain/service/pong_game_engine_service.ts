@@ -2,22 +2,30 @@ import type { PongGameStateResponse } from "@shared/api/pong";
 import { type MatchId, PongGame } from "../model/pong";
 import type { IPongBallRepository } from "../repository/pong_ball_repository";
 import type { IPongClientRepository } from "../repository/pong_client_repository";
+import type { IPongMatchStateRepository } from "../repository/pong_match_state_repository";
+import type { IPongPaddleRepository } from "../repository/pong_paddle_repository";
 
 export class PongGameEngineService {
 	constructor(
 		private readonly matchId: MatchId,
 		private readonly pongBallRepo: IPongBallRepository,
+		private readonly pongPaddleRepo: IPongPaddleRepository,
 		private readonly pongClientRepo: IPongClientRepository,
+		private readonly pongMatchStateRepo: IPongMatchStateRepository,
 	) {}
 
 	// Processing one frame
 	// this function is called in setInterval
 	async processFrame() {
 		const ball = await this.pongBallRepo.get(this.matchId);
-		if (!ball) {
-			return;
-		}
-		const pongGame = new PongGame(ball);
+		const paddle1 = await this.pongPaddleRepo.get(this.matchId, "player1");
+		const paddle2 = await this.pongPaddleRepo.get(this.matchId, "player2");
+		const state = this.pongMatchStateRepo.get(this.matchId);
+		const pongGame = new PongGame(
+			ball,
+			{ player1: paddle1, player2: paddle2 },
+			state,
+		);
 		const newPongGame = pongGame.calculateFrame();
 
 		this.pongClientRepo.get(this.matchId)?.forEach((client) => {
@@ -27,15 +35,21 @@ export class PongGameEngineService {
 			client.send(JSON.stringify(this.toResponse(newPongGame)));
 		});
 
-		await this.pongBallRepo.set(this.matchId, newPongGame.ball);
+		this.pongMatchStateRepo.set(this.matchId, newPongGame.state);
+		if (newPongGame.ball !== undefined) {
+			await this.pongBallRepo.set(this.matchId, newPongGame.ball);
+		} else {
+			await this.pongBallRepo.delete(this.matchId);
+		}
 	}
 
 	private toResponse(pongGame: PongGame): PongGameStateResponse {
 		return {
 			event: "gameState",
 			payload: {
+				field: pongGame.field,
 				ball: pongGame.ball,
-				// paddles: this.paddles,
+				paddles: pongGame.paddles,
 				// score: this.score,
 			},
 		};

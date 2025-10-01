@@ -32,6 +32,7 @@ import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase
 import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
 import { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
 import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
+import { UpdatePongPaddleUsecase } from "@usecase/pong/update_pong_paddle_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import Fastify from "fastify";
@@ -108,8 +109,14 @@ const start = async () => {
 		const joinPongUsecase = new JoinPongUsecase(repo);
 		const leavePongUsecase = new LeavePongUsecase(repo);
 		const startPongUsecase = new StartPongUsecase(repo);
+		const updatePongPaddleUsecase = new UpdatePongPaddleUsecase(repo);
 		app.register(
-			pongController(joinPongUsecase, leavePongUsecase, startPongUsecase),
+			pongController(
+				joinPongUsecase,
+				leavePongUsecase,
+				startPongUsecase,
+				updatePongPaddleUsecase,
+			),
 			{ prefix: "/ws" },
 		);
 

@@ -1,8 +1,17 @@
 import { ErrBadRequest } from "@domain/error";
-import { PongField } from "@shared/api/pong";
 import { ulid } from "ulid";
 import { describe, expect, it } from "vitest";
-import { MatchId, PongBall, PongGame } from "./pong";
+import {
+	MatchId,
+	PongBall,
+	PongField,
+	PongGame,
+	PongMatchState,
+	PongPaddle,
+	pongFieldSize,
+	pongPaddleDy,
+	pongPaddleSize,
+} from "./pong";
 
 describe("MatchId", () => {
 	it("should create a MatchId instance with a valid ULID", () => {
@@ -34,80 +43,181 @@ describe("PongBall", () => {
 	});
 });
 
+describe("PongField", () => {
+	it("should create a field with valid size", () => {
+		const fieldWidth = pongFieldSize.width;
+		const fieldHeight = pongFieldSize.height;
+
+		expect(fieldWidth).toBe(600);
+		expect(fieldHeight).toBe(400);
+	});
+
+	it("should detect wall collision", () => {
+		const field = new PongField();
+		const ball1 = new PongBall({ x: 10, y: 5, dx: -10, dy: -10 });
+		const ball2 = new PongBall({
+			x: 10,
+			y: pongFieldSize.height - 5,
+			dx: 10,
+			dy: 10,
+		});
+		const ball3 = new PongBall({ x: 10, y: 200, dx: -10, dy: -10 });
+
+		const newBall1 = field.detectCollision(ball1);
+		expect(newBall1).toBeDefined();
+		expect(newBall1.x).toBe(0);
+		expect(newBall1.y).toBe(5);
+		expect(newBall1.dx).toBe(-10);
+		expect(newBall1.dy).toBe(10);
+		const newBall2 = field.detectCollision(ball2);
+		expect(newBall2).toBeDefined();
+		expect(newBall2.x).toBe(20);
+		expect(newBall2.y).toBe(pongFieldSize.height - 5);
+		expect(newBall2.dx).toBe(10);
+		expect(newBall2.dy).toBe(-10);
+		const newBall3 = field.detectCollision(ball3);
+		expect(newBall3).toBeUndefined();
+	});
+
+	it("should score point correctly", () => {
+		const field = new PongField();
+		const ball1 = new PongBall({ x: -5, y: 200, dx: -10, dy: 10 });
+		const ball2 = new PongBall({
+			x: pongFieldSize.width + 5,
+			y: 200,
+			dx: 10,
+			dy: 10,
+		});
+		const ball3 = new PongBall({ x: 300, y: 200, dx: 0, dy: 0 });
+
+		expect(field.isScoredPoint(ball1, "player1")).toBe(true);
+		expect(field.isScoredPoint(ball1, "player2")).toBe(false);
+		expect(field.isScoredPoint(ball2, "player1")).toBe(false);
+		expect(field.isScoredPoint(ball2, "player2")).toBe(true);
+		expect(field.isScoredPoint(ball3, "player1")).toBe(false);
+		expect(field.isScoredPoint(ball3, "player2")).toBe(false);
+	});
+});
+
+describe("PongPaddle", () => {
+	it("should create a paddle with valid values", () => {
+		const paddle = new PongPaddle({ x: 1, y: 2 });
+
+		expect(paddle).toBeInstanceOf(PongPaddle);
+		expect(paddle.x).toBe(1);
+		expect(paddle.y).toBe(2);
+		expect(paddle.width).toBe(pongPaddleSize.width);
+		expect(paddle.height).toBe(pongPaddleSize.height);
+	});
+
+	it("should move", () => {
+		const paddle = new PongPaddle({ x: 10, y: 100 });
+		const upPaddle = paddle.move("up");
+		expect(upPaddle.y).toBe(100 - pongPaddleDy);
+		const downPaddle = paddle.move("down");
+		expect(downPaddle.y).toBe(100 + pongPaddleDy);
+	});
+
+	it("should not move out of the field(Top)", () => {
+		const paddle = new PongPaddle({ x: 10, y: 2 });
+		const upPaddle = paddle.move("up");
+		expect(upPaddle.y).toBe(0);
+	});
+
+	it("should not move out of the field(Bottom)", () => {
+		const paddle = new PongPaddle({
+			x: 10,
+			y: pongFieldSize.height - pongPaddleSize.height - 2,
+		});
+		const upPaddle = paddle.move("down");
+		expect(upPaddle.y).toBe(pongFieldSize.height - pongPaddleSize.height);
+	});
+
+	it("should collide with the ball(top) by player1", () => {
+		const paddle = new PongPaddle({ x: 10, y: 20 });
+		const ball = new PongBall({
+			x: paddle.x + paddle.width + 5,
+			y: paddle.y - 5,
+			dx: -10,
+			dy: 10,
+		});
+		const newBall = paddle.detectCollision(ball, 0);
+		expect(newBall).toBeDefined();
+		expect(newBall.x).toBe(paddle.x + paddle.width + 5);
+		expect(newBall.dx).toBe(3);
+		expect(newBall.y).toBe(paddle.y - 5);
+		expect(newBall.dy).toBe(-8);
+	});
+
+	it("should collide with the ball(bottom) by player1", () => {
+		const paddle = new PongPaddle({ x: 10, y: 20 });
+		const ball = new PongBall({
+			x: paddle.x + paddle.width + 5,
+			y: paddle.y + paddle.height - 5,
+			dx: -10,
+			dy: 10,
+		});
+		const newBall = paddle.detectCollision(ball, 0);
+		expect(newBall).toBeDefined();
+		expect(newBall.x).toBe(paddle.x + paddle.width + 5);
+		expect(newBall.dx).toBe(3);
+		expect(newBall.y).toBe(paddle.y + paddle.height - 5);
+		expect(newBall.dy).toBe(8);
+	});
+
+	it("should collide with the ball(top) by player2", () => {
+		const paddle = new PongPaddle({ x: 10, y: 20 });
+		const ball = new PongBall({
+			x: paddle.x - 5,
+			y: paddle.y - 5,
+			dx: 10,
+			dy: 10,
+		});
+		const newBall = paddle.detectCollision(ball, 0);
+		expect(newBall).toBeDefined();
+		expect(newBall.x).toBe(paddle.x - 5);
+		expect(newBall.dx).toBe(-3);
+		expect(newBall.y).toBe(paddle.y - 5);
+		expect(newBall.dy).toBe(-8);
+	});
+
+	it("should collide with the ball(bottom) by player2", () => {
+		const paddle = new PongPaddle({ x: 10, y: 20 });
+		const ball = new PongBall({
+			x: paddle.x - 5,
+			y: paddle.y + paddle.height - 5,
+			dx: 10,
+			dy: 10,
+		});
+		const newBall = paddle.detectCollision(ball, 0);
+		expect(newBall).toBeDefined();
+		expect(newBall.x).toBe(paddle.x - 5);
+		expect(newBall.dx).toBe(-3);
+		expect(newBall.y).toBe(paddle.y + paddle.height - 5);
+		expect(newBall.dy).toBe(8);
+	});
+});
+
 describe("PongGame", () => {
 	it("should calculate the next frame correctly", () => {
 		const ball = new PongBall({ x: 50, y: 50, dx: 5, dy: 3 });
-		const pongGame = new PongGame(ball);
-
+		const paddle1 = new PongPaddle({ x: 0, y: 40 });
+		const paddle2 = new PongPaddle({ x: 590, y: 40 });
+		const state = PongMatchState.init();
+		const pongGame = new PongGame(
+			ball,
+			{ player1: paddle1, player2: paddle2 },
+			state,
+		);
 		const newPongGame = pongGame.calculateFrame();
 		expect(newPongGame.ball.x).toBe(55);
 		expect(newPongGame.ball.y).toBe(53);
 		expect(newPongGame.ball.dx).toBe(5);
 		expect(newPongGame.ball.dy).toBe(3);
-	});
-
-	it("should bounce off the left wall", () => {
-		const ball = new PongBall({ x: 1, y: 50, dx: -5, dy: 2 });
-		const pongGame = new PongGame(ball);
-		const newPongGame = pongGame.calculateFrame();
-		expect(newPongGame.ball.x).toBe(4);
-		expect(newPongGame.ball.y).toBe(52);
-		expect(newPongGame.ball.dx).toBe(5);
-		expect(newPongGame.ball.dy).toBe(2);
-	});
-
-	it("should bounce off the right wall", () => {
-		const ball = new PongBall({ x: PongField.width - 1, y: 50, dx: 5, dy: 2 });
-		const pongGame = new PongGame(ball);
-		const newPongGame = pongGame.calculateFrame();
-		expect(newPongGame.ball.x).toBe(PongField.width - 4);
-		expect(newPongGame.ball.y).toBe(52);
-		expect(newPongGame.ball.dx).toBe(-5);
-		expect(newPongGame.ball.dy).toBe(2);
-	});
-
-	it("should bounce off the top wall", () => {
-		const ball = new PongBall({ x: 50, y: 1, dx: -5, dy: -5 });
-		const pongGame = new PongGame(ball);
-		const newPongGame = pongGame.calculateFrame();
-		expect(newPongGame.ball.x).toBe(45);
-		expect(newPongGame.ball.y).toBe(4);
-		expect(newPongGame.ball.dx).toBe(-5);
-		expect(newPongGame.ball.dy).toBe(5);
-	});
-
-	it("should bounce off the bottom wall", () => {
-		const ball = new PongBall({ x: 6, y: PongField.height - 1, dx: -5, dy: 5 });
-		const pongGame = new PongGame(ball);
-		const newPongGame = pongGame.calculateFrame();
-		expect(newPongGame.ball.x).toBe(1);
-		expect(newPongGame.ball.y).toBe(PongField.height - 4);
-		expect(newPongGame.ball.dx).toBe(-5);
-		expect(newPongGame.ball.dy).toBe(-5);
-	});
-
-	it("should bounce off the corner(top-left)", () => {
-		const ball = new PongBall({ x: 1, y: 1, dx: -5, dy: -5 });
-		const pongGame = new PongGame(ball);
-		const newPongGame = pongGame.calculateFrame();
-		expect(newPongGame.ball.x).toBe(4);
-		expect(newPongGame.ball.y).toBe(4);
-		expect(newPongGame.ball.dx).toBe(5);
-		expect(newPongGame.ball.dy).toBe(5);
-	});
-
-	it("should bounce off the corner(bottom-right)", () => {
-		const ball = new PongBall({
-			x: PongField.width - 1,
-			y: PongField.height - 1,
-			dx: 5,
-			dy: 5,
-		});
-		const pongGame = new PongGame(ball);
-		const newPongGame = pongGame.calculateFrame();
-		expect(newPongGame.ball.x).toBe(PongField.width - 4);
-		expect(newPongGame.ball.y).toBe(PongField.height - 4);
-		expect(newPongGame.ball.dx).toBe(-5);
-		expect(newPongGame.ball.dy).toBe(-5);
+		expect(newPongGame.paddles.player1.x).toBe(paddle1.x);
+		expect(newPongGame.paddles.player1.y).toBe(paddle1.y);
+		expect(newPongGame.paddles.player2.x).toBe(paddle2.x);
+		expect(newPongGame.paddles.player2.y).toBe(paddle2.y);
+		expect(newPongGame.state.rallyTime).toBe(state.rallyTime);
 	});
 });

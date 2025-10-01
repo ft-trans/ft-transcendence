@@ -1,4 +1,4 @@
-import type { PongGameStateResponse } from "@shared/api/pong";
+import { PONG_COMMAND, type PongGameStateResponse } from "@shared/api/pong";
 import { Component, type RouteParams, SectionTitle } from "client/components";
 import { PongGame } from "client/components/pong_game";
 
@@ -29,10 +29,24 @@ export class MatchesPong extends Component {
 
 		// TODO 画面遷移時にイベントを削除する
 		document.addEventListener("keydown", (event) => {
-			if (event.code === "Space") {
-				// TODO ゲーム開始は後でちゃんと書く
-				// TODO イベントの種類を./shared/apiで管理
-				socket.send("start");
+			switch (event.code) {
+				case "Space":
+					socket.send(PONG_COMMAND.START);
+					break;
+				case "KeyW":
+					socket.send(PONG_COMMAND.PADDLE1_UP);
+					break;
+				case "KeyS":
+					socket.send(PONG_COMMAND.PADDLE1_DOWN);
+					break;
+				case "ArrowUp":
+					socket.send(PONG_COMMAND.PADDLE2_UP);
+					break;
+				case "ArrowDown":
+					socket.send(PONG_COMMAND.PADDLE2_DOWN);
+					break;
+				default:
+					return;
 			}
 		});
 	}
@@ -44,7 +58,11 @@ export class MatchesPong extends Component {
     <div id="pong-court" class="flex justify-center items-center">
     </div>
 	<div class="text-center mt-4 text-gray-700">
-		<small>スペースキーでゲーム開始</small>
+		<small>
+			<p>スペースキーでゲーム開始</p>
+			<p>w/sキーでパドル1を上下移動</p>
+			<p>↑/↓キーでパドル2を上下移動</p>
+		</small>
 	</div>
 </div>
 `;

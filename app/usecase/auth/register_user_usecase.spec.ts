@@ -8,6 +8,8 @@ import type {
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
+	IPongMatchStateRepository,
+	IPongPaddleRepository,
 	ISessionRepository,
 	IUserRepository,
 } from "@domain/repository";
@@ -38,8 +40,10 @@ describe("RegisterUserUsecase", () => {
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
 				newSessionRepository: () => mock<ISessionRepository>(),
 				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 				newMatchRepository: () => mock<IMatchRepository>(),
 			};
 			return callback(repo);
@@ -68,8 +72,10 @@ describe("RegisterUserUsecase", () => {
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
 				newSessionRepository: () => mock<ISessionRepository>(),
 				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 				newMatchRepository: () => mock<IMatchRepository>(),
 			};
 			return callback(repo);
@@ -101,8 +107,10 @@ describe("RegisterUserUsecase", () => {
 				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
 				newSessionRepository: () => mock<ISessionRepository>(),
 				newPongBallRepository: () => mock<IPongBallRepository>(),
+				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
+				newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 				newMatchRepository: () => mock<IMatchRepository>(),
 			};
 			return callback(repo);

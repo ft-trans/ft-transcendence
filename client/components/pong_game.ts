@@ -1,15 +1,13 @@
-import { PongField, type PongGameStateResponse } from "@shared/api/pong";
+import type { PongGameStateResponse } from "@shared/api/pong";
 
 export class PongGame {
 	private readonly canvas: HTMLCanvasElement;
 	private readonly context: CanvasRenderingContext2D;
-	readonly width = PongField.width;
-	readonly height = PongField.height;
 
-	constructor() {
+	constructor({ width, height } = { width: 600, height: 400 }) {
 		this.canvas = document.createElement("canvas");
-		this.canvas.width = this.width;
-		this.canvas.height = this.height;
+		this.canvas.width = width;
+		this.canvas.height = height;
 		const ctx = this.canvas.getContext("2d");
 		if (!ctx) {
 			// TODO ユーザーに通知
@@ -24,8 +22,15 @@ export class PongGame {
 	}
 
 	draw(gameState: PongGameStateResponse) {
+		this.canvas.width = gameState.payload.field.width;
+		this.canvas.height = gameState.payload.field.height;
+
 		this.drawField();
-		this.drawBall(gameState.payload.ball.x, gameState.payload.ball.y);
+		if (gameState.payload.ball !== undefined) {
+			this.drawBall(gameState.payload.ball);
+		}
+		this.drawPaddle(gameState.payload.paddles.player1);
+		this.drawPaddle(gameState.payload.paddles.player2);
 	}
 
 	private drawField() {
@@ -41,10 +46,25 @@ export class PongGame {
 		this.context.stroke();
 	}
 
-	private drawBall(x: number, y: number) {
+	private drawBall({ x, y }: { x: number; y: number }) {
 		this.context.fillStyle = "white";
 		this.context.beginPath();
-		this.context.arc(x, y, 5, 0, Math.PI * 2);
+		this.context.arc(x, y, 8, 0, Math.PI * 2);
 		this.context.fill();
+	}
+
+	private drawPaddle({
+		x,
+		y,
+		width,
+		height,
+	}: {
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+	}) {
+		this.context.fillStyle = "white";
+		this.context.fillRect(x, y, width, height);
 	}
 }
