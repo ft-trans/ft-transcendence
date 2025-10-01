@@ -1,7 +1,6 @@
 // ==> app/usecase/relationship/relationship_usecase.spec.ts <==
 import { ErrBadRequest, ErrForbidden, ErrNotFound } from "@domain/error";
-import { Friendship } from "@domain/model/friendship";
-import { User, UserEmail } from "@domain/model/user";
+import { Friendship, User, UserEmail, Username } from "@domain/model";
 import type {
 	IPongBallRepository,
 	IPongClientRepository,
@@ -11,6 +10,7 @@ import type {
 } from "@domain/repository";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
+import type { IMatchRepository } from "@domain/repository/match_repository";
 import type { ISessionRepository } from "@domain/repository/session_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -41,6 +41,7 @@ const mockRepos = {
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
+	newMatchRepository: () => mock<IMatchRepository>(),
 };
 tx.exec.mockImplementation(async (callback) => callback(mockRepos));
 
@@ -53,8 +54,14 @@ beforeEach(() => {
 
 describe("SendFriendRequestUsecase", () => {
 	const usecase = new SendFriendRequestUsecase(tx);
-	const requester = User.create(new UserEmail("requester@example.com"));
-	const receiver = User.create(new UserEmail("receiver@example.com"));
+	const requester = User.create(
+		new UserEmail("requester@example.com"),
+		new Username("requester"),
+	);
+	const receiver = User.create(
+		new UserEmail("receiver@example.com"),
+		new Username("receiver"),
+	);
 
 	it("should create a pending friendship when no relationship exists", async () => {
 		userRepo.findById
@@ -148,9 +155,18 @@ describe("SendFriendRequestUsecase", () => {
 
 describe("RespondToFriendRequestUsecase", () => {
 	const usecase = new RespondToFriendRequestUsecase(tx);
-	const requester = User.create(new UserEmail("requester@example.com"));
-	const receiver = User.create(new UserEmail("receiver@example.com"));
-	const otherUser = User.create(new UserEmail("other@example.com"));
+	const requester = User.create(
+		new UserEmail("requester@example.com"),
+		new Username("requester"),
+	);
+	const receiver = User.create(
+		new UserEmail("receiver@example.com"),
+		new Username("receiver"),
+	);
+	const otherUser = User.create(
+		new UserEmail("other@example.com"),
+		new Username("other"),
+	);
 
 	it("should accept a pending friend request", async () => {
 		const pendingFriendship = Friendship.create(requester, receiver);
@@ -223,9 +239,18 @@ describe("RespondToFriendRequestUsecase", () => {
 
 describe("GetFriendsUsecase", () => {
 	const usecase = new GetFriendsUsecase(tx);
-	const user = User.create(new UserEmail("user@example.com"));
-	const friend1 = User.create(new UserEmail("friend1@example.com"));
-	const friend2 = User.create(new UserEmail("friend2@example.com"));
+	const user = User.create(
+		new UserEmail("user@example.com"),
+		new Username("user"),
+	);
+	const friend1 = User.create(
+		new UserEmail("friend1@example.com"),
+		new Username("friend1"),
+	);
+	const friend2 = User.create(
+		new UserEmail("friend2@example.com"),
+		new Username("friend2"),
+	);
 
 	it("should return a list of friends", async () => {
 		userRepo.findById.mockResolvedValue(user);
@@ -253,8 +278,14 @@ describe("GetFriendsUsecase", () => {
 
 describe("RemoveFriendUsecase", () => {
 	const usecase = new RemoveFriendUsecase(tx);
-	const user = User.create(new UserEmail("user@example.com"));
-	const friend = User.create(new UserEmail("friend@example.com"));
+	const user = User.create(
+		new UserEmail("user@example.com"),
+		new Username("user"),
+	);
+	const friend = User.create(
+		new UserEmail("friend@example.com"),
+		new Username("friend"),
+	);
 
 	it("should remove a friend successfully", async () => {
 		const friendship = Friendship.create(user, friend);
@@ -287,8 +318,14 @@ describe("RemoveFriendUsecase", () => {
 
 describe("BlockUserUsecase", () => {
 	const usecase = new BlockUserUsecase(tx);
-	const blocker = User.create(new UserEmail("blocker@example.com"));
-	const blocked = User.create(new UserEmail("blocked@example.com"));
+	const blocker = User.create(
+		new UserEmail("blocker@example.com"),
+		new Username("blocker"),
+	);
+	const blocked = User.create(
+		new UserEmail("blocked@example.com"),
+		new Username("blocked"),
+	);
 
 	it("should create a new relationship with 'blocked' status", async () => {
 		userRepo.findById
@@ -366,9 +403,18 @@ describe("BlockUserUsecase", () => {
 
 describe("UnblockUserUsecase", () => {
 	const usecase = new UnblockUserUsecase(tx);
-	const blocker = User.create(new UserEmail("blocker@example.com"));
-	const blocked = User.create(new UserEmail("blocked@example.com"));
-	const otherUser = User.create(new UserEmail("other@example.com"));
+	const blocker = User.create(
+		new UserEmail("blocker@example.com"),
+		new Username("blocker"),
+	);
+	const blocked = User.create(
+		new UserEmail("blocked@example.com"),
+		new Username("blocked"),
+	);
+	const otherUser = User.create(
+		new UserEmail("other@example.com"),
+		new Username("other"),
+	);
 
 	it("should unblock a user by deleting the relationship", async () => {
 		const friendship = Friendship.create(blocker, blocked);

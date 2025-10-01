@@ -1,4 +1,4 @@
-import type { User, UserEmail, UserId } from "../model";
+import type { User, UserEmail, UserId, Username } from "../model";
 
 export interface IUserRepository {
 	create(user: User): Promise<User>;
@@ -6,4 +6,5 @@ export interface IUserRepository {
 	delete(id: UserId): Promise<User>;
 	findById(id: UserId): Promise<User | undefined>;
 	findByEmail(email: UserEmail): Promise<User | undefined>;
+	findByUsername(username: Username): Promise<User | undefined>;
 }

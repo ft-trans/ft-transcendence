@@ -2,6 +2,7 @@ import { PongPaddle, pongPaddleDy } from "@domain/model/pong";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IMatchRepository,
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
@@ -30,6 +31,7 @@ const repo = {
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 	newSessionRepository: () => mock<ISessionRepository>(),
 	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
+	newMatchRepository: () => mock<IMatchRepository>(),
 };
 
 describe("UpdatePongPaddleUsecase", () => {

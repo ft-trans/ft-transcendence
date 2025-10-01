@@ -22,6 +22,7 @@ export class Register extends Component {
 				const formData = new FormData(form);
 				const rawData = {
 					email: formData.get("email"),
+					username: formData.get("username"),
 					password: formData.get("password"),
 					passwordConfirm: formData.get("passwordConfirm"),
 				};
@@ -38,7 +39,13 @@ export class Register extends Component {
 				// TODO: APIエラーのハンドリング
 				await new ApiClient().post<RegisterUserRequest, RegisterUserResponse>(
 					"/api/auth/register",
-					{ user: { email: input.data.email, password: input.data.password } },
+					{
+						user: {
+							email: input.data.email,
+							username: input.data.username,
+							password: input.data.password,
+						},
+					},
 				);
 			});
 		}
@@ -56,6 +63,13 @@ export class Register extends Component {
 							type: "email",
 							autocomplete: "email",
 							labelText: "メールアドレス",
+						}).render()}
+            ${new FormInput({
+							id: "username",
+							name: "username",
+							type: "text",
+							autocomplete: "username",
+							labelText: "ユーザー名",
 						}).render()}
             ${new FormInput({
 							id: "password",

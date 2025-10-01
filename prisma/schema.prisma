@@ -14,6 +14,8 @@ datasource db {
 model User {
   id              String    @id
   email           String    @unique
+  username        String    @unique
+  avatar          String    @default("")
   passwordDigest  String
   status          String    @default("offline") // "online" or "offline"
   createdAt       DateTime  @default(now())
@@ -21,7 +23,6 @@ model User {
 
   // Session management for multiple devices
   sessions Session[]
-
 
   // Friendship relations
   sentFriendRequests     Friendship[] @relation("Requester")

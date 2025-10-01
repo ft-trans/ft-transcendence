@@ -1,7 +1,8 @@
 import { pathToRegexp } from "path-to-regexp";
 import { createRouteParams, Navigation } from "./components";
-import { Register } from "./features/auth";
+import { Login, Register } from "./features/auth";
 import { Home } from "./features/home";
+import { Matchmaking } from "./features/matchmaking";
 import { MatchesPong } from "./features/pong/matches";
 import { EditProfile } from "./features/profile";
 
@@ -14,12 +15,20 @@ export const router = async () => {
 			component: new Navigation({ child: new Home() }),
 		},
 		{
+			path: "/auth/login",
+			component: new Navigation({ child: new Login() }),
+		},
+		{
 			path: "/auth/register",
 			component: new Navigation({ child: new Register() }),
 		},
 		{
 			path: "/profile/edit",
 			component: new Navigation({ child: new EditProfile() }),
+		},
+		{
+			path: "/matchmaking",
+			component: new Navigation({ child: new Matchmaking() }),
 		},
 		{
 			path: "/pong/matches/:match_id",

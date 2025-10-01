@@ -1,16 +1,22 @@
 import { resolve } from "node:path";
+import { MatchmakingService } from "@domain/service/matchmaking_service";
 import FastifyCookie from "@fastify/cookie";
 import FastifyRedis from "@fastify/redis";
 import FastifyVite from "@fastify/vite";
 import websocket from "@fastify/websocket";
+import { MatchmakingQueueRepository } from "@infra/database/matchmaking_queue_repository";
 import { prisma } from "@infra/database/prisma";
 import { Transaction } from "@infra/database/transaction";
 import { InMemoryChatClientRepository } from "@infra/in_memory/chat_client_repository";
+import { InMemoryMatchmakingClientRepository } from "@infra/in_memory/matchmaking_client_repository";
 import { Repository } from "@infra/repository";
 import { authController } from "@presentation/controllers/auth_controller";
 import { chatController } from "@presentation/controllers/chat_controller";
+import { matchmakingController } from "@presentation/controllers/matchmaking_controller";
+import { matchmakingWsController } from "@presentation/controllers/matchmaking_ws_controller";
 import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
+import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
 import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
@@ -21,6 +27,8 @@ import {
 	SendDirectMessageUsecase,
 	SendGameInviteUsecase,
 } from "@usecase/chat";
+import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
+import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
 import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
 import { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
 import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
@@ -60,12 +68,39 @@ const start = async () => {
 		const registerUserUsecase = new RegisterUserUsecase(tx);
 		const loginUserUsecase = new LoginUserUsecase(tx);
 		const logoutUserUsecase = new LogoutUserUsecase(tx);
+		const authPrehandler = createAuthPrehandler(
+			repo.newSessionRepository(),
+			repo.newUserRepository(),
+		);
 		await app.register(
-			authController(registerUserUsecase, loginUserUsecase, logoutUserUsecase),
+			authController(
+				registerUserUsecase,
+				loginUserUsecase,
+				logoutUserUsecase,
+				authPrehandler,
+			),
 			{ prefix: "/api" },
 		);
 		const updateUserUsecase = new UpdateUserUsecase(tx);
 		const deleteUserUsecase = new DeleteUserUsecase(tx);
+		const queueRepo = new MatchmakingQueueRepository(app.redis, {
+			prefix: "mm",
+		});
+		const matchmakingClientRepository =
+			new InMemoryMatchmakingClientRepository();
+
+		const matchmakingService = new MatchmakingService(
+			tx,
+			queueRepo,
+			matchmakingClientRepository,
+		);
+		const joinMatchmakingUseCase = new JoinMatchmakingUseCase(
+			repo.newUserRepository(),
+			matchmakingService,
+		);
+		const leaveMatchmakingUseCase = new LeaveMatchmakingUseCase(
+			matchmakingService,
+		);
 
 		await app.register(
 			profileController(updateUserUsecase, deleteUserUsecase),
@@ -107,7 +142,25 @@ const start = async () => {
 			{ prefix: "/ws" },
 		);
 
-		app.get("/*", (_req, reply) => reply.html());
+		await app.register(
+			matchmakingController(
+				joinMatchmakingUseCase,
+				leaveMatchmakingUseCase,
+				authPrehandler,
+			),
+			{
+				prefix: "/api",
+			},
+		);
+
+		await app.register(
+			matchmakingWsController(authPrehandler, matchmakingClientRepository),
+			{ prefix: "/ws" },
+		);
+
+		app.get("/*", (_req, reply) => {
+			return reply.html();
+		});
 
 		await app.vite.ready();
 		await app.listen({ host: "0.0.0.0", port: 3000 });

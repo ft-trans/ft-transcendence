@@ -1,13 +1,30 @@
 import { Friendship } from "@domain/model/friendship";
-import { User, UserEmail, UserId } from "@domain/model/user";
+import {
+	User,
+	UserAvatar,
+	UserEmail,
+	UserId,
+	Username,
+	type UserStatus,
+	UserStatusValue,
+} from "@domain/model/user";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
 import type { Client } from "./prisma";
 
 // PrismaのUserモデルからドメインのUserモデルへ変換
-const toUserDomain = (prismaUser: { id: string; email: string }): User => {
+const toUserDomain = (prismaUser: {
+	id: string;
+	email: string;
+	username: string;
+	avatar: string;
+	status: string;
+}): User => {
 	return User.reconstruct(
 		new UserId(prismaUser.id),
 		new UserEmail(prismaUser.email),
+		new Username(prismaUser.username),
+		new UserAvatar(prismaUser.avatar),
+		new UserStatusValue(prismaUser.status as UserStatus),
 	);
 };
 
