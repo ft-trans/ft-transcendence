@@ -3,6 +3,7 @@ import {
 	Button,
 	Component,
 	FloatingBanner,
+	Link,
 	SectionTitle,
 } from "client/components";
 
@@ -268,8 +269,31 @@ export class Matchmaking extends Component {
 		}
 	}
 
+	async onLoad(): Promise<void> {
+		const currentMatch = await this.api.get<MatchResult>("/api/matchmaking");
+		if (currentMatch) {
+			const root = document.getElementById("matchmaking-root");
+			if (root) {
+				root.innerHTML = this.currentMatch(currentMatch.id);
+			}
+		}
+	}
+
 	render(): string {
 		return `<div id="matchmaking-root">${this.inner()}</div>`;
+	}
+
+	private currentMatch(matchId: string): string {
+		return `
+        <div>
+          ${new SectionTitle({ text: "Matchmaking" }).render()}
+          <div class="max-w-2xl mx-auto rounded-2xl shadow p-6 space-y-4">
+            <div class="flex justify-center">
+              ${new Link({ text: "ゲームを開始する", color: "blue", href: `/pong/matches/${matchId}` }).render()}
+            </div>
+          </div>
+        </div>
+		`;
 	}
 
 	private inner(): string {
@@ -281,7 +305,7 @@ export class Matchmaking extends Component {
 		if (this.state.phase === "idle") {
 			return `
         <div>
-          ${new SectionTitle({ text: "マッチメイキング" }).render()}
+          ${new SectionTitle({ text: "Matchmaking" }).render()}
           <div class="max-w-2xl mx-auto rounded-2xl shadow p-6 space-y-4">
             <p class="text-gray-700">Pong の対戦相手を探します。</p>
             <div class="flex justify-center">
@@ -332,7 +356,10 @@ export class Matchmaking extends Component {
         <div>
           ${new SectionTitle({ text: "Matchmaking" }).render()}
           <div class="max-w-2xl mx-auto rounded-2xl shadow p-6 space-y-4">
-            <div class="rounded-xl border px-4 py-3 bg-green-50">
+		    <div class="flex justify-center">
+              ${new Link({ text: "ゲームを開始する", color: "blue", href: `/pong/matches/${m.id}` }).render()}
+			</div>
+            <div class="rounded-xl border px-4 py-3 bg-green-50 mt-10">
               マッチが成立しました!（ID: <span class="font-mono">${m.id}</span>）
             </div>
             <ul class="list-disc pl-6 space-y-1">
