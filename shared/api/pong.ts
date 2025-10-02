@@ -1,5 +1,13 @@
 export type PongGameEvent = "gameState";
 
+export type PongGamePhase =
+	| "waiting"
+	| "serv_player1"
+	| "serv_player2"
+	| "ended";
+
+export const pongMaxScore = 5;
+
 export type PongGameStatePayload = {
 	field: { width: number; height: number };
 	ball: { x: number; y: number; dx: number; dy: number } | undefined;
@@ -17,7 +25,11 @@ export type PongGameStatePayload = {
 			height: number;
 		};
 	};
-	state: { rallyTime: number; score: { player1: number; player2: number } };
+	state: {
+		rallyTime: number;
+		score: { player1: number; player2: number };
+		phase: PongGamePhase;
+	};
 };
 
 export type PongGameStateResponse = {

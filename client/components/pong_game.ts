@@ -1,9 +1,13 @@
-import type { PongGameStateResponse } from "@shared/api/pong";
+import {
+	type PongGamePhase,
+	type PongGameStateResponse,
+	pongMaxScore,
+} from "@shared/api/pong";
+import { navigateTo } from "../router";
 
 export class PongGame {
 	private readonly canvas: HTMLCanvasElement;
 	private readonly context: CanvasRenderingContext2D;
-	private readonly scoreFont: string;
 
 	constructor({ width, height } = { width: 600, height: 400 }) {
 		this.canvas = document.createElement("canvas");
@@ -15,7 +19,6 @@ export class PongGame {
 			throw new Error("Failed to get 2D context");
 		}
 		this.context = ctx;
-		this.scoreFont = "180px 'Jersey 10', monospace";
 	}
 
 	appendTo(parent: HTMLElement) {
@@ -29,11 +32,45 @@ export class PongGame {
 
 		this.drawField();
 		this.drawScore(gameState.payload.state.score);
+		if (this.gameIsOver(gameState.payload.state.phase)) {
+			return;
+		}
 		if (gameState.payload.ball !== undefined) {
 			this.drawBall(gameState.payload.ball);
 		}
 		this.drawPaddle(gameState.payload.paddles.player1);
 		this.drawPaddle(gameState.payload.paddles.player2);
+	}
+
+	private gameIsOver(phase: PongGamePhase): boolean {
+		if (phase !== "ended") {
+			return false;
+		}
+
+		this.context.font = "80px 'Jersey 10', monospace";
+		this.context.textAlign = "center";
+		this.context.fillStyle = "#5f5";
+		this.context.fillText(
+			"The Game is Over",
+			this.canvas.width / 2,
+			this.canvas.height / 2 + 20,
+		);
+
+		this.context.font = "20px 'sans-serif'";
+		this.context.textAlign = "center";
+		this.context.fillStyle = "#fff";
+		this.context.fillText(
+			"クリックして対戦履歴を表示する",
+			this.canvas.width / 2,
+			this.canvas.height / 2 + 60,
+		);
+		this.canvas.style.cursor = "pointer";
+		this.canvas.addEventListener("click", () => {
+			// TODO 対戦履歴画面へ遷移
+			navigateTo("/");
+		});
+
+		return true;
 	}
 
 	private drawField() {
@@ -72,10 +109,23 @@ export class PongGame {
 	}
 
 	private drawScore(score: { player1: number; player2: number }) {
-		this.context.fillStyle = "#ccc";
-		this.context.font = this.scoreFont;
+		this.context.font = "180px 'Jersey 10', monospace";
 		this.context.textAlign = "center";
+
+		this.context.fillStyle = PongGame.scoreColor(score.player1);
 		this.context.fillText(`${score.player1}`, this.canvas.width / 4, 120);
+
+		this.context.fillStyle = PongGame.scoreColor(score.player2);
 		this.context.fillText(`${score.player2}`, (this.canvas.width / 4) * 3, 120);
+	}
+
+	private static scoreColor(score: number): string {
+		if (score >= pongMaxScore) {
+			return "#5f5";
+		}
+		if (score + 1 >= pongMaxScore) {
+			return "#ff5";
+		}
+		return "#ccc";
 	}
 }
