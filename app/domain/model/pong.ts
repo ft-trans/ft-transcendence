@@ -1,3 +1,4 @@
+import { type PongGamePhase, pongMaxScore } from "@shared/api/pong";
 import { isValid } from "ulid";
 import { ErrBadRequest } from "../error";
 import { ValueObject } from "./value_object";
@@ -207,31 +208,70 @@ export class PongField {
 
 	isScoredPoint(ball: PongBall, player: PongPlayer): boolean {
 		if (player === "player1") {
-			return ball.x < 0;
-		} else {
 			return this.width < ball.x;
+		} else {
+			return ball.x < 0;
 		}
 	}
 }
 
 export class PongMatchState {
-	// readonly gameState: "waiting" | "playing" | "ended"
-	// readonly score: { player1: number; player2: number },
 	readonly rallyTime: number = 0;
+	readonly score: { player1: number; player2: number };
+	readonly phase: PongGamePhase;
 
-	constructor({ rallyTime = 0 }: { rallyTime: number }) {
+	constructor({
+		rallyTime = 0,
+		score = { player1: 0, player2: 0 },
+		phase = "waiting",
+	}: {
+		rallyTime: number;
+		score: { player1: number; player2: number };
+		phase: PongGamePhase;
+	}) {
 		this.rallyTime = rallyTime;
+		this.score = score;
+		this.phase = phase;
 	}
 
 	initRallyTime(): PongMatchState {
-		return new PongMatchState({ rallyTime: 0 });
+		return new PongMatchState({
+			rallyTime: 0,
+			score: this.score,
+			phase: this.phase,
+		});
 	}
 	incrementRally(): PongMatchState {
-		return new PongMatchState({ rallyTime: this.rallyTime + 1 });
+		return new PongMatchState({
+			rallyTime: this.rallyTime + 1,
+			score: this.score,
+			phase: this.phase,
+		});
+	}
+	scorePoint(player: PongPlayer): PongMatchState {
+		if (player === "player1") {
+			return new PongMatchState({
+				rallyTime: this.rallyTime,
+				score: { player1: this.score.player1 + 1, player2: this.score.player2 },
+				phase:
+					this.score.player1 + 1 >= pongMaxScore ? "ended" : "serv_player2",
+			});
+		} else {
+			return new PongMatchState({
+				rallyTime: this.rallyTime,
+				score: { player1: this.score.player1, player2: this.score.player2 + 1 },
+				phase:
+					this.score.player2 + 1 >= pongMaxScore ? "ended" : "serv_player1",
+			});
+		}
 	}
 
 	static init(): PongMatchState {
-		return new PongMatchState({ rallyTime: 0 });
+		return new PongMatchState({
+			rallyTime: 0,
+			score: { player1: 0, player2: 0 },
+			phase: "waiting",
+		});
 	}
 }
 
@@ -273,22 +313,27 @@ export class PongGame {
 
 		const nextBall = this.ball.next();
 		if (this.field.isScoredPoint(nextBall, "player1")) {
-			// TODO スコア計算
-			return new PongGame(undefined, this.paddles, this.state);
+			return new PongGame(
+				undefined,
+				this.paddles,
+				this.state.scorePoint("player1"),
+			);
 		}
 		if (this.field.isScoredPoint(nextBall, "player2")) {
-			// TODO スコア計算
-			return new PongGame(undefined, this.paddles, this.state);
+			return new PongGame(
+				undefined,
+				this.paddles,
+				this.state.scorePoint("player2"),
+			);
 		}
 		return new PongGame(nextBall, this.paddles, this.state);
 	}
 
-	static initialBall(): PongBall {
+	static initialBall(state: PongMatchState): PongBall {
 		const x = pongFieldSize.width / 2;
 		const y = pongFieldSize.height * Math.random();
-		// TODO 点を取られた方に向かって出るようにする。
-		// TODO 最初はplayer1に向かうようにする
-		const dx = -3;
+		const serv_direction = state.phase === "serv_player1" ? -1 : 1;
+		const dx = 3 * serv_direction;
 		const dy = 8 * (0.5 - Math.random());
 		return new PongBall({ x, y, dx, dy });
 	}

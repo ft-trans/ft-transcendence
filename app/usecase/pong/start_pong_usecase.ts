@@ -12,12 +12,10 @@ export class StartPongUsecase {
 		const matchId = new MatchId(input.matchId);
 		const pongMatchStateRepo = this.repo.newPongMatchStateRepository();
 		const state = pongMatchStateRepo.get(matchId);
-		if (state) {
-			pongMatchStateRepo.set(matchId, state.initRallyTime());
-		} else {
-			pongMatchStateRepo.set(matchId, PongMatchState.init());
-		}
-		const ball = PongGame.initialBall();
+		const newState = state ? state.initRallyTime() : PongMatchState.init();
+		pongMatchStateRepo.set(matchId, newState);
+
+		const ball = PongGame.initialBall(newState);
 		const pongBallRepo = this.repo.newPongBallRepository();
 		await pongBallRepo.set(matchId, ball);
 		return matchId;
