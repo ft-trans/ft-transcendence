@@ -27,6 +27,7 @@ import {
 	SendDirectMessageUsecase,
 	SendGameInviteUsecase,
 } from "@usecase/chat";
+import { GetMatchUseCase } from "@usecase/game/get_match_usecase";
 import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
 import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
@@ -142,8 +143,10 @@ const start = async () => {
 			{ prefix: "/ws" },
 		);
 
+		const getMatchUseCase = new GetMatchUseCase(repo.newMatchRepository());
 		await app.register(
 			matchmakingController(
+				getMatchUseCase,
 				joinMatchmakingUseCase,
 				leaveMatchmakingUseCase,
 				authPrehandler,
