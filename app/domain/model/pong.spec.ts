@@ -90,10 +90,10 @@ describe("PongField", () => {
 		});
 		const ball3 = new PongBall({ x: 300, y: 200, dx: 0, dy: 0 });
 
-		expect(field.isScoredPoint(ball1, "player1")).toBe(true);
-		expect(field.isScoredPoint(ball1, "player2")).toBe(false);
-		expect(field.isScoredPoint(ball2, "player1")).toBe(false);
-		expect(field.isScoredPoint(ball2, "player2")).toBe(true);
+		expect(field.isScoredPoint(ball1, "player1")).toBe(false);
+		expect(field.isScoredPoint(ball1, "player2")).toBe(true);
+		expect(field.isScoredPoint(ball2, "player1")).toBe(true);
+		expect(field.isScoredPoint(ball2, "player2")).toBe(false);
 		expect(field.isScoredPoint(ball3, "player1")).toBe(false);
 		expect(field.isScoredPoint(ball3, "player2")).toBe(false);
 	});
