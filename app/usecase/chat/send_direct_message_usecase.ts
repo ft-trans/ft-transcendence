@@ -46,7 +46,8 @@ export class SendDirectMessageUsecase {
 				// 友達関係が存在する場合はメッセージ送信を許可
 				if (!friendship.isAccepted()) {
 					throw new ErrBadRequest({
-						userMessage: "友達リクエストが承認されていないため、メッセージを送信できません。",
+						userMessage:
+							"友達リクエストが承認されていないため、メッセージを送信できません。",
 					});
 				}
 			} else {
