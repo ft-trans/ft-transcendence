@@ -1,5 +1,6 @@
 import { ErrBadRequest } from "@domain/error";
 import type { User } from "@domain/model/user";
+import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
 import type { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
 import type { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase";
@@ -16,21 +17,57 @@ export const relationshipController = (
 	removeFriendUsecase: RemoveFriendUsecase,
 	blockUserUsecase: BlockUserUsecase,
 	unblockUserUsecase: UnblockUserUsecase,
+	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
-		fastify.get("/friends", onGetFriends(getFriendsUsecase));
+		fastify.get(
+			"/friends",
+			{ preHandler: authPrehandler },
+			onGetFriends(getFriendsUsecase),
+		);
 		fastify.post(
 			"/friends/requests",
+			{ preHandler: authPrehandler },
 			onSendFriendRequest(sendFriendRequestUsecase),
 		);
 		fastify.put(
 			"/friends/requests/:requestId",
+			{ preHandler: authPrehandler },
 			onRespondToFriendRequest(respondToFriendRequestUsecase),
 		);
-		fastify.delete("/friends/:friendId", onRemoveFriend(removeFriendUsecase));
-		fastify.post("/blocks", onBlockUser(blockUserUsecase));
-		fastify.delete("/blocks/:blockedUserId", onUnblockUser(unblockUserUsecase));
+		fastify.delete(
+			"/friends/:friendId",
+			{ preHandler: authPrehandler },
+			onRemoveFriend(removeFriendUsecase),
+		);
+		fastify.post(
+			"/blocks",
+			{ preHandler: authPrehandler },
+			onBlockUser(blockUserUsecase),
+		);
+		fastify.delete(
+			"/blocks/:blockedUserId",
+			{ preHandler: authPrehandler },
+			onUnblockUser(unblockUserUsecase),
+		);
 	};
+};
+
+/**
+ * Zod validation error handling helper function
+ */
+const handleValidationError = (parseError: z.ZodError) => {
+	const flat = parseError.flatten();
+	const details: Record<string, string> = {};
+	for (const [key, value] of Object.entries(flat.fieldErrors)) {
+		if (Array.isArray(value) && value.length > 0) {
+			details[key] = value.join(", ");
+		}
+	}
+	if (flat.formErrors && flat.formErrors.length > 0) {
+		details.formErrors = flat.formErrors.join(", ");
+	}
+	throw new ErrBadRequest({ details });
 };
 
 /**
@@ -39,20 +76,18 @@ export const relationshipController = (
 const toUserDTO = (user: User) => {
 	return {
 		id: user.id.value,
-		email: user.email.value,
-		// 必要に応じて他のプロパティも追加
-		//例: username: user.username.value,
+		username: user.username.value,
+		avatar: user.avatar.value,
+		status: user.status.value,
 	};
 };
 
 const onGetFriends = (usecase: GetFriendsUsecase) => {
-	return async (_req: FastifyRequest, reply: FastifyReply) => {
-		// TODO: セッションからuserIdを取得する
-		const userId = "01K24DQHXAJ2NFYKPZ812F4HBJ"; // 仮のユーザーID
+	return async (req: FastifyRequest, reply: FastifyReply) => {
+		const userId = req.authenticatedUser?.id;
 
 		const friends = await usecase.execute(userId);
 
-		// 🔽【修正点】ドメインオブジェクトの配列を、DTOの配列に変換
 		const responseBody = friends.map(toUserDTO);
 
 		reply.send(responseBody);
@@ -70,19 +105,10 @@ const onSendFriendRequest = (usecase: SendFriendRequestUsecase) => {
 	) => {
 		const input = sendFriendRequestSchema.safeParse(req.body);
 		if (!input.success) {
-			const flat = input.error.flatten();
-			const details: Record<string, string> = {};
-			for (const [key, value] of Object.entries(flat.fieldErrors)) {
-				if (value && value.length > 0) details[key] = value.join(", ");
-			}
-			if (flat.formErrors && flat.formErrors.length > 0) {
-				details.formErrors = flat.formErrors.join(", ");
-			}
-			throw new ErrBadRequest({ details });
+			handleValidationError(input.error);
 		}
 
-		// TODO: セッションからuserIdを取得する
-		const requesterId = "01K24DQHXAJ2NFYKPZ812F4HBJ"; // 仮のユーザーID
+		const requesterId = req.authenticatedUser?.id;
 
 		await usecase.execute({
 			requesterId,
@@ -106,19 +132,10 @@ const onRespondToFriendRequest = (usecase: RespondToFriendRequestUsecase) => {
 	) => {
 		const input = respondToFriendRequestSchema.safeParse(req.body);
 		if (!input.success) {
-			const flat = input.error.flatten();
-			const details: Record<string, string> = {};
-			for (const [key, value] of Object.entries(flat.fieldErrors)) {
-				if (value && value.length > 0) details[key] = value.join(", ");
-			}
-			if (flat.formErrors && flat.formErrors.length > 0) {
-				details.formErrors = flat.formErrors.join(", ");
-			}
-			throw new ErrBadRequest({ details });
+			handleValidationError(input.error);
 		}
 
-		// TODO: セッションからuserIdを取得する
-		const userId = "01K24DQMEY074R1XNH3BKR3J17"; // 仮のユーザーID (リクエストを受け取った側)
+		const userId = req.authenticatedUser?.id;
 
 		await usecase.execute({
 			receiverId: userId,
@@ -134,8 +151,7 @@ const onRemoveFriend = (usecase: RemoveFriendUsecase) => {
 		req: FastifyRequest<{ Params: { friendId: string } }>,
 		reply: FastifyReply,
 	) => {
-		// TODO: セッションからuserIdを取得する
-		const userId = "01K24DQHXAJ2NFYKPZ812F4HBJ"; // 仮のユーザーID
+		const userId = req.authenticatedUser?.id;
 
 		await usecase.execute({
 			userId,
@@ -156,19 +172,10 @@ const onBlockUser = (usecase: BlockUserUsecase) => {
 	) => {
 		const input = blockUserSchema.safeParse(req.body);
 		if (!input.success) {
-			const flat = input.error.flatten();
-			const details: Record<string, string> = {};
-			for (const [key, value] of Object.entries(flat.fieldErrors)) {
-				if (value && value.length > 0) details[key] = value.join(", ");
-			}
-			if (flat.formErrors && flat.formErrors.length > 0) {
-				details.formErrors = flat.formErrors.join(", ");
-			}
-			throw new ErrBadRequest({ details });
+			handleValidationError(input.error);
 		}
 
-		// TODO: セッションからuserIdを取得する
-		const userId = "01K24DQHXAJ2NFYKPZ812F4HBJ"; // 仮のユーザーID
+		const userId = req.authenticatedUser?.id;
 
 		await usecase.execute({
 			blockerId: userId,
@@ -183,8 +190,7 @@ const onUnblockUser = (usecase: UnblockUserUsecase) => {
 		req: FastifyRequest<{ Params: { blockedUserId: string } }>,
 		reply: FastifyReply,
 	) => {
-		// TODO: セッションからuserIdを取得する
-		const userId = "01K24DQHXAJ2NFYKPZ812F4HBJ"; // 仮のユーザーID
+		const userId = req.authenticatedUser?.id;
 
 		await usecase.execute({
 			blockerId: userId,
