@@ -7,6 +7,7 @@ import {
 	UserStatusValue,
 } from "@domain/model/user";
 import { relationshipController } from "@presentation/controllers/relationship_controller";
+import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
 import type { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
 import type { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase";
@@ -27,6 +28,15 @@ describe("relationshipController", () => {
 	const blockUserUsecase = mock<BlockUserUsecase>();
 	const unblockUserUsecase = mock<UnblockUserUsecase>();
 
+	// Mock auth prehandler that sets authenticatedUser
+	const mockAuthPrehandler: AuthPrehandler = async (request, _reply, done) => {
+		request.authenticatedUser = {
+			id: "01K24DQHXAJ2NFYKPZ812F4HBJ",
+			email: "test@example.com",
+		};
+		done();
+	};
+
 	beforeEach(() => {
 		app = Fastify();
 		app.register(
@@ -37,6 +47,7 @@ describe("relationshipController", () => {
 				removeFriendUsecase,
 				blockUserUsecase,
 				unblockUserUsecase,
+				mockAuthPrehandler,
 			),
 		);
 	});
@@ -65,7 +76,9 @@ describe("relationshipController", () => {
 
 			const expectedResponseBody = friends.map((f) => ({
 				id: f.id.value,
-				email: f.email.value,
+				username: f.username.value,
+				avatar: f.avatar.value,
+				status: f.status.value,
 			}));
 
 			expect(response.statusCode).toBe(200);
@@ -107,7 +120,7 @@ describe("relationshipController", () => {
 
 			expect(response.statusCode).toBe(204);
 			expect(respondToFriendRequestUsecase.execute).toHaveBeenCalledWith({
-				receiverId: "01K24DQMEY074R1XNH3BKR3J17",
+				receiverId: "01K24DQHXAJ2NFYKPZ812F4HBJ",
 				requesterId: "request123",
 				response: "accept",
 			});

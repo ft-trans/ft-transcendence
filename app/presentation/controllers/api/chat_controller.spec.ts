@@ -11,6 +11,7 @@ import {
 	UserStatusValue,
 } from "@domain/model/user";
 import { chatController as apiChatController } from "@presentation/controllers/api/chat_controller";
+import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { GetDirectMessagesUsecase } from "@usecase/chat/get_direct_messages_usecase";
 import type { SendDirectMessageUsecase } from "@usecase/chat/send_direct_message_usecase";
 import type { FastifyInstance } from "fastify";
@@ -37,6 +38,15 @@ describe("directMessageController", () => {
 	const getDirectMessagesUsecase = mock<GetDirectMessagesUsecase>();
 	const sendDirectMessageUsecase = mock<SendDirectMessageUsecase>();
 
+	// Mock auth prehandler that sets authenticatedUser
+	const mockAuthPrehandler: AuthPrehandler = async (request, _reply, done) => {
+		request.authenticatedUser = {
+			id: sender.id.value,
+			email: sender.email.value,
+		};
+		done();
+	};
+
 	beforeEach(() => {
 		app = Fastify();
 		app.setErrorHandler((error, _request, reply) => {
@@ -57,7 +67,11 @@ describe("directMessageController", () => {
 			}
 		});
 		app.register(
-			apiChatController(getDirectMessagesUsecase, sendDirectMessageUsecase),
+			apiChatController(
+				getDirectMessagesUsecase,
+				sendDirectMessageUsecase,
+				mockAuthPrehandler,
+			),
 		);
 	});
 
@@ -81,8 +95,11 @@ describe("directMessageController", () => {
 			expect(response.json()).toEqual(
 				messages.map((m) => ({
 					id: m.id,
-					sender: { id: m.sender.id.value, email: m.sender.email.value },
-					receiver: { id: m.receiver.id.value, email: m.receiver.email.value },
+					sender: { id: m.sender.id.value, username: m.sender.username.value },
+					receiver: {
+						id: m.receiver.id.value,
+						username: m.receiver.username.value,
+					},
 					content: m.content,
 					isRead: m.isRead,
 					sentAt: m.sentAt.toISOString(),
@@ -121,11 +138,11 @@ describe("directMessageController", () => {
 				id: sentMessage.id,
 				sender: {
 					id: sentMessage.sender.id.value,
-					email: sentMessage.sender.email.value,
+					username: sentMessage.sender.username.value,
 				},
 				receiver: {
 					id: sentMessage.receiver.id.value,
-					email: sentMessage.receiver.email.value,
+					username: sentMessage.receiver.username.value,
 				},
 				content: sentMessage.content,
 				isRead: sentMessage.isRead,
