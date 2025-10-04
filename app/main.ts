@@ -153,7 +153,11 @@ const start = async () => {
 			{ prefix: "/ws" },
 		);
 		app.register(
-			apiChatController(getDirectMessagesUsecase, sendDirectMessageUsecase),
+			apiChatController(
+				getDirectMessagesUsecase,
+				sendDirectMessageUsecase,
+				authPrehandler,
+			),
 			{ prefix: "/api" },
 		);
 
@@ -171,6 +175,7 @@ const start = async () => {
 				removeFriendUsecase,
 				blockUserUsecase,
 				unblockUserUsecase,
+				authPrehandler,
 			),
 			{ prefix: "/api" },
 		);
