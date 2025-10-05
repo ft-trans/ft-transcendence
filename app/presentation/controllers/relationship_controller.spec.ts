@@ -8,6 +8,7 @@ import {
 } from "@domain/model/user";
 import { relationshipController } from "@presentation/controllers/relationship_controller";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import type { GetUsersOnlineStatusUsecase } from "@usecase/presence";
 import type { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
 import type { CancelFriendRequestUsecase } from "@usecase/relationship/cancel_friend_request_usecase";
 import type { GetFriendRequestsUsecase } from "@usecase/relationship/get_friend_requests_usecase";
@@ -33,6 +34,7 @@ describe("relationshipController", () => {
 	const cancelFriendRequestUsecase = mock<CancelFriendRequestUsecase>();
 	const blockUserUsecase = mock<BlockUserUsecase>();
 	const unblockUserUsecase = mock<UnblockUserUsecase>();
+	const getUsersOnlineStatusUsecase = mock<GetUsersOnlineStatusUsecase>();
 
 	// Mock auth prehandler that sets authenticatedUser
 	const mockAuthPrehandler: AuthPrehandler = async (request, _reply) => {
@@ -55,6 +57,7 @@ describe("relationshipController", () => {
 				cancelFriendRequestUsecase,
 				blockUserUsecase,
 				unblockUserUsecase,
+				getUsersOnlineStatusUsecase,
 				mockAuthPrehandler,
 			),
 		);
@@ -76,6 +79,9 @@ describe("relationshipController", () => {
 				),
 			];
 			getFriendsUsecase.execute.mockResolvedValue(friends);
+			getUsersOnlineStatusUsecase.execute.mockResolvedValue([
+				{ userId: "01K24DQHXAJ2NFYKPZ812F4HBC", isOnline: true },
+			]);
 
 			const response = await app.inject({
 				method: "GET",
@@ -86,7 +92,7 @@ describe("relationshipController", () => {
 				id: f.id.value,
 				username: f.username.value,
 				avatar: f.avatar.value,
-				status: f.status.value,
+				status: "online", // リアルタイムオンラインステータスが適用される
 			}));
 
 			expect(response.statusCode).toBe(200);
