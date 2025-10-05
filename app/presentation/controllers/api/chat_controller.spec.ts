@@ -39,12 +39,11 @@ describe("directMessageController", () => {
 	const sendDirectMessageUsecase = mock<SendDirectMessageUsecase>();
 
 	// Mock auth prehandler that sets authenticatedUser
-	const mockAuthPrehandler: AuthPrehandler = async (request, _reply, done) => {
+	const mockAuthPrehandler: AuthPrehandler = async (request, _reply) => {
 		request.authenticatedUser = {
 			id: sender.id.value,
 			email: sender.email.value,
 		};
-		done();
 	};
 
 	beforeEach(() => {
@@ -66,11 +65,17 @@ describe("directMessageController", () => {
 				});
 			}
 		});
+		const mockChatClientRepository = {
+			add: vi.fn(),
+			remove: vi.fn(),
+			findByUserId: vi.fn().mockReturnValue(undefined), // Default: receiver is offline
+		};
 		app.register(
 			apiChatController(
 				getDirectMessagesUsecase,
 				sendDirectMessageUsecase,
 				mockAuthPrehandler,
+				mockChatClientRepository,
 			),
 		);
 	});

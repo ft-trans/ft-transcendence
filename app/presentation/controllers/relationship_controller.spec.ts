@@ -29,12 +29,11 @@ describe("relationshipController", () => {
 	const unblockUserUsecase = mock<UnblockUserUsecase>();
 
 	// Mock auth prehandler that sets authenticatedUser
-	const mockAuthPrehandler: AuthPrehandler = async (request, _reply, done) => {
+	const mockAuthPrehandler: AuthPrehandler = async (request, _reply) => {
 		request.authenticatedUser = {
 			id: "01K24DQHXAJ2NFYKPZ812F4HBJ",
 			email: "test@example.com",
 		};
-		done();
 	};
 
 	beforeEach(() => {
