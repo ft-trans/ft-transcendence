@@ -9,7 +9,6 @@ import { MatchesPong } from "./features/pong/matches";
 import { EditProfile } from "./features/profile";
 
 export const router = async () => {
-	console.log("[ROUTER] Called with path:", window.location.pathname);
 	// biome-ignore lint/style/noNonNullAssertion: app container は必ず存在する
 	const container = document.querySelector<HTMLElement>("#app")!;
 	const routes = [
@@ -57,16 +56,12 @@ export const router = async () => {
 		const match = regexp.exec(path);
 
 		if (match) {
-			console.log("[ROUTER] Route matched:", route.path);
-			console.log("[ROUTER] Component:", route.component.constructor.name);
 			container.innerHTML = route.component.render();
 			if (keys.length === 0) {
-				console.log("[ROUTER] Calling onLoad without params");
 				await route.component.onLoad();
 				return;
 			} else {
 				const params = createRouteParams(keys, match);
-				console.log("[ROUTER] Calling onLoad with params:", params);
 				await route.component.onLoad(params);
 				return;
 			}
@@ -104,27 +99,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
 window.addEventListener("popstate", router);
 
-// Debug helper - グローバルに追加
-(
-	window as unknown as { debugRouter: () => void; testMessagesPage: () => void }
-).debugRouter = () => {
-	console.log("Current path:", window.location.pathname);
-	console.log("Calling router manually...");
-	router();
-};
+// Debug helpers - 開発環境でのみ利用可能
+if (import.meta.env.DEV) {
+	(
+		window as unknown as {
+			debugRouter: () => void;
+			testMessagesPage: () => void;
+		}
+	).debugRouter = () => {
+		console.log("Current path:", window.location.pathname);
+		console.log("Calling router manually...");
+		router();
+	};
 
-(
-	window as unknown as { debugRouter: () => void; testMessagesPage: () => void }
-).testMessagesPage = () => {
-	console.log("Testing MessagesPage directly...");
-	const messagesPage = new MessagesPage();
-	console.log("MessagesPage created:", messagesPage);
-	try {
-		const html = messagesPage.render();
-		console.log("render() succeeded, HTML length:", html.length);
-		messagesPage.onLoad();
-		console.log("onLoad() called");
-	} catch (error) {
-		console.error("Error in MessagesPage:", error);
-	}
-};
+	(
+		window as unknown as {
+			debugRouter: () => void;
+			testMessagesPage: () => void;
+		}
+	).testMessagesPage = () => {
+		console.log("Testing MessagesPage directly...");
+		const messagesPage = new MessagesPage();
+		console.log("MessagesPage created:", messagesPage);
+		try {
+			const html = messagesPage.render();
+			console.log("render() succeeded, HTML length:", html.length);
+			messagesPage.onLoad();
+			console.log("onLoad() called");
+		} catch (error) {
+			console.error("Error in MessagesPage:", error);
+		}
+	};
+}

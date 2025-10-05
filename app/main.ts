@@ -62,8 +62,6 @@ import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import Fastify from "fastify";
 import { otelInstrumentation } from "./observability/otel.js";
 
-const uniqueId = `main-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
 const app = Fastify({ logger: true });
 
 const start = async () => {
@@ -172,9 +170,6 @@ const start = async () => {
 				sendGameInviteUsecase,
 			),
 			{ prefix: "/ws" },
-		);
-		console.log(
-			`[MAIN DEBUG] About to register apiChatController directly (without plugin) - Execution ID: ${uniqueId}`,
 		);
 
 		// GET ハンドラー - メッセージ履歴取得

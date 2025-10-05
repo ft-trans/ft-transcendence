@@ -13,16 +13,6 @@ export class SendDirectMessageUsecase {
 	constructor(private readonly transaction: ITransaction) {}
 
 	async execute(input: ISendDirectMessageUsecase): Promise<DirectMessage> {
-		console.log(
-			`[USECASE DEBUG] SendDirectMessageUsecase.execute called with:`,
-			{
-				senderId: input.senderId,
-				receiverId: input.receiverId,
-				content: input.content,
-				timestamp: new Date().toISOString(),
-			},
-		);
-
 		if (input.senderId === input.receiverId) {
 			throw new ErrBadRequest({
 				userMessage: "自分自身にメッセージ送信することはできません。",
@@ -68,16 +58,7 @@ export class SendDirectMessageUsecase {
 			}
 
 			const message = DirectMessage.create(sender, receiver, input.content);
-			console.log(`[USECASE DEBUG] About to save message:`, {
-				id: message.id,
-				content: message.content,
-				timestamp: new Date().toISOString(),
-			});
 			const savedMessage = await messageRepository.save(message);
-			console.log(`[USECASE DEBUG] Message saved successfully:`, {
-				id: savedMessage.id,
-				timestamp: new Date().toISOString(),
-			});
 			return savedMessage;
 		});
 	}
