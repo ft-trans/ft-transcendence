@@ -279,13 +279,19 @@ const start = async () => {
 				cancelFriendRequestUsecase,
 				blockUserUsecase,
 				unblockUserUsecase,
+				getUsersOnlineStatusUsecase,
 				authPrehandler,
 			),
 			{ prefix: "/api" },
 		);
 
 		app.register(
-			userController(searchUsersUsecase, findUserUsecase, authPrehandler),
+			userController(
+				searchUsersUsecase,
+				findUserUsecase,
+				getUsersOnlineStatusUsecase,
+				authPrehandler,
+			),
 			{ prefix: "/api" },
 		);
 

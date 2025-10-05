@@ -1,6 +1,7 @@
 import { ErrBadRequest } from "@domain/error";
 import type { User } from "@domain/model/user";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import type { GetUsersOnlineStatusUsecase } from "@usecase/presence";
 import type { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
 import type { CancelFriendRequestUsecase } from "@usecase/relationship/cancel_friend_request_usecase";
 import type { GetFriendRequestsUsecase } from "@usecase/relationship/get_friend_requests_usecase";
@@ -23,13 +24,14 @@ export const relationshipController = (
 	cancelFriendRequestUsecase: CancelFriendRequestUsecase,
 	blockUserUsecase: BlockUserUsecase,
 	unblockUserUsecase: UnblockUserUsecase,
+	getUsersOnlineStatusUsecase: GetUsersOnlineStatusUsecase,
 	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
 		fastify.get(
 			"/friends",
 			{ preHandler: authPrehandler },
-			onGetFriends(getFriendsUsecase),
+			onGetFriends(getFriendsUsecase, getUsersOnlineStatusUsecase),
 		);
 		fastify.get(
 			"/friends/requests/received",
@@ -94,21 +96,40 @@ const handleValidationError = (parseError: z.ZodError) => {
 /**
  * Userドメインオブジェクトをクライアント向けのJSONオブジェクト（DTO）に変換するヘルパー関数
  */
-const toUserDTO = (user: User) => {
+const toUserDTO = (user: User, isOnline?: boolean) => {
 	return {
 		id: user.id.value,
 		username: user.username.value,
 		avatar: user.avatar.value,
-		status: user.status.value,
+		status:
+			isOnline !== undefined
+				? isOnline
+					? "online"
+					: "offline"
+				: user.status.value,
 	};
 };
 
-const onGetFriends = (usecase: GetFriendsUsecase) => {
+const onGetFriends = (
+	usecase: GetFriendsUsecase,
+	getUsersOnlineStatusUsecase: GetUsersOnlineStatusUsecase,
+) => {
 	return async (req: FastifyRequest, reply: FastifyReply) => {
 		try {
 			const userId = req.authenticatedUser?.id;
 			const friends = await usecase.execute(userId);
-			const responseBody = friends.map(toUserDTO);
+
+			// 友達のオンラインステータスを取得
+			const friendIds = friends.map((friend) => friend.id.value);
+			const onlineStatusList =
+				await getUsersOnlineStatusUsecase.execute(friendIds);
+			const onlineStatusMap = new Map(
+				onlineStatusList.map((status) => [status.userId, status.isOnline]),
+			);
+
+			const responseBody = friends.map((friend) =>
+				toUserDTO(friend, onlineStatusMap.get(friend.id.value)),
+			);
 
 			// レスポンスが既に送信されていないかチェック
 			if (!reply.sent) {

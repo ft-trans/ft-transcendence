@@ -1,6 +1,7 @@
 import type { User } from "@domain/model/user";
 import { UserId } from "@domain/model/user";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import type { GetUsersOnlineStatusUsecase } from "@usecase/presence";
 import type { FindUserUsecase } from "@usecase/user/find_user_usecase";
 import type { SearchUsersUsecase } from "@usecase/user/search_users_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
@@ -8,18 +9,19 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 export const userController = (
 	searchUsersUsecase: SearchUsersUsecase,
 	findUserUsecase: FindUserUsecase,
+	getUsersOnlineStatusUsecase: GetUsersOnlineStatusUsecase,
 	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
 		fastify.get(
 			"/users",
 			{ preHandler: authPrehandler },
-			onSearchUsers(searchUsersUsecase),
+			onSearchUsers(searchUsersUsecase, getUsersOnlineStatusUsecase),
 		);
 		fastify.get(
 			"/users/:userId",
 			{ preHandler: authPrehandler },
-			onGetUser(findUserUsecase),
+			onGetUser(findUserUsecase, getUsersOnlineStatusUsecase),
 		);
 	};
 };
@@ -27,16 +29,24 @@ export const userController = (
 /**
  * Userドメインオブジェクトをクライアント向けのJSONオブジェクト（DTO）に変換するヘルパー関数
  */
-const toUserDTO = (user: User) => {
+const toUserDTO = (user: User, isOnline?: boolean) => {
 	return {
 		id: user.id.value,
 		username: user.username.value,
 		avatar: user.avatar.value,
-		status: user.status.value,
+		status:
+			isOnline !== undefined
+				? isOnline
+					? "online"
+					: "offline"
+				: user.status.value,
 	};
 };
 
-const onSearchUsers = (usecase: SearchUsersUsecase) => {
+const onSearchUsers = (
+	usecase: SearchUsersUsecase,
+	getUsersOnlineStatusUsecase: GetUsersOnlineStatusUsecase,
+) => {
 	return async (
 		req: FastifyRequest<{
 			Querystring: { q?: string; limit?: string };
@@ -54,7 +64,17 @@ const onSearchUsers = (usecase: SearchUsersUsecase) => {
 				limit,
 			});
 
-			const responseBody = users.map(toUserDTO);
+			// ユーザーのオンラインステータスを取得
+			const userIds = users.map((user) => user.id.value);
+			const onlineStatusList =
+				await getUsersOnlineStatusUsecase.execute(userIds);
+			const onlineStatusMap = new Map(
+				onlineStatusList.map((status) => [status.userId, status.isOnline]),
+			);
+
+			const responseBody = users.map((user) =>
+				toUserDTO(user, onlineStatusMap.get(user.id.value)),
+			);
 
 			if (!reply.sent) {
 				return reply.send(responseBody);
@@ -68,7 +88,10 @@ const onSearchUsers = (usecase: SearchUsersUsecase) => {
 	};
 };
 
-const onGetUser = (usecase: FindUserUsecase) => {
+const onGetUser = (
+	usecase: FindUserUsecase,
+	getUsersOnlineStatusUsecase: GetUsersOnlineStatusUsecase,
+) => {
 	return async (
 		req: FastifyRequest<{
 			Params: { userId: string };
@@ -79,7 +102,15 @@ const onGetUser = (usecase: FindUserUsecase) => {
 			const { userId } = req.params;
 			const userIdObj = new UserId(userId);
 			const user = await usecase.run(userIdObj);
-			const responseBody = toUserDTO(user);
+
+			// ユーザーのオンラインステータスを取得
+			const onlineStatusList = await getUsersOnlineStatusUsecase.execute([
+				userId,
+			]);
+			const isOnline =
+				onlineStatusList.length > 0 ? onlineStatusList[0].isOnline : false;
+
+			const responseBody = toUserDTO(user, isOnline);
 
 			if (!reply.sent) {
 				return reply.send(responseBody);
