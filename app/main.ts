@@ -10,7 +10,7 @@ import { Transaction } from "@infra/database/transaction";
 import { InMemoryChatClientRepository } from "@infra/in_memory/chat_client_repository";
 import { InMemoryMatchmakingClientRepository } from "@infra/in_memory/matchmaking_client_repository";
 import { Repository } from "@infra/repository";
-import { chatController as apiChatController } from "@presentation/controllers/api/chat_controller";
+
 import { presenceController } from "@presentation/controllers/api/presence_controller";
 import { authController } from "@presentation/controllers/auth_controller";
 import { matchmakingController } from "@presentation/controllers/matchmaking_controller";
@@ -27,7 +27,6 @@ import {
 	GetDirectMessagesUsecase,
 	JoinChatUsecase,
 	LeaveChatUsecase,
-	SendChatMessageUsecase,
 	SendDirectMessageUsecase,
 	SendGameInviteUsecase,
 } from "@usecase/chat";
@@ -57,6 +56,8 @@ import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import Fastify from "fastify";
 import { otelInstrumentation } from "./observability/otel.js";
 
+const uniqueId = `main-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
 const app = Fastify({ logger: true });
 
 const start = async () => {
@@ -80,7 +81,6 @@ const start = async () => {
 			process.exit(1);
 		}
 
-		await app.register(websocket);
 		await app.register(FastifyRedis, { url: redisUrl });
 		const repo = new Repository(prisma, app.redis);
 		const tx = new Transaction(prisma, app.redis);
@@ -149,10 +149,6 @@ const start = async () => {
 
 		const chatClientRepository = new InMemoryChatClientRepository();
 		const sendDirectMessageUsecase = new SendDirectMessageUsecase(tx);
-		const sendChatMessageUsecase = new SendChatMessageUsecase(
-			sendDirectMessageUsecase,
-			chatClientRepository,
-		);
 		const sendGameInviteUsecase = new SendGameInviteUsecase(
 			repo.newUserRepository(),
 			chatClientRepository,
@@ -160,23 +156,104 @@ const start = async () => {
 		const joinChatUsecase = new JoinChatUsecase(chatClientRepository);
 		const leaveChatUsecase = new LeaveChatUsecase(chatClientRepository);
 		const getDirectMessagesUsecase = new GetDirectMessagesUsecase(tx);
+
+		// WebSocketチャットコントローラーを登録
 		app.register(
 			webSocketChatController(
 				joinChatUsecase,
 				leaveChatUsecase,
-				sendChatMessageUsecase,
+				null, // メッセージ送信はAPIで処理
 				sendGameInviteUsecase,
 			),
 			{ prefix: "/ws" },
 		);
-		app.register(
-			apiChatController(
-				getDirectMessagesUsecase,
-				sendDirectMessageUsecase,
-				authPrehandler,
-			),
-			{ prefix: "/api" },
+		console.log(
+			`[MAIN DEBUG] About to register apiChatController directly (without plugin) - Execution ID: ${uniqueId}`,
 		);
+
+		// GET ハンドラー - メッセージ履歴取得
+		app.get<{ Params: { partnerId: string } }>(
+			"/api/dms/:partnerId",
+			{ preHandler: authPrehandler },
+			async (req, reply) => {
+				const userId = req.authenticatedUser?.id;
+				const messages = await getDirectMessagesUsecase.execute({
+					senderId: userId,
+					receiverId: req.params.partnerId,
+				});
+
+				const responseBody = messages.map((message) => ({
+					id: message.id,
+					sender: {
+						id: message.sender.id.value,
+						username: message.sender.username.value,
+					},
+					receiver: {
+						id: message.receiver.id.value,
+						username: message.receiver.username.value,
+					},
+					content: message.content,
+					isRead: message.isRead,
+					sentAt: message.sentAt.toISOString(),
+				}));
+
+				return reply.send(responseBody);
+			},
+		);
+
+		app.post<{ Body: { receiverId: string; content: string } }>(
+			"/api/dms",
+			{ preHandler: authPrehandler },
+			async (req, reply) => {
+				const input = req.body;
+				const senderId = req.authenticatedUser?.id;
+
+				// 1. データベースにメッセージを保存する
+				const sentMessage = await sendDirectMessageUsecase.execute({
+					senderId,
+					receiverId: input.receiverId,
+					content: input.content,
+				});
+
+				// 2. 相手がオンラインならWebSocketで通知する
+				const receiverClient = chatClientRepository.findByUserId(
+					sentMessage.receiver.id,
+				);
+				if (receiverClient) {
+					receiverClient.send({
+						type: "newMessage",
+						payload: {
+							senderId: sentMessage.sender.id.value,
+							senderName: sentMessage.sender.username.value,
+							content: sentMessage.content,
+							timestamp: sentMessage.sentAt.toISOString(),
+						},
+					});
+				}
+
+				const responseBody = {
+					id: sentMessage.id,
+					sender: {
+						id: sentMessage.sender.id.value,
+						username: sentMessage.sender.username.value,
+					},
+					receiver: {
+						id: sentMessage.receiver.id.value,
+						username: sentMessage.receiver.username.value,
+					},
+					content: sentMessage.content,
+					isRead: sentMessage.isRead,
+					sentAt: sentMessage.sentAt.toISOString(),
+				};
+
+				return reply.status(201).send(responseBody);
+			},
+		);
+
+		// WebSocketプラグインをHTTPルート登録後に登録
+		await app.register(websocket);
+
+		// WebSocketプラグインを登録済みのため、ルート情報は省略
 
 		const getFriendsUsecase = new GetFriendsUsecase(tx);
 		const sendFriendRequestUsecase = new SendFriendRequestUsecase(tx);
@@ -240,7 +317,7 @@ const start = async () => {
 
 		await app.vite.ready();
 		await app.listen({ host: "0.0.0.0", port: 3000 });
-		app.log.info("HTTP app listening on :3000");
+		app.log.info("HTTP server listening on :3000");
 	} catch (err) {
 		app.log.error(err);
 		process.exit(1);
