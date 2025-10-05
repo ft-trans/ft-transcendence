@@ -9,7 +9,10 @@ import {
 import { relationshipController } from "@presentation/controllers/relationship_controller";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
+import type { CancelFriendRequestUsecase } from "@usecase/relationship/cancel_friend_request_usecase";
+import type { GetFriendRequestsUsecase } from "@usecase/relationship/get_friend_requests_usecase";
 import type { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
+import type { GetSentFriendRequestsUsecase } from "@usecase/relationship/get_sent_friend_requests_usecase";
 import type { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase";
 import type { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_friend_request_usecase";
 import type { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
@@ -22,9 +25,12 @@ import { mock } from "vitest-mock-extended";
 describe("relationshipController", () => {
 	let app: FastifyInstance;
 	const getFriendsUsecase = mock<GetFriendsUsecase>();
+	const getFriendRequestsUsecase = mock<GetFriendRequestsUsecase>();
+	const getSentFriendRequestsUsecase = mock<GetSentFriendRequestsUsecase>();
 	const sendFriendRequestUsecase = mock<SendFriendRequestUsecase>();
 	const respondToFriendRequestUsecase = mock<RespondToFriendRequestUsecase>();
 	const removeFriendUsecase = mock<RemoveFriendUsecase>();
+	const cancelFriendRequestUsecase = mock<CancelFriendRequestUsecase>();
 	const blockUserUsecase = mock<BlockUserUsecase>();
 	const unblockUserUsecase = mock<UnblockUserUsecase>();
 
@@ -41,9 +47,12 @@ describe("relationshipController", () => {
 		app.register(
 			relationshipController(
 				getFriendsUsecase,
+				getFriendRequestsUsecase,
+				getSentFriendRequestsUsecase,
 				sendFriendRequestUsecase,
 				respondToFriendRequestUsecase,
 				removeFriendUsecase,
+				cancelFriendRequestUsecase,
 				blockUserUsecase,
 				unblockUserUsecase,
 				mockAuthPrehandler,

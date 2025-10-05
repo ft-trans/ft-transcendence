@@ -2,7 +2,10 @@ import { ErrBadRequest } from "@domain/error";
 import type { User } from "@domain/model/user";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
+import type { CancelFriendRequestUsecase } from "@usecase/relationship/cancel_friend_request_usecase";
+import type { GetFriendRequestsUsecase } from "@usecase/relationship/get_friend_requests_usecase";
 import type { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
+import type { GetSentFriendRequestsUsecase } from "@usecase/relationship/get_sent_friend_requests_usecase";
 import type { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase";
 import type { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_friend_request_usecase";
 import type { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
@@ -12,9 +15,12 @@ import { z } from "zod";
 
 export const relationshipController = (
 	getFriendsUsecase: GetFriendsUsecase,
+	getFriendRequestsUsecase: GetFriendRequestsUsecase,
+	getSentFriendRequestsUsecase: GetSentFriendRequestsUsecase,
 	sendFriendRequestUsecase: SendFriendRequestUsecase,
 	respondToFriendRequestUsecase: RespondToFriendRequestUsecase,
 	removeFriendUsecase: RemoveFriendUsecase,
+	cancelFriendRequestUsecase: CancelFriendRequestUsecase,
 	blockUserUsecase: BlockUserUsecase,
 	unblockUserUsecase: UnblockUserUsecase,
 	authPrehandler: AuthPrehandler,
@@ -24,6 +30,16 @@ export const relationshipController = (
 			"/friends",
 			{ preHandler: authPrehandler },
 			onGetFriends(getFriendsUsecase),
+		);
+		fastify.get(
+			"/friends/requests/received",
+			{ preHandler: authPrehandler },
+			onGetFriendRequests(getFriendRequestsUsecase),
+		);
+		fastify.get(
+			"/friends/requests/sent",
+			{ preHandler: authPrehandler },
+			onGetSentFriendRequests(getSentFriendRequestsUsecase),
 		);
 		fastify.post(
 			"/friends/requests",
@@ -39,6 +55,11 @@ export const relationshipController = (
 			"/friends/:friendId",
 			{ preHandler: authPrehandler },
 			onRemoveFriend(removeFriendUsecase),
+		);
+		fastify.delete(
+			"/friends/requests/:receiverId",
+			{ preHandler: authPrehandler },
+			onCancelFriendRequest(cancelFriendRequestUsecase),
 		);
 		fastify.post(
 			"/blocks",
@@ -95,6 +116,54 @@ const onGetFriends = (usecase: GetFriendsUsecase) => {
 			}
 		} catch (error) {
 			console.error("[ERROR] GetFriends failed:", error);
+			if (!reply.sent) {
+				return reply.status(500).send({ error: "Internal server error" });
+			}
+		}
+	};
+};
+
+const onGetFriendRequests = (usecase: GetFriendRequestsUsecase) => {
+	return async (req: FastifyRequest, reply: FastifyReply) => {
+		try {
+			const userId = req.authenticatedUser?.id;
+			const friendRequests = await usecase.execute(userId);
+			const responseBody = friendRequests.map((request) => ({
+				id: `${request.requesterId.value}_${request.receiverId.value}`,
+				requesterId: request.requesterId.value,
+				receiverId: request.receiverId.value,
+				status: request.status,
+			}));
+
+			if (!reply.sent) {
+				return reply.send(responseBody);
+			}
+		} catch (error) {
+			console.error("[ERROR] GetFriendRequests failed:", error);
+			if (!reply.sent) {
+				return reply.status(500).send({ error: "Internal server error" });
+			}
+		}
+	};
+};
+
+const onGetSentFriendRequests = (usecase: GetSentFriendRequestsUsecase) => {
+	return async (req: FastifyRequest, reply: FastifyReply) => {
+		try {
+			const userId = req.authenticatedUser?.id;
+			const sentRequests = await usecase.execute(userId);
+			const responseBody = sentRequests.map((request) => ({
+				id: `${request.requesterId.value}_${request.receiverId.value}`,
+				requesterId: request.requesterId.value,
+				receiverId: request.receiverId.value,
+				status: request.status,
+			}));
+
+			if (!reply.sent) {
+				return reply.send(responseBody);
+			}
+		} catch (error) {
+			console.error("[ERROR] GetSentFriendRequests failed:", error);
 			if (!reply.sent) {
 				return reply.status(500).send({ error: "Internal server error" });
 			}
@@ -188,6 +257,21 @@ const onBlockUser = (usecase: BlockUserUsecase) => {
 		await usecase.execute({
 			blockerId: userId,
 			blockedId: input.data.blockedId,
+		});
+		reply.status(204).send();
+	};
+};
+
+const onCancelFriendRequest = (usecase: CancelFriendRequestUsecase) => {
+	return async (
+		req: FastifyRequest<{ Params: { receiverId: string } }>,
+		reply: FastifyReply,
+	) => {
+		const requesterId = req.authenticatedUser?.id;
+
+		await usecase.execute({
+			requesterId,
+			receiverId: req.params.receiverId,
 		});
 		reply.status(204).send();
 	};
