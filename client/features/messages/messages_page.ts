@@ -191,7 +191,7 @@ export class MessagesPage extends Component {
 		}
 
 		// Connect to WebSocket
-		wsManager.connect(state.user.id);
+		wsManager.connect();
 
 		// Setup message handler
 		this.wsUnsubscribe = wsManager.onMessage((message: ServerMessage) => {

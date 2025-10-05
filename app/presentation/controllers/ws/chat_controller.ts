@@ -7,16 +7,30 @@ import type { SendChatMessageUsecase } from "@usecase/chat/send_chat_message_use
 import type { SendGameInviteUsecase } from "@usecase/chat/send_game_invite_usecase";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
+/**
+ * Simplified WebSocket interface for chat functionality
+ * Only includes the methods actually needed by InMemoryChatClient
+ */
+interface SimplifiedWebSocket {
+	send(data: string): void;
+	close(): void;
+}
+
 export const chatController = (
 	joinChatUsecase: JoinChatUsecase,
 	leaveChatUsecase: LeaveChatUsecase,
 	sendChatMessageUsecase: SendChatMessageUsecase | null,
 	sendGameInviteUsecase: SendGameInviteUsecase,
+	// biome-ignore lint/suspicious/noExplicitAny: Type import would cause circular dependency
+	authPrehandler: any,
 ) => {
 	return async (fastify: FastifyInstance) => {
 		fastify.get(
 			"/chat",
-			{ websocket: true },
+			{
+				websocket: true,
+				preHandler: authPrehandler,
+			},
 			onConnectClient(
 				joinChatUsecase,
 				leaveChatUsecase,
@@ -34,30 +48,16 @@ const onConnectClient = (
 	sendGameInviteUsecase: SendGameInviteUsecase,
 ) => {
 	return async (connection: unknown, req: FastifyRequest) => {
-		// Get userId from query parameter
-		const userId = (req.query as { userId?: string })?.userId;
-		console.log(`[WS Chat] Client connected: ${userId}`);
+		// Use authenticated user from prehandler instead of query parameter
+		const userId = req.authenticatedUser?.id;
 
 		if (userId) {
-			// WebSocketアダプター: FastifyのconnectionをWebSocket風にラップ
+			// WebSocketアダプター: FastifyのconnectionをSimplifiedWebSocketインターフェースに適合させる
 			// biome-ignore lint/suspicious/noExplicitAny: Fastify WebSocket connection型の互換性のため必要
 			const connectionWithAny = connection as any;
-			const webSocketAdapter = {
+			const webSocketAdapter: SimplifiedWebSocket = {
 				send: (data: string) => connectionWithAny.send(data),
 				close: () => connectionWithAny.close(),
-				// InMemoryChatClientがWebSocketインターフェースを期待するためのダミープロパティ
-				binaryType: "nodebuffer" as const,
-				bufferedAmount: 0,
-				extensions: "",
-				protocol: "",
-				readyState: 1, // WebSocket.OPEN
-				url: "",
-				onopen: null,
-				onmessage: null,
-				onerror: null,
-				onclose: null,
-				addEventListener: () => {},
-				removeEventListener: () => {},
 			};
 
 			const chatClient = new InMemoryChatClient(
@@ -94,7 +94,6 @@ const onConnectClient = (
 			});
 
 			connectionWithAny.on("close", () => {
-				console.log(`[WS Chat] Client disconnected: ${userId}`);
 				leaveChatUsecase.execute(chatClient);
 			});
 

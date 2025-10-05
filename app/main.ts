@@ -10,7 +10,6 @@ import { Transaction } from "@infra/database/transaction";
 import { InMemoryChatClientRepository } from "@infra/in_memory/chat_client_repository";
 import { InMemoryMatchmakingClientRepository } from "@infra/in_memory/matchmaking_client_repository";
 import { Repository } from "@infra/repository";
-
 import { presenceController } from "@presentation/controllers/api/presence_controller";
 import { authController } from "@presentation/controllers/auth_controller";
 import { matchmakingController } from "@presentation/controllers/matchmaking_controller";
@@ -21,6 +20,7 @@ import { relationshipController } from "@presentation/controllers/relationship_c
 import { userController } from "@presentation/controllers/user_controller";
 import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import { MESSAGE_TYPES } from "@shared/api/chat";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
 import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
@@ -168,6 +168,7 @@ const start = async () => {
 				leaveChatUsecase,
 				null, // メッセージ送信はAPIで処理
 				sendGameInviteUsecase,
+				authPrehandler,
 			),
 			{ prefix: "/ws" },
 		);
@@ -222,7 +223,7 @@ const start = async () => {
 				);
 				if (receiverClient) {
 					receiverClient.send({
-						type: "newMessage",
+						type: MESSAGE_TYPES.NEW_MESSAGE,
 						payload: {
 							senderId: sentMessage.sender.id.value,
 							senderName: sentMessage.sender.username.value,

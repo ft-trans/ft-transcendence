@@ -197,6 +197,10 @@ export class FriendsPage extends Component {
 			for (const request of this.receivedFriendRequests) {
 				if (!request.requesterId) {
 					console.error("requesterId is undefined for request:", request);
+					new FloatingBanner({
+						message: "友達申請の送信者情報の取得に失敗しました",
+						type: "error",
+					}).show();
 					continue;
 				}
 

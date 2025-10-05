@@ -10,13 +10,13 @@ export class WebSocketManager {
 	private maxReconnectAttempts = 5;
 	private reconnectDelay = 1000;
 
-	connect(userId: string): void {
+	connect(): void {
 		if (this.ws && this.ws.readyState === WebSocket.OPEN) {
 			return;
 		}
 
-		// Use query parameter for user authentication since WebSocket doesn't support custom headers
-		const wsUrl = `${import.meta.env.VITE_WS_URL || "ws://localhost:3000"}/ws/chat?userId=${encodeURIComponent(userId)}`;
+		// Use cookie-based authentication - cookies are automatically sent with WebSocket connections
+		const wsUrl = `${import.meta.env.VITE_WS_URL || "ws://localhost:3000"}/ws/chat`;
 		this.ws = new WebSocket(wsUrl);
 
 		this.ws.onopen = () => {
@@ -35,7 +35,7 @@ export class WebSocketManager {
 
 		this.ws.onclose = () => {
 			console.log("[WS] Disconnected from chat server");
-			this.attemptReconnect(userId);
+			this.attemptReconnect();
 		};
 
 		this.ws.onerror = (error) => {
@@ -89,7 +89,7 @@ export class WebSocketManager {
 		return () => this.messageHandlers.delete(handler);
 	}
 
-	private attemptReconnect(userId: string): void {
+	private attemptReconnect(): void {
 		if (this.reconnectAttempts >= this.maxReconnectAttempts) {
 			console.error("[WS] Max reconnection attempts reached");
 			return;
@@ -103,7 +103,7 @@ export class WebSocketManager {
 		);
 
 		setTimeout(() => {
-			this.connect(userId);
+			this.connect();
 		}, delay);
 	}
 }
