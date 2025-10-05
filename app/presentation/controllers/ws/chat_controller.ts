@@ -11,7 +11,7 @@ import type WebSocket from "ws";
 export const chatController = (
 	joinChatUsecase: JoinChatUsecase,
 	leaveChatUsecase: LeaveChatUsecase,
-	sendChatMessageUsecase: SendChatMessageUsecase,
+	sendChatMessageUsecase: SendChatMessageUsecase | null,
 	sendGameInviteUsecase: SendGameInviteUsecase,
 ) => {
 	return async (fastify: FastifyInstance) => {
@@ -31,14 +31,14 @@ export const chatController = (
 const onConnectClient = (
 	joinChatUsecase: JoinChatUsecase,
 	leaveChatUsecase: LeaveChatUsecase,
-	sendChatMessageUsecase: SendChatMessageUsecase,
+	_sendChatMessageUsecase: SendChatMessageUsecase | null,
 	sendGameInviteUsecase: SendGameInviteUsecase,
 ) => {
 	return async (socket: WebSocket, req: FastifyRequest) => {
-		// TODO: Should authenticate user and get userId
-		const userId = req.headers["x-user-id"] as string; // Temporary solution for getting user id
+		// Get userId from query parameter
+		const userId = (req.query as { userId?: string })?.userId;
 		if (!userId) {
-			socket.close(1008, "User not authenticated");
+			socket.terminate();
 			return;
 		}
 
@@ -52,21 +52,22 @@ const onConnectClient = (
 
 				switch (message.type) {
 					case MESSAGE_TYPES.SEND_MESSAGE:
-						await sendChatMessageUsecase.execute({
-							senderId: userId,
-							...message.payload,
-						});
-						break;
+						// メッセージ送信はAPIで処理されるため、WebSocketでは何もしない
+						return;
 					case MESSAGE_TYPES.SEND_GAME_INVITE:
 						await sendGameInviteUsecase.execute({
 							senderId: userId,
 							...message.payload,
 						});
 						break;
+					default:
+						console.warn(
+							"Unknown WebSocket message type:",
+							JSON.stringify(message),
+						);
 				}
 			} catch (error) {
-				// TODO: Error handling
-				console.error(error);
+				console.error("Error processing WebSocket message:", error);
 			}
 		};
 
