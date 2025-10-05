@@ -93,11 +93,18 @@ export class FriendshipRepository implements IFriendshipRepository {
 			},
 		});
 
-		return friendships.map((f) =>
-			f.requesterId === userId
-				? toUserDomain(f.receiver)
-				: toUserDomain(f.requester),
-		);
+		// 重複を除去するためにSetを使用
+		const friendsMap = new Map<string, User>();
+
+		friendships.forEach((f) => {
+			const friend =
+				f.requesterId === userId
+					? toUserDomain(f.receiver)
+					: toUserDomain(f.requester);
+			friendsMap.set(friend.id.value, friend);
+		});
+
+		return Array.from(friendsMap.values());
 	}
 
 	async findPendingRequestsByReceiverId(userId: string): Promise<Friendship[]> {
