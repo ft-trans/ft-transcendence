@@ -1,12 +1,15 @@
 import { pathToRegexp } from "path-to-regexp";
 import { createRouteParams, Navigation } from "./components";
 import { Login, Register } from "./features/auth";
+import { FriendsPage } from "./features/friends";
 import { Home } from "./features/home";
 import { Matchmaking } from "./features/matchmaking";
+import { MessagesPage } from "./features/messages";
 import { MatchesPong } from "./features/pong/matches";
 import { EditProfile } from "./features/profile";
 
 export const router = async () => {
+	console.log("[ROUTER] Called with path:", window.location.pathname);
 	// biome-ignore lint/style/noNonNullAssertion: app container は必ず存在する
 	const container = document.querySelector<HTMLElement>("#app")!;
 	const routes = [
@@ -34,6 +37,18 @@ export const router = async () => {
 			path: "/pong/matches/:match_id",
 			component: new Navigation({ child: new MatchesPong() }),
 		},
+		{
+			path: "/messages",
+			component: new Navigation({ child: new MessagesPage() }),
+		},
+		{
+			path: "/messages/:userId",
+			component: new Navigation({ child: new MessagesPage() }),
+		},
+		{
+			path: "/friends",
+			component: new Navigation({ child: new FriendsPage() }),
+		},
 	];
 
 	const path = window.location.pathname;
@@ -42,13 +57,17 @@ export const router = async () => {
 		const match = regexp.exec(path);
 
 		if (match) {
+			console.log("[ROUTER] Route matched:", route.path);
+			console.log("[ROUTER] Component:", route.component.constructor.name);
 			container.innerHTML = route.component.render();
 			if (keys.length === 0) {
-				route.component.onLoad();
+				console.log("[ROUTER] Calling onLoad without params");
+				await route.component.onLoad();
 				return;
 			} else {
 				const params = createRouteParams(keys, match);
-				route.component.onLoad(params);
+				console.log("[ROUTER] Calling onLoad with params:", params);
+				await route.component.onLoad(params);
 				return;
 			}
 		}
@@ -84,3 +103,28 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 window.addEventListener("popstate", router);
+
+// Debug helper - グローバルに追加
+(
+	window as unknown as { debugRouter: () => void; testMessagesPage: () => void }
+).debugRouter = () => {
+	console.log("Current path:", window.location.pathname);
+	console.log("Calling router manually...");
+	router();
+};
+
+(
+	window as unknown as { debugRouter: () => void; testMessagesPage: () => void }
+).testMessagesPage = () => {
+	console.log("Testing MessagesPage directly...");
+	const messagesPage = new MessagesPage();
+	console.log("MessagesPage created:", messagesPage);
+	try {
+		const html = messagesPage.render();
+		console.log("render() succeeded, HTML length:", html.length);
+		messagesPage.onLoad();
+		console.log("onLoad() called");
+	} catch (error) {
+		console.error("Error in MessagesPage:", error);
+	}
+};
