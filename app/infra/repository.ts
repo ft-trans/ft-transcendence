@@ -9,6 +9,7 @@ import type {
 	IPongPaddleRepository,
 	IRepository,
 	ISessionRepository,
+	IUserPresenceRepository,
 	IUserRepository,
 } from "@domain/repository";
 import { DirectMessageRepository } from "./database/direct_message_repository";
@@ -23,6 +24,7 @@ import { PongMatchStateRepository } from "./in_memory/pong_match_state_repositor
 import type { KvsClient } from "./kvs/client";
 import { PongBallRepository } from "./kvs/pong_ball_repository";
 import { PongPaddleRepository } from "./kvs/pong_paddle_repository";
+import { UserPresenceRepository } from "./kvs/user_presence_repository";
 
 export class Repository implements IRepository {
 	constructor(
@@ -53,6 +55,9 @@ export class Repository implements IRepository {
 	}
 	newPongPaddleRepository(): IPongPaddleRepository {
 		return new PongPaddleRepository(this.kvsClient);
+	}
+	newUserPresenceRepository(): IUserPresenceRepository {
+		return new UserPresenceRepository(this.kvsClient);
 	}
 
 	// in-memory repositories
