@@ -11,6 +11,7 @@ import { InMemoryChatClientRepository } from "@infra/in_memory/chat_client_repos
 import { InMemoryMatchmakingClientRepository } from "@infra/in_memory/matchmaking_client_repository";
 import { Repository } from "@infra/repository";
 import { chatController as apiChatController } from "@presentation/controllers/api/chat_controller";
+import { presenceController } from "@presentation/controllers/api/presence_controller";
 import { authController } from "@presentation/controllers/auth_controller";
 import { matchmakingController } from "@presentation/controllers/matchmaking_controller";
 import { matchmakingWsController } from "@presentation/controllers/matchmaking_ws_controller";
@@ -37,6 +38,14 @@ import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
 import { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
 import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import { UpdatePongPaddleUsecase } from "@usecase/pong/update_pong_paddle_usecase";
+import {
+	ExtendUserOnlineUsecase,
+	GetOnlineUsersUsecase,
+	GetUsersOnlineStatusUsecase,
+	IsUserOnlineUsecase,
+	SetUserOfflineUsecase,
+	SetUserOnlineUsecase,
+} from "@usecase/presence";
 import { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
 import { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
 import { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase";
@@ -112,6 +121,14 @@ const start = async () => {
 			matchmakingService,
 		);
 
+		// プレゼンス機能のユースケース
+		const setUserOnlineUsecase = new SetUserOnlineUsecase(repo);
+		const setUserOfflineUsecase = new SetUserOfflineUsecase(repo);
+		const extendUserOnlineUsecase = new ExtendUserOnlineUsecase(repo);
+		const getOnlineUsersUsecase = new GetOnlineUsersUsecase(repo);
+		const getUsersOnlineStatusUsecase = new GetUsersOnlineStatusUsecase(repo);
+		const isUserOnlineUsecase = new IsUserOnlineUsecase(repo);
+
 		await app.register(
 			profileController(updateUserUsecase, deleteUserUsecase),
 			{ prefix: "/api" },
@@ -180,6 +197,19 @@ const start = async () => {
 			{ prefix: "/api" },
 		);
 
+		await app.register(
+			presenceController(
+				setUserOnlineUsecase,
+				setUserOfflineUsecase,
+				extendUserOnlineUsecase,
+				getOnlineUsersUsecase,
+				getUsersOnlineStatusUsecase,
+				isUserOnlineUsecase,
+				authPrehandler,
+			),
+			{ prefix: "/api" },
+		);
+
 		const getMatchUseCase = new GetMatchUseCase(repo.newMatchRepository());
 		await app.register(
 			matchmakingController(
@@ -194,7 +224,13 @@ const start = async () => {
 		);
 
 		await app.register(
-			matchmakingWsController(authPrehandler, matchmakingClientRepository),
+			matchmakingWsController(
+				authPrehandler,
+				matchmakingClientRepository,
+				setUserOnlineUsecase,
+				setUserOfflineUsecase,
+				extendUserOnlineUsecase,
+			),
 			{ prefix: "/ws" },
 		);
 
