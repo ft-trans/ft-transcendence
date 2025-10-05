@@ -53,7 +53,7 @@ export class FriendList extends Component {
             <div class="flex space-x-2">
               <button 
                 class="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                onclick="window.navigateTo && window.navigateTo('/messages/${friend.id}')"
+                data-navigate-to="/messages/${friend.id}"
               >
                 メッセージ
               </button>
