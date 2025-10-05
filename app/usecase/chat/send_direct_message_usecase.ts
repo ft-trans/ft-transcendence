@@ -43,7 +43,7 @@ export class SendDirectMessageUsecase {
 				if (friendship.isBlocked()) {
 					throw new ErrForbidden();
 				}
-				// 友達関係が存在する場合はメッセージ送信を許可
+				// 友達関係が承認されている場合のみメッセージ送信を許可
 				if (!friendship.isAccepted()) {
 					throw new ErrBadRequest({
 						userMessage:
