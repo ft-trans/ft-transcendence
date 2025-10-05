@@ -18,6 +18,7 @@ import { matchmakingWsController } from "@presentation/controllers/matchmaking_w
 import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
 import { relationshipController } from "@presentation/controllers/relationship_controller";
+import { userController } from "@presentation/controllers/user_controller";
 import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
@@ -46,12 +47,17 @@ import {
 	SetUserOnlineUsecase,
 } from "@usecase/presence";
 import { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
+import { CancelFriendRequestUsecase } from "@usecase/relationship/cancel_friend_request_usecase";
+import { GetFriendRequestsUsecase } from "@usecase/relationship/get_friend_requests_usecase";
 import { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
+import { GetSentFriendRequestsUsecase } from "@usecase/relationship/get_sent_friend_requests_usecase";
 import { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase";
 import { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_friend_request_usecase";
 import { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
 import { UnblockUserUsecase } from "@usecase/relationship/unblock_user_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
+import { FindUserUsecase } from "@usecase/user/find_user_usecase";
+import { SearchUsersUsecase } from "@usecase/user/search_users_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import Fastify from "fastify";
 import { otelInstrumentation } from "./observability/otel.js";
@@ -256,21 +262,35 @@ const start = async () => {
 		// WebSocketプラグインを登録済みのため、ルート情報は省略
 
 		const getFriendsUsecase = new GetFriendsUsecase(tx);
+		const getFriendRequestsUsecase = new GetFriendRequestsUsecase(tx);
+		const getSentFriendRequestsUsecase = new GetSentFriendRequestsUsecase(tx);
 		const sendFriendRequestUsecase = new SendFriendRequestUsecase(tx);
 		const respondToFriendRequestUsecase = new RespondToFriendRequestUsecase(tx);
 		const removeFriendUsecase = new RemoveFriendUsecase(tx);
+		const cancelFriendRequestUsecase = new CancelFriendRequestUsecase(tx);
 		const blockUserUsecase = new BlockUserUsecase(tx);
 		const unblockUserUsecase = new UnblockUserUsecase(tx);
+		const searchUsersUsecase = new SearchUsersUsecase(tx);
+		const findUserUsecase = new FindUserUsecase(repo);
+
 		app.register(
 			relationshipController(
 				getFriendsUsecase,
+				getFriendRequestsUsecase,
+				getSentFriendRequestsUsecase,
 				sendFriendRequestUsecase,
 				respondToFriendRequestUsecase,
 				removeFriendUsecase,
+				cancelFriendRequestUsecase,
 				blockUserUsecase,
 				unblockUserUsecase,
 				authPrehandler,
 			),
+			{ prefix: "/api" },
+		);
+
+		app.register(
+			userController(searchUsersUsecase, findUserUsecase, authPrehandler),
 			{ prefix: "/api" },
 		);
 
