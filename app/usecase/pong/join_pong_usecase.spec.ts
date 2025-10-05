@@ -9,6 +9,7 @@ import type {
 	IPongMatchStateRepository,
 	IPongPaddleRepository,
 	ISessionRepository,
+	IUserPresenceRepository,
 	IUserRepository,
 } from "@domain/repository";
 import type { IPongClient } from "@domain/service/pong_client";
@@ -24,11 +25,12 @@ const repo = {
 	newUserRepository: () => mock<IUserRepository>(),
 	newFriendshipRepository: () => mock<IFriendshipRepository>(),
 	newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+	newSessionRepository: () => mock<ISessionRepository>(),
 	newPongBallRepository: () => mock<IPongBallRepository>(),
 	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
+	newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
 	newPongClientRepository: () => pongClientRepo,
 	newPongLoopRepository: () => pongLoopRepo,
-	newSessionRepository: () => mock<ISessionRepository>(),
 	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 	newMatchRepository: () => mock<IMatchRepository>(),
 };

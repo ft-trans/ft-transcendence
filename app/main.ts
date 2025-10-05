@@ -10,17 +10,21 @@ import { Transaction } from "@infra/database/transaction";
 import { InMemoryChatClientRepository } from "@infra/in_memory/chat_client_repository";
 import { InMemoryMatchmakingClientRepository } from "@infra/in_memory/matchmaking_client_repository";
 import { Repository } from "@infra/repository";
+import { chatController as apiChatController } from "@presentation/controllers/api/chat_controller";
+import { presenceController } from "@presentation/controllers/api/presence_controller";
 import { authController } from "@presentation/controllers/auth_controller";
-import { chatController } from "@presentation/controllers/chat_controller";
 import { matchmakingController } from "@presentation/controllers/matchmaking_controller";
 import { matchmakingWsController } from "@presentation/controllers/matchmaking_ws_controller";
 import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
+import { relationshipController } from "@presentation/controllers/relationship_controller";
+import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
 import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
 import { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
 import {
+	GetDirectMessagesUsecase,
 	JoinChatUsecase,
 	LeaveChatUsecase,
 	SendChatMessageUsecase,
@@ -34,6 +38,20 @@ import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
 import { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
 import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import { UpdatePongPaddleUsecase } from "@usecase/pong/update_pong_paddle_usecase";
+import {
+	ExtendUserOnlineUsecase,
+	GetOnlineUsersUsecase,
+	GetUsersOnlineStatusUsecase,
+	IsUserOnlineUsecase,
+	SetUserOfflineUsecase,
+	SetUserOnlineUsecase,
+} from "@usecase/presence";
+import { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
+import { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
+import { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase";
+import { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_friend_request_usecase";
+import { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
+import { UnblockUserUsecase } from "@usecase/relationship/unblock_user_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import Fastify from "fastify";
@@ -103,6 +121,14 @@ const start = async () => {
 			matchmakingService,
 		);
 
+		// プレゼンス機能のユースケース
+		const setUserOnlineUsecase = new SetUserOnlineUsecase(repo);
+		const setUserOfflineUsecase = new SetUserOfflineUsecase(repo);
+		const extendUserOnlineUsecase = new ExtendUserOnlineUsecase(repo);
+		const getOnlineUsersUsecase = new GetOnlineUsersUsecase(repo);
+		const getUsersOnlineStatusUsecase = new GetUsersOnlineStatusUsecase(repo);
+		const isUserOnlineUsecase = new IsUserOnlineUsecase(repo);
+
 		await app.register(
 			profileController(updateUserUsecase, deleteUserUsecase),
 			{ prefix: "/api" },
@@ -133,14 +159,55 @@ const start = async () => {
 		);
 		const joinChatUsecase = new JoinChatUsecase(chatClientRepository);
 		const leaveChatUsecase = new LeaveChatUsecase(chatClientRepository);
+		const getDirectMessagesUsecase = new GetDirectMessagesUsecase(tx);
 		app.register(
-			chatController(
+			webSocketChatController(
 				joinChatUsecase,
 				leaveChatUsecase,
 				sendChatMessageUsecase,
 				sendGameInviteUsecase,
 			),
 			{ prefix: "/ws" },
+		);
+		app.register(
+			apiChatController(
+				getDirectMessagesUsecase,
+				sendDirectMessageUsecase,
+				authPrehandler,
+			),
+			{ prefix: "/api" },
+		);
+
+		const getFriendsUsecase = new GetFriendsUsecase(tx);
+		const sendFriendRequestUsecase = new SendFriendRequestUsecase(tx);
+		const respondToFriendRequestUsecase = new RespondToFriendRequestUsecase(tx);
+		const removeFriendUsecase = new RemoveFriendUsecase(tx);
+		const blockUserUsecase = new BlockUserUsecase(tx);
+		const unblockUserUsecase = new UnblockUserUsecase(tx);
+		app.register(
+			relationshipController(
+				getFriendsUsecase,
+				sendFriendRequestUsecase,
+				respondToFriendRequestUsecase,
+				removeFriendUsecase,
+				blockUserUsecase,
+				unblockUserUsecase,
+				authPrehandler,
+			),
+			{ prefix: "/api" },
+		);
+
+		await app.register(
+			presenceController(
+				setUserOnlineUsecase,
+				setUserOfflineUsecase,
+				extendUserOnlineUsecase,
+				getOnlineUsersUsecase,
+				getUsersOnlineStatusUsecase,
+				isUserOnlineUsecase,
+				authPrehandler,
+			),
+			{ prefix: "/api" },
 		);
 
 		const getMatchUseCase = new GetMatchUseCase(repo.newMatchRepository());
@@ -157,7 +224,13 @@ const start = async () => {
 		);
 
 		await app.register(
-			matchmakingWsController(authPrehandler, matchmakingClientRepository),
+			matchmakingWsController(
+				authPrehandler,
+				matchmakingClientRepository,
+				setUserOnlineUsecase,
+				setUserOfflineUsecase,
+				extendUserOnlineUsecase,
+			),
 			{ prefix: "/ws" },
 		);
 

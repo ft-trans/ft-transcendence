@@ -7,6 +7,7 @@ import type {
 	IPongLoopRepository,
 	IPongMatchStateRepository,
 	IPongPaddleRepository,
+	IUserPresenceRepository,
 } from "@domain/repository";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
@@ -38,6 +39,7 @@ const mockRepos = {
 	newSessionRepository: () => mock<ISessionRepository>(),
 	newPongBallRepository: () => mock<IPongBallRepository>(),
 	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
+	newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),

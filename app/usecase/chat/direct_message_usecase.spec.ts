@@ -13,6 +13,7 @@ import type { IDirectMessageRepository } from "@domain/repository/direct_message
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
 import type { IMatchRepository } from "@domain/repository/match_repository";
 import type { ISessionRepository } from "@domain/repository/session_repository";
+import type { IUserPresenceRepository } from "@domain/repository/user_presence_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
 import type { ITransaction } from "@usecase/transaction";
 import { ulid } from "ulid";
@@ -38,6 +39,7 @@ const mockRepos = {
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 	newMatchRepository: () => mock<IMatchRepository>(),
+	newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
 };
 tx.exec.mockImplementation(async (callback) => callback(mockRepos));
 
@@ -59,10 +61,13 @@ describe("SendDirectMessageUsecase", () => {
 	);
 
 	it("should send a message successfully", async () => {
+		const friendship = Friendship.create(sender, receiver);
+		friendship.status = "accepted";
+
 		userRepo.findById
 			.mockResolvedValueOnce(sender)
 			.mockResolvedValueOnce(receiver);
-		friendshipRepo.findByUserIds.mockResolvedValue(null);
+		friendshipRepo.findByUserIds.mockResolvedValue(friendship);
 		messageRepo.save.mockImplementation(async (msg) => msg);
 
 		const input = {
@@ -153,6 +158,20 @@ describe("SendDirectMessageUsecase", () => {
 			content: "Hello!",
 		};
 		await expect(usecase.execute(input)).rejects.toThrow(ErrForbidden);
+	});
+
+	it("should throw ErrBadRequest if users are not friends", async () => {
+		userRepo.findById
+			.mockResolvedValueOnce(sender)
+			.mockResolvedValueOnce(receiver);
+		friendshipRepo.findByUserIds.mockResolvedValue(null);
+
+		const input = {
+			senderId: sender.id.value,
+			receiverId: receiver.id.value,
+			content: "Hello!",
+		};
+		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 	});
 });
 

@@ -49,7 +49,7 @@ describe("SendChatMessageUsecase", () => {
 			type: MESSAGE_TYPES.NEW_MESSAGE,
 			payload: {
 				senderId: sender.id.value,
-				senderEmail: sender.email.value,
+				senderName: sender.username.value,
 				content: message.content,
 				timestamp: message.sentAt.toISOString(),
 			},

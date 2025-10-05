@@ -18,7 +18,7 @@ export type NewMessage = {
 	type: typeof MESSAGE_TYPES.NEW_MESSAGE;
 	payload: {
 		senderId: string;
-		senderEmail: string;
+		senderName: string;
 		content: string;
 		timestamp: string;
 	};
@@ -35,6 +35,7 @@ export type GameInvite = {
 	type: typeof MESSAGE_TYPES.GAME_INVITE;
 	payload: {
 		senderId: string;
+		senderName: string;
 	};
 };
 

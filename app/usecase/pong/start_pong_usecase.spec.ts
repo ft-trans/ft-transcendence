@@ -8,6 +8,7 @@ import type {
 	IPongMatchStateRepository,
 	IPongPaddleRepository,
 	ISessionRepository,
+	IUserPresenceRepository,
 	IUserRepository,
 } from "@domain/repository";
 import { ulid } from "ulid";
@@ -21,11 +22,12 @@ const repo = {
 	newUserRepository: () => mock<IUserRepository>(),
 	newFriendshipRepository: () => mock<IFriendshipRepository>(),
 	newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+	newSessionRepository: () => mock<ISessionRepository>(),
 	newPongBallRepository: () => pongBallRepo,
 	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
+	newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
-	newSessionRepository: () => mock<ISessionRepository>(),
 	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 	newMatchRepository: () => mock<IMatchRepository>(),
 };
