@@ -9,8 +9,11 @@ import { MatchesPong } from "./features/pong/matches";
 import { EditProfile } from "./features/profile";
 
 export const router = async () => {
-	// biome-ignore lint/style/noNonNullAssertion: app container は必ず存在する
-	const container = document.querySelector<HTMLElement>("#app")!;
+	const container = document.querySelector<HTMLElement>("#app");
+	if (!container) {
+		console.error("App container not found");
+		return;
+	}
 	const routes = [
 		{
 			path: "/",

@@ -40,7 +40,7 @@ const onConnectClient = (
 
 		if (userId) {
 			// WebSocketアダプター: FastifyのconnectionをWebSocket風にラップ
-			// biome-ignore lint/suspicious/noExplicitAny: Fastify WebSocket connectionは特定の型がないためanyを使用
+			// biome-ignore lint/suspicious/noExplicitAny: Fastify WebSocket connection型の互換性のため必要
 			const connectionWithAny = connection as any;
 			const webSocketAdapter = {
 				send: (data: string) => connectionWithAny.send(data),
@@ -60,8 +60,8 @@ const onConnectClient = (
 				removeEventListener: () => {},
 			};
 
-			// biome-ignore lint/suspicious/noExplicitAny: WebSocketアダプターはWebSocketの一部のインターフェースのみ実装
 			const chatClient = new InMemoryChatClient(
+				// biome-ignore lint/suspicious/noExplicitAny: WebSocketインターフェース互換性のため必要
 				webSocketAdapter as any,
 				userId,
 			);
