@@ -13,6 +13,7 @@ import type { IDirectMessageRepository } from "@domain/repository/direct_message
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
 import type { IMatchRepository } from "@domain/repository/match_repository";
 import type { ISessionRepository } from "@domain/repository/session_repository";
+import type { IUserPresenceRepository } from "@domain/repository/user_presence_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
 import type { ITransaction } from "@usecase/transaction";
 import { ulid } from "ulid";
@@ -38,6 +39,7 @@ const mockRepos = {
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 	newMatchRepository: () => mock<IMatchRepository>(),
+	newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
 };
 tx.exec.mockImplementation(async (callback) => callback(mockRepos));
 

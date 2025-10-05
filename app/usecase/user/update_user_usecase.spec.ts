@@ -11,6 +11,7 @@ import type {
 	IPongMatchStateRepository,
 	IPongPaddleRepository,
 	ISessionRepository,
+	IUserPresenceRepository,
 	IUserRepository,
 } from "@domain/repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -24,11 +25,12 @@ const repo = {
 	newUserRepository: () => mockUserRepo,
 	newFriendshipRepository: () => mock<IFriendshipRepository>(),
 	newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
+	newSessionRepository: () => mock<ISessionRepository>(),
 	newPongBallRepository: () => mock<IPongBallRepository>(),
 	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
+	newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
-	newSessionRepository: () => mock<ISessionRepository>(),
 	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 	newMatchRepository: () => mock<IMatchRepository>(),
 };

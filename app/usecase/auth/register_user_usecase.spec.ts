@@ -11,6 +11,7 @@ import type {
 	IPongMatchStateRepository,
 	IPongPaddleRepository,
 	ISessionRepository,
+	IUserPresenceRepository,
 	IUserRepository,
 } from "@domain/repository";
 import type { ITransaction } from "@usecase/transaction";
@@ -41,6 +42,7 @@ describe("RegisterUserUsecase", () => {
 				newSessionRepository: () => mock<ISessionRepository>(),
 				newPongBallRepository: () => mock<IPongBallRepository>(),
 				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
+				newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 				newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
@@ -77,6 +79,7 @@ describe("RegisterUserUsecase", () => {
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 				newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 				newMatchRepository: () => mock<IMatchRepository>(),
+				newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
 			};
 			return callback(repo);
 		});
@@ -108,6 +111,7 @@ describe("RegisterUserUsecase", () => {
 				newSessionRepository: () => mock<ISessionRepository>(),
 				newPongBallRepository: () => mock<IPongBallRepository>(),
 				newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
+				newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
 				newPongClientRepository: () => mock<IPongClientRepository>(),
 				newPongLoopRepository: () => mock<IPongLoopRepository>(),
 				newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
