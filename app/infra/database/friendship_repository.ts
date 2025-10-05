@@ -117,6 +117,18 @@ export class FriendshipRepository implements IFriendshipRepository {
 		return pending.map(toFriendshipDomain);
 	}
 
+	async findPendingRequestsByRequesterId(
+		userId: string,
+	): Promise<Friendship[]> {
+		const pending = await this.client.friendship.findMany({
+			where: {
+				requesterId: userId,
+				status: "pending",
+			},
+		});
+		return pending.map(toFriendshipDomain);
+	}
+
 	async delete(friendship: Friendship): Promise<void> {
 		await this.client.friendship.delete({
 			where: {

@@ -129,4 +129,71 @@ export class UserRepository implements IUserRepository {
 			user.passwordDigest,
 		);
 	}
+
+	async searchByUsername(
+		searchQuery: string,
+		options?: { excludeUserId?: string; limit?: number },
+	): Promise<User[]> {
+		const { excludeUserId, limit = 50 } = options || {};
+
+		const users = await this.client.user.findMany({
+			where: {
+				username: {
+					contains: searchQuery,
+				},
+				...(excludeUserId && {
+					id: {
+						not: excludeUserId,
+					},
+				}),
+			},
+			take: limit,
+			orderBy: {
+				username: "asc",
+			},
+		});
+
+		return users.map((user) =>
+			User.reconstruct(
+				new UserId(user.id),
+				new UserEmail(user.email),
+				new Username(user.username),
+				new UserAvatar(user.avatar),
+				new UserStatusValue(user.status as UserStatus),
+				user.passwordDigest,
+			),
+		);
+	}
+
+	async findMany(options?: {
+		excludeUserId?: string;
+		limit?: number;
+	}): Promise<User[]> {
+		const { excludeUserId, limit = 50 } = options || {};
+
+		const users = await this.client.user.findMany({
+			where: {
+				...(excludeUserId && {
+					id: {
+						not: excludeUserId,
+					},
+				}),
+			},
+			take: limit,
+			orderBy: {
+				username: "asc",
+			},
+		});
+
+		return users.map((user) =>
+			User.reconstruct(
+				new UserId(user.id),
+				new UserEmail(user.email),
+				new Username(user.username),
+				new UserAvatar(user.avatar),
+				new UserStatusValue(user.status as UserStatus),
+				user.passwordDigest,
+			),
+		);
+	}
 }
