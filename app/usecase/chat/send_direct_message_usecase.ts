@@ -58,7 +58,8 @@ export class SendDirectMessageUsecase {
 			}
 
 			const message = DirectMessage.create(sender, receiver, input.content);
-			return messageRepository.save(message);
+			const savedMessage = await messageRepository.save(message);
+			return savedMessage;
 		});
 	}
 }

@@ -8,8 +8,12 @@ import {
 } from "@domain/model/user";
 import { relationshipController } from "@presentation/controllers/relationship_controller";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import type { GetUsersOnlineStatusUsecase } from "@usecase/presence";
 import type { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
+import type { CancelFriendRequestUsecase } from "@usecase/relationship/cancel_friend_request_usecase";
+import type { GetFriendRequestsUsecase } from "@usecase/relationship/get_friend_requests_usecase";
 import type { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
+import type { GetSentFriendRequestsUsecase } from "@usecase/relationship/get_sent_friend_requests_usecase";
 import type { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase";
 import type { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_friend_request_usecase";
 import type { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
@@ -22,19 +26,22 @@ import { mock } from "vitest-mock-extended";
 describe("relationshipController", () => {
 	let app: FastifyInstance;
 	const getFriendsUsecase = mock<GetFriendsUsecase>();
+	const getFriendRequestsUsecase = mock<GetFriendRequestsUsecase>();
+	const getSentFriendRequestsUsecase = mock<GetSentFriendRequestsUsecase>();
 	const sendFriendRequestUsecase = mock<SendFriendRequestUsecase>();
 	const respondToFriendRequestUsecase = mock<RespondToFriendRequestUsecase>();
 	const removeFriendUsecase = mock<RemoveFriendUsecase>();
+	const cancelFriendRequestUsecase = mock<CancelFriendRequestUsecase>();
 	const blockUserUsecase = mock<BlockUserUsecase>();
 	const unblockUserUsecase = mock<UnblockUserUsecase>();
+	const getUsersOnlineStatusUsecase = mock<GetUsersOnlineStatusUsecase>();
 
 	// Mock auth prehandler that sets authenticatedUser
-	const mockAuthPrehandler: AuthPrehandler = async (request, _reply, done) => {
+	const mockAuthPrehandler: AuthPrehandler = async (request, _reply) => {
 		request.authenticatedUser = {
 			id: "01K24DQHXAJ2NFYKPZ812F4HBJ",
 			email: "test@example.com",
 		};
-		done();
 	};
 
 	beforeEach(() => {
@@ -42,11 +49,15 @@ describe("relationshipController", () => {
 		app.register(
 			relationshipController(
 				getFriendsUsecase,
+				getFriendRequestsUsecase,
+				getSentFriendRequestsUsecase,
 				sendFriendRequestUsecase,
 				respondToFriendRequestUsecase,
 				removeFriendUsecase,
+				cancelFriendRequestUsecase,
 				blockUserUsecase,
 				unblockUserUsecase,
+				getUsersOnlineStatusUsecase,
 				mockAuthPrehandler,
 			),
 		);
@@ -68,6 +79,9 @@ describe("relationshipController", () => {
 				),
 			];
 			getFriendsUsecase.execute.mockResolvedValue(friends);
+			getUsersOnlineStatusUsecase.execute.mockResolvedValue([
+				{ userId: "01K24DQHXAJ2NFYKPZ812F4HBC", isOnline: true },
+			]);
 
 			const response = await app.inject({
 				method: "GET",
@@ -78,7 +92,7 @@ describe("relationshipController", () => {
 				id: f.id.value,
 				username: f.username.value,
 				avatar: f.avatar.value,
-				status: f.status.value,
+				status: "online", // リアルタイムオンラインステータスが適用される
 			}));
 
 			expect(response.statusCode).toBe(200);

@@ -1,8 +1,12 @@
 import { ErrBadRequest } from "@domain/error";
 import type { User } from "@domain/model/user";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import type { GetUsersOnlineStatusUsecase } from "@usecase/presence";
 import type { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
+import type { CancelFriendRequestUsecase } from "@usecase/relationship/cancel_friend_request_usecase";
+import type { GetFriendRequestsUsecase } from "@usecase/relationship/get_friend_requests_usecase";
 import type { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
+import type { GetSentFriendRequestsUsecase } from "@usecase/relationship/get_sent_friend_requests_usecase";
 import type { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase";
 import type { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_friend_request_usecase";
 import type { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
@@ -12,18 +16,32 @@ import { z } from "zod";
 
 export const relationshipController = (
 	getFriendsUsecase: GetFriendsUsecase,
+	getFriendRequestsUsecase: GetFriendRequestsUsecase,
+	getSentFriendRequestsUsecase: GetSentFriendRequestsUsecase,
 	sendFriendRequestUsecase: SendFriendRequestUsecase,
 	respondToFriendRequestUsecase: RespondToFriendRequestUsecase,
 	removeFriendUsecase: RemoveFriendUsecase,
+	cancelFriendRequestUsecase: CancelFriendRequestUsecase,
 	blockUserUsecase: BlockUserUsecase,
 	unblockUserUsecase: UnblockUserUsecase,
+	getUsersOnlineStatusUsecase: GetUsersOnlineStatusUsecase,
 	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
 		fastify.get(
 			"/friends",
 			{ preHandler: authPrehandler },
-			onGetFriends(getFriendsUsecase),
+			onGetFriends(getFriendsUsecase, getUsersOnlineStatusUsecase),
+		);
+		fastify.get(
+			"/friends/requests/received",
+			{ preHandler: authPrehandler },
+			onGetFriendRequests(getFriendRequestsUsecase),
+		);
+		fastify.get(
+			"/friends/requests/sent",
+			{ preHandler: authPrehandler },
+			onGetSentFriendRequests(getSentFriendRequestsUsecase),
 		);
 		fastify.post(
 			"/friends/requests",
@@ -39,6 +57,11 @@ export const relationshipController = (
 			"/friends/:friendId",
 			{ preHandler: authPrehandler },
 			onRemoveFriend(removeFriendUsecase),
+		);
+		fastify.delete(
+			"/friends/requests/:receiverId",
+			{ preHandler: authPrehandler },
+			onCancelFriendRequest(cancelFriendRequestUsecase),
 		);
 		fastify.post(
 			"/blocks",
@@ -73,24 +96,99 @@ const handleValidationError = (parseError: z.ZodError) => {
 /**
  * Userドメインオブジェクトをクライアント向けのJSONオブジェクト（DTO）に変換するヘルパー関数
  */
-const toUserDTO = (user: User) => {
+const toUserDTO = (user: User, isOnline?: boolean) => {
 	return {
 		id: user.id.value,
 		username: user.username.value,
 		avatar: user.avatar.value,
-		status: user.status.value,
+		status:
+			isOnline !== undefined
+				? isOnline
+					? "online"
+					: "offline"
+				: user.status.value,
 	};
 };
 
-const onGetFriends = (usecase: GetFriendsUsecase) => {
+const onGetFriends = (
+	usecase: GetFriendsUsecase,
+	getUsersOnlineStatusUsecase: GetUsersOnlineStatusUsecase,
+) => {
 	return async (req: FastifyRequest, reply: FastifyReply) => {
-		const userId = req.authenticatedUser?.id;
+		try {
+			const userId = req.authenticatedUser?.id;
+			const friends = await usecase.execute(userId);
 
-		const friends = await usecase.execute(userId);
+			// 友達のオンラインステータスを取得
+			const friendIds = friends.map((friend) => friend.id.value);
+			const onlineStatusList =
+				await getUsersOnlineStatusUsecase.execute(friendIds);
+			const onlineStatusMap = new Map(
+				onlineStatusList.map((status) => [status.userId, status.isOnline]),
+			);
 
-		const responseBody = friends.map(toUserDTO);
+			const responseBody = friends.map((friend) =>
+				toUserDTO(friend, onlineStatusMap.get(friend.id.value)),
+			);
 
-		reply.send(responseBody);
+			// レスポンスが既に送信されていないかチェック
+			if (!reply.sent) {
+				return reply.send(responseBody);
+			}
+		} catch (error) {
+			console.error("[ERROR] GetFriends failed:", error);
+			if (!reply.sent) {
+				return reply.status(500).send({ error: "Internal server error" });
+			}
+		}
+	};
+};
+
+const onGetFriendRequests = (usecase: GetFriendRequestsUsecase) => {
+	return async (req: FastifyRequest, reply: FastifyReply) => {
+		try {
+			const userId = req.authenticatedUser?.id;
+			const friendRequests = await usecase.execute(userId);
+			const responseBody = friendRequests.map((request) => ({
+				id: `${request.requesterId.value}_${request.receiverId.value}`,
+				requesterId: request.requesterId.value,
+				receiverId: request.receiverId.value,
+				status: request.status,
+			}));
+
+			if (!reply.sent) {
+				return reply.send(responseBody);
+			}
+		} catch (error) {
+			console.error("[ERROR] GetFriendRequests failed:", error);
+			if (!reply.sent) {
+				return reply.status(500).send({ error: "Internal server error" });
+			}
+		}
+	};
+};
+
+const onGetSentFriendRequests = (usecase: GetSentFriendRequestsUsecase) => {
+	return async (req: FastifyRequest, reply: FastifyReply) => {
+		try {
+			const userId = req.authenticatedUser?.id;
+			const sentRequests = await usecase.execute(userId);
+			const responseBody = sentRequests.map((request) => ({
+				id: `${request.requesterId.value}_${request.receiverId.value}`,
+				requesterId: request.requesterId.value,
+				receiverId: request.receiverId.value,
+				status: request.status,
+			}));
+
+			if (!reply.sent) {
+				return reply.send(responseBody);
+			}
+		} catch (error) {
+			console.error("[ERROR] GetSentFriendRequests failed:", error);
+			if (!reply.sent) {
+				return reply.status(500).send({ error: "Internal server error" });
+			}
+		}
 	};
 };
 
@@ -180,6 +278,21 @@ const onBlockUser = (usecase: BlockUserUsecase) => {
 		await usecase.execute({
 			blockerId: userId,
 			blockedId: input.data.blockedId,
+		});
+		reply.status(204).send();
+	};
+};
+
+const onCancelFriendRequest = (usecase: CancelFriendRequestUsecase) => {
+	return async (
+		req: FastifyRequest<{ Params: { receiverId: string } }>,
+		reply: FastifyReply,
+	) => {
+		const requesterId = req.authenticatedUser?.id;
+
+		await usecase.execute({
+			requesterId,
+			receiverId: req.params.receiverId,
 		});
 		reply.status(204).send();
 	};

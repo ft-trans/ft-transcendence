@@ -2,7 +2,9 @@
 
 import { ErrBadRequest } from "@domain/error";
 import type { DirectMessage } from "@domain/model/direct_message";
+import type { IChatClientRepository } from "@domain/repository/chat_client_repository";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import { MESSAGE_TYPES } from "@shared/api/chat";
 import type { GetDirectMessagesUsecase } from "@usecase/chat/get_direct_messages_usecase";
 import type { SendDirectMessageUsecase } from "@usecase/chat/send_direct_message_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
@@ -29,6 +31,7 @@ export const chatController = (
 	getDirectMessagesUsecase: GetDirectMessagesUsecase,
 	sendDirectMessageUsecase: SendDirectMessageUsecase,
 	authPrehandler: AuthPrehandler,
+	chatClientRepository: IChatClientRepository,
 ) => {
 	return async (fastify: FastifyInstance) => {
 		fastify.get(
@@ -36,10 +39,11 @@ export const chatController = (
 			{ preHandler: authPrehandler },
 			onGetDirectMessages(getDirectMessagesUsecase),
 		);
+
 		fastify.post(
 			"/dms",
 			{ preHandler: authPrehandler },
-			onSendDirectMessage(sendDirectMessageUsecase),
+			onSendDirectMessage(sendDirectMessageUsecase, chatClientRepository),
 		);
 	};
 };
@@ -78,7 +82,7 @@ const onGetDirectMessages = (usecase: GetDirectMessagesUsecase) => {
 
 		const responseBody = messages.map(toDirectMessageDTO);
 
-		reply.send(responseBody);
+		return reply.send(responseBody);
 	};
 };
 
@@ -87,7 +91,10 @@ const sendDirectMessageSchema = z.object({
 	content: z.string().min(1),
 });
 
-const onSendDirectMessage = (usecase: SendDirectMessageUsecase) => {
+const onSendDirectMessage = (
+	usecase: SendDirectMessageUsecase,
+	chatClientRepository: IChatClientRepository,
+) => {
 	return async (
 		req: FastifyRequest<{ Body: z.infer<typeof sendDirectMessageSchema> }>,
 		reply: FastifyReply,
@@ -98,14 +105,35 @@ const onSendDirectMessage = (usecase: SendDirectMessageUsecase) => {
 		}
 		const senderId = req.authenticatedUser?.id;
 
+		// 1. データベースにメッセージを保存する
 		const sentMessage = await usecase.execute({
 			senderId,
 			receiverId: input.data.receiverId,
 			content: input.data.content,
 		});
 
+		// 2. 相手がオンラインならWebSocketで通知する
+		const receiverClient = chatClientRepository.findByUserId(
+			sentMessage.receiver.id,
+		);
+		if (receiverClient) {
+			receiverClient.send({
+				type: MESSAGE_TYPES.NEW_MESSAGE,
+				payload: {
+					senderId: sentMessage.sender.id.value,
+					senderName: sentMessage.sender.username.value,
+					content: sentMessage.content,
+					timestamp: sentMessage.sentAt.toISOString(),
+				},
+			});
+		}
+
 		const responseBody = toDirectMessageDTO(sentMessage);
 
-		reply.status(201).send(responseBody);
+		// 3. APIレスポンスを返す
+		if (reply.sent) {
+			return;
+		}
+		return reply.status(201).send(responseBody);
 	};
 };

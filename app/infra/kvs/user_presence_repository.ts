@@ -5,7 +5,10 @@ import type { FastifyRedis } from "@fastify/redis";
 export class UserPresenceRepository implements IUserPresenceRepository {
 	private readonly onlineUsersKey = "users:online";
 	private readonly userOnlinePrefix = "user:online:";
-	private readonly defaultTTL = 300; // 5分
+	private readonly defaultTTL =
+		Number(process.env.USER_PRESENCE_TTL) > 0
+			? Number(process.env.USER_PRESENCE_TTL)
+			: 120; // 2分（デフォルト: 120秒、環境変数 USER_PRESENCE_TTL で上書き可）
 
 	constructor(private readonly redis: FastifyRedis) {}
 

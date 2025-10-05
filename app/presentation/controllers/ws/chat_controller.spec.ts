@@ -17,6 +17,7 @@ describe("webSocketController", () => {
 	const leaveChatUsecase = mock<LeaveChatUsecase>();
 	const sendChatMessageUsecase = mock<SendChatMessageUsecase>();
 	const sendGameInviteUsecase = mock<SendGameInviteUsecase>();
+	const mockAuthPrehandler = vi.fn();
 
 	beforeEach(async () => {
 		app = Fastify();
@@ -27,6 +28,7 @@ describe("webSocketController", () => {
 				leaveChatUsecase,
 				sendChatMessageUsecase,
 				sendGameInviteUsecase,
+				mockAuthPrehandler,
 			),
 		);
 		await app.ready();
