@@ -24,6 +24,8 @@ export class Navigation extends Component {
 	render(): string {
 		const navContent = this.isAuthenticated
 			? `
+				${new Link({ href: "/friends", text: "友達" }).render()}
+				${new Link({ href: "/messages", text: "メッセージ" }).render()}
 				${new Link({ href: "/profile/edit", text: "プロフィール編集" }).render()}
 				${new Button({ id: "logout-btn", text: "ログアウト", color: "gray" }).render()}
 			`
@@ -40,9 +42,6 @@ export class Navigation extends Component {
               <h1 class="text-2xl font-bold text-gray-900">
                   <a href="/" data-link class="hover:text-blue-600">ft_trans</a>
               </h1>
-              <nav class="space-x-6">
-                ${new Link({ href: "/auth/register", text: "登録" }).render()}
-                ${new Link({ href: "/profile/edit", text: "変更" }).render()}
               <nav class="space-x-6 flex items-center">
                 ${navContent}
               </nav>
