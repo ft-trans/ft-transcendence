@@ -84,13 +84,21 @@ const toUserDTO = (user: User) => {
 
 const onGetFriends = (usecase: GetFriendsUsecase) => {
 	return async (req: FastifyRequest, reply: FastifyReply) => {
-		const userId = req.authenticatedUser?.id;
+		try {
+			const userId = req.authenticatedUser?.id;
+			const friends = await usecase.execute(userId);
+			const responseBody = friends.map(toUserDTO);
 
-		const friends = await usecase.execute(userId);
-
-		const responseBody = friends.map(toUserDTO);
-
-		reply.send(responseBody);
+			// レスポンスが既に送信されていないかチェック
+			if (!reply.sent) {
+				return reply.send(responseBody);
+			}
+		} catch (error) {
+			console.error("[ERROR] GetFriends failed:", error);
+			if (!reply.sent) {
+				return reply.status(500).send({ error: "Internal server error" });
+			}
+		}
 	};
 };
 
