@@ -224,7 +224,7 @@ export class PongMatchState {
 	readonly rallyTime: number = 0;
 	readonly score: { player1: number; player2: number };
 	readonly phase: PongGamePhase;
-	readonly startedAt: Date | undefined;
+	readonly startedAt: Date;
 	readonly playerIds: { player1: UserId; player2: UserId };
 	readonly playerStates: { player1: PongPlayerState; player2: PongPlayerState };
 
@@ -232,14 +232,14 @@ export class PongMatchState {
 		rallyTime = 0,
 		score = { player1: 0, player2: 0 },
 		phase = "waiting",
-		startedAt = undefined,
+		startedAt = new Date(),
 		playerIds,
 		playerStates = { player1: "waiting", player2: "waiting" },
 	}: {
 		rallyTime: number;
 		score: { player1: number; player2: number };
 		phase: PongGamePhase;
-		startedAt: Date | undefined;
+		startedAt: Date;
 		playerIds: { player1: UserId; player2: UserId };
 		playerStates: { player1: PongPlayerState; player2: PongPlayerState };
 	}) {
@@ -330,7 +330,7 @@ export class PongMatchState {
 			rallyTime: 0,
 			score: { player1: 0, player2: 0 },
 			phase: "waiting",
-			startedAt: undefined,
+			startedAt: new Date(),
 			playerIds: { player1: player1, player2: player2 },
 			playerStates: { player1: "waiting", player2: "waiting" },
 		});

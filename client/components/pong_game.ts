@@ -36,6 +36,7 @@ export class PongGame {
 		if (this.gameIsOver(gameState.payload.state.phase)) {
 			return;
 		}
+		this.drawCountDown(new Date(gameState.payload.state.startedAt));
 		if (gameState.payload.ball !== undefined) {
 			this.drawBall(gameState.payload.ball);
 		}
@@ -138,5 +139,23 @@ export class PongGame {
 			return "#ff5";
 		}
 		return "#ccc";
+	}
+
+	private drawCountDown(startedAt: Date) {
+		const now = new Date();
+		const elapsed = Math.floor((now.getTime() - startedAt.getTime()) / 1000);
+		const count = 10 - elapsed;
+		if (count <= 0) {
+			return;
+		}
+
+		this.context.font = "200px 'Jersey 10', monospace";
+		this.context.textAlign = "center";
+		this.context.fillStyle = "#5f5";
+		this.context.fillText(
+			`${count}`,
+			this.canvas.width / 2,
+			this.canvas.height / 2 + 50,
+		);
 	}
 }

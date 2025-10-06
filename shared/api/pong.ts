@@ -31,6 +31,7 @@ export type PongGameStatePayload = {
 		rallyTime: number;
 		score: { player1: number; player2: number };
 		phase: PongGamePhase;
+		startedAt: Date;
 		playerStates: { player1: PongPlayerState; player2: PongPlayerState };
 	};
 };
