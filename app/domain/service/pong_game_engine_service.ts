@@ -21,7 +21,7 @@ export class PongGameEngineService {
 		const paddle1 = await this.pongPaddleRepo.get(this.matchId, "player1");
 		const paddle2 = await this.pongPaddleRepo.get(this.matchId, "player2");
 		const state = this.pongMatchStateRepo.get(this.matchId);
-		const pongGame = new PongGame(
+		const pongGame = PongGame.createAndStart(
 			ball,
 			{ player1: paddle1, player2: paddle2 },
 			state,

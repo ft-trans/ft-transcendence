@@ -2,6 +2,7 @@ import {
 	type PongGamePhase,
 	type PongPlayerState,
 	pongMaxScore,
+	pongWaitTimeMs,
 } from "@shared/api/pong";
 import { isValid } from "ulid";
 import { ErrBadRequest } from "../error";
@@ -319,6 +320,12 @@ export class PongMatchState {
 		});
 	}
 
+	isOver(): boolean {
+		return (
+			this.score.player1 >= pongMaxScore || this.score.player2 >= pongMaxScore
+		);
+	}
+
 	static init({
 		player1,
 		player2,
@@ -348,6 +355,29 @@ export class PongGame {
 		},
 		readonly state: PongMatchState,
 	) {}
+
+	static createAndStart(
+		ball: PongBall | undefined,
+		paddles: {
+			player1: PongPaddle | undefined;
+			player2: PongPaddle | undefined;
+		},
+		state: PongMatchState,
+	): PongGame {
+		const now = new Date();
+		if (
+			state.isOver() ||
+			state.startedAt.getTime() + pongWaitTimeMs > now.getTime()
+		) {
+			return new PongGame(ball, paddles, state);
+		}
+		if (!ball) {
+			ball = PongGame.initialBall(state);
+			const newState = state.initRallyTime();
+			return new PongGame(ball, paddles, newState);
+		}
+		return new PongGame(ball, paddles, state);
+	}
 
 	calculateFrame(): PongGame {
 		if (!this.ball || !this.paddles.player1 || !this.paddles.player2) {

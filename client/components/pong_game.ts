@@ -3,6 +3,7 @@ import {
 	type PongGameStateResponse,
 	type PongPlayerState,
 	pongMaxScore,
+	pongWaitTimeMs,
 } from "@shared/api/pong";
 import { navigateTo } from "../router";
 
@@ -144,8 +145,8 @@ export class PongGame {
 	private drawCountDown(startedAt: Date) {
 		const now = new Date();
 		const elapsed = Math.floor((now.getTime() - startedAt.getTime()) / 1000);
-		const count = 10 - elapsed;
-		if (count <= 0) {
+		const count = pongWaitTimeMs / 1000 - elapsed - 1;
+		if (count < 0) {
 			return;
 		}
 

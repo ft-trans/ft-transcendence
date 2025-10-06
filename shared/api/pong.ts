@@ -9,6 +9,7 @@ export type PongGamePhase =
 export type PongPlayerState = "waiting" | "playing" | "left";
 
 export const pongMaxScore = 5;
+export const pongWaitTimeMs = 10000;
 
 export type PongGameStatePayload = {
 	field: { width: number; height: number };

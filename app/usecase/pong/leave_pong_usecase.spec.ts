@@ -48,7 +48,7 @@ describe("LeavePongUsecase", () => {
 		pongClientRepo.delete.mockReturnValue(undefined);
 
 		const usecase = new LeavePongUsecase(repo);
-		const input = { matchId: matchId, client: pongClient };
+		const input = { matchId: matchId, client: pongClient, userId: undefined };
 		const ret = await usecase.execute(input);
 		expect(ret.value).toBe(matchId);
 
@@ -70,7 +70,7 @@ describe("LeavePongUsecase", () => {
 		pongClientRepo.delete.mockReturnValue(new Set([otherPongClient]));
 
 		const usecase = new LeavePongUsecase(repo);
-		const input = { matchId: matchId, client: pongClient };
+		const input = { matchId: matchId, client: pongClient, userId: undefined };
 		const ret = await usecase.execute(input);
 		expect(ret.value).toBe(matchId);
 

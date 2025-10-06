@@ -89,7 +89,7 @@ describe("JoinPongUsecase", () => {
 		pongLoopRepo.get.mockReturnValue(pongLoopId);
 
 		const usecase = new JoinPongUsecase(repo);
-		const input = { matchId: matchId, client: pongClient };
+		const input = { matchId: matchId, client: pongClient, userId: undefined };
 		const ret = await usecase.execute(input);
 
 		expect(ret.value).toBe(matchId);
