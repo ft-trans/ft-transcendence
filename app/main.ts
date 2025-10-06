@@ -137,19 +137,6 @@ const start = async () => {
 			profileController(updateUserUsecase, deleteUserUsecase),
 			{ prefix: "/api" },
 		);
-		const joinPongUsecase = new JoinPongUsecase(repo);
-		const leavePongUsecase = new LeavePongUsecase(repo);
-		const startPongUsecase = new StartPongUsecase(repo);
-		const updatePongPaddleUsecase = new UpdatePongPaddleUsecase(repo);
-		app.register(
-			pongController(
-				joinPongUsecase,
-				leavePongUsecase,
-				startPongUsecase,
-				updatePongPaddleUsecase,
-			),
-			{ prefix: "/ws" },
-		);
 
 		const chatClientRepository = new InMemoryChatClientRepository();
 		const sendDirectMessageUsecase = new SendDirectMessageUsecase(tx);
@@ -329,6 +316,21 @@ const start = async () => {
 				setUserOnlineUsecase,
 				setUserOfflineUsecase,
 				extendUserOnlineUsecase,
+			),
+			{ prefix: "/ws" },
+		);
+
+		const joinPongUsecase = new JoinPongUsecase(repo);
+		const leavePongUsecase = new LeavePongUsecase(repo);
+		const startPongUsecase = new StartPongUsecase(repo);
+		const updatePongPaddleUsecase = new UpdatePongPaddleUsecase(repo);
+		app.register(
+			pongController(
+				joinPongUsecase,
+				leavePongUsecase,
+				startPongUsecase,
+				updatePongPaddleUsecase,
+				authPrehandler,
 			),
 			{ prefix: "/ws" },
 		);

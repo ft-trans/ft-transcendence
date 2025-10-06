@@ -1,4 +1,11 @@
-import { MatchId, type PongLoopId } from "@domain/model/pong";
+import {
+	Match,
+	MatchId,
+	type PongLoopId,
+	User,
+	UserEmail,
+	Username,
+} from "@domain/model";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
@@ -20,6 +27,7 @@ import { JoinPongUsecase } from "./join_pong_usecase";
 
 const pongClientRepo = mock<IPongClientRepository>();
 const pongLoopRepo = mock<IPongLoopRepository>();
+const matchmakingRepo = mock<IMatchRepository>();
 
 const repo = {
 	newUserRepository: () => mock<IUserRepository>(),
@@ -32,7 +40,7 @@ const repo = {
 	newPongClientRepository: () => pongClientRepo,
 	newPongLoopRepository: () => pongLoopRepo,
 	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
-	newMatchRepository: () => mock<IMatchRepository>(),
+	newMatchRepository: () => matchmakingRepo,
 };
 
 describe("JoinPongUsecase", () => {
@@ -41,12 +49,26 @@ describe("JoinPongUsecase", () => {
 	});
 
 	it("should join a user to a match and return the match ID", async () => {
-		const matchId = ulid();
+		const player1 = User.create(
+			new UserEmail("player1@example.com"),
+			new Username("player1"),
+		);
+		const player2 = User.create(
+			new UserEmail("player2@example.com"),
+			new Username("player2"),
+		);
+		const match = Match.create([player1, player2]);
+		const matchId = match.id;
+		matchmakingRepo.findById.mockResolvedValue(match);
 		const pongClient = mock<IPongClient>();
 		pongLoopRepo.get.mockReturnValue(undefined);
 
 		const usecase = new JoinPongUsecase(repo);
-		const input = { matchId: matchId, client: pongClient };
+		const input = {
+			matchId: matchId,
+			client: pongClient,
+			userId: player1.id.value,
+		};
 		const ret = await usecase.execute(input);
 
 		expect(ret.value).toBe(matchId);

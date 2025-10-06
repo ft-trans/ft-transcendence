@@ -1,4 +1,9 @@
-import { PongPaddle, pongPaddleDy } from "@domain/model/pong";
+import {
+	PongMatchState,
+	PongPaddle,
+	pongPaddleDy,
+	UserId,
+} from "@domain/model";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
@@ -21,6 +26,7 @@ import {
 } from "./update_pong_paddle_usecase";
 
 const pongPaddleRepo = mock<IPongPaddleRepository>();
+const pongMatchStateRepo = mock<IPongMatchStateRepository>();
 
 const repo = {
 	newUserRepository: () => mock<IUserRepository>(),
@@ -32,7 +38,7 @@ const repo = {
 	newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
 	newPongClientRepository: () => mock<IPongClientRepository>(),
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
-	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
+	newPongMatchStateRepository: () => pongMatchStateRepo,
 	newMatchRepository: () => mock<IMatchRepository>(),
 };
 
@@ -45,12 +51,20 @@ describe("UpdatePongPaddleUsecase", () => {
 		const matchId = ulid();
 		const paddle = new PongPaddle({ x: 10, y: 100 });
 		pongPaddleRepo.get.mockResolvedValue(paddle);
+		const player1Id = new UserId(ulid());
+		const player2Id = new UserId(ulid());
+		const state = PongMatchState.init({
+			player1: player1Id,
+			player2: player2Id,
+		});
+		pongMatchStateRepo.get.mockReturnValue(state);
 
 		const usecase = new UpdatePongPaddleUsecase(repo);
 		const input = {
 			matchId: matchId,
 			player: "player1",
 			direction: "up",
+			userId: player1Id.value,
 		} as UpdatePongPaddleUsecaseInput;
 		const ret = await usecase.execute(input);
 
@@ -62,12 +76,20 @@ describe("UpdatePongPaddleUsecase", () => {
 	it("should return undefined if paddle not found", async () => {
 		const matchId = ulid();
 		pongPaddleRepo.get.mockResolvedValue(undefined);
+		const player1Id = new UserId(ulid());
+		const player2Id = new UserId(ulid());
+		const state = PongMatchState.init({
+			player1: player1Id,
+			player2: player2Id,
+		});
+		pongMatchStateRepo.get.mockReturnValue(state);
 
 		const usecase = new UpdatePongPaddleUsecase(repo);
 		const input = {
 			matchId: matchId,
 			player: "player1",
 			direction: "up",
+			userId: player1Id.value,
 		} as UpdatePongPaddleUsecaseInput;
 		const ret = await usecase.execute(input);
 		expect(ret).toBeUndefined();

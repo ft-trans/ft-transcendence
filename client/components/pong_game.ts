@@ -1,6 +1,7 @@
 import {
 	type PongGamePhase,
 	type PongGameStateResponse,
+	type PongPlayerState,
 	pongMaxScore,
 } from "@shared/api/pong";
 import { navigateTo } from "../router";
@@ -38,8 +39,14 @@ export class PongGame {
 		if (gameState.payload.ball !== undefined) {
 			this.drawBall(gameState.payload.ball);
 		}
-		this.drawPaddle(gameState.payload.paddles.player1);
-		this.drawPaddle(gameState.payload.paddles.player2);
+		this.drawPaddle({
+			paddle: gameState.payload.paddles.player1,
+			state: gameState.payload.state.playerStates.player1,
+		});
+		this.drawPaddle({
+			paddle: gameState.payload.paddles.player2,
+			state: gameState.payload.state.playerStates.player2,
+		});
 	}
 
 	private gameIsOver(phase: PongGamePhase): boolean {
@@ -94,17 +101,21 @@ export class PongGame {
 	}
 
 	private drawPaddle({
-		x,
-		y,
-		width,
-		height,
+		paddle: { x, y, width, height },
+		state,
 	}: {
-		x: number;
-		y: number;
-		width: number;
-		height: number;
+		paddle: { x: number; y: number; width: number; height: number };
+		state: PongPlayerState;
 	}) {
-		this.context.fillStyle = "white";
+		if (state === "waiting") {
+			this.context.fillStyle = "gray";
+		} else if (state === "left") {
+			this.context.fillStyle = "yellow";
+		} else if (state === "playing") {
+			this.context.fillStyle = "white";
+		} else {
+			this.context.fillStyle = "red";
+		}
 		this.context.fillRect(x, y, width, height);
 	}
 
