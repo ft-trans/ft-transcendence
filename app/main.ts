@@ -36,7 +36,6 @@ import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
 import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
 import { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
-import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import { UpdatePongPaddleUsecase } from "@usecase/pong/update_pong_paddle_usecase";
 import {
 	ExtendUserOnlineUsecase,
@@ -136,19 +135,6 @@ const start = async () => {
 		await app.register(
 			profileController(updateUserUsecase, deleteUserUsecase),
 			{ prefix: "/api" },
-		);
-		const joinPongUsecase = new JoinPongUsecase(repo);
-		const leavePongUsecase = new LeavePongUsecase(repo);
-		const startPongUsecase = new StartPongUsecase(repo);
-		const updatePongPaddleUsecase = new UpdatePongPaddleUsecase(repo);
-		app.register(
-			pongController(
-				joinPongUsecase,
-				leavePongUsecase,
-				startPongUsecase,
-				updatePongPaddleUsecase,
-			),
-			{ prefix: "/ws" },
 		);
 
 		const chatClientRepository = new InMemoryChatClientRepository();
@@ -329,6 +315,19 @@ const start = async () => {
 				setUserOnlineUsecase,
 				setUserOfflineUsecase,
 				extendUserOnlineUsecase,
+			),
+			{ prefix: "/ws" },
+		);
+
+		const joinPongUsecase = new JoinPongUsecase(repo);
+		const leavePongUsecase = new LeavePongUsecase(repo);
+		const updatePongPaddleUsecase = new UpdatePongPaddleUsecase(repo);
+		app.register(
+			pongController(
+				joinPongUsecase,
+				leavePongUsecase,
+				updatePongPaddleUsecase,
+				authPrehandler,
 			),
 			{ prefix: "/ws" },
 		);

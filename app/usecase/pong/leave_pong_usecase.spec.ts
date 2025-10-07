@@ -2,6 +2,7 @@ import { MatchId, type PongLoopId } from "@domain/model/pong";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IMatchHistoryRepository,
 	IMatchRepository,
 	IPongBallRepository,
 	IPongClientRepository,
@@ -33,6 +34,7 @@ const repo = {
 	newPongLoopRepository: () => pongLoopRepo,
 	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 	newMatchRepository: () => mock<IMatchRepository>(),
+	newMatchHistoryRepository: () => mock<IMatchHistoryRepository>(),
 };
 
 describe("LeavePongUsecase", () => {
@@ -48,7 +50,7 @@ describe("LeavePongUsecase", () => {
 		pongClientRepo.delete.mockReturnValue(undefined);
 
 		const usecase = new LeavePongUsecase(repo);
-		const input = { matchId: matchId, client: pongClient };
+		const input = { matchId: matchId, client: pongClient, userId: undefined };
 		const ret = await usecase.execute(input);
 		expect(ret.value).toBe(matchId);
 
@@ -57,8 +59,6 @@ describe("LeavePongUsecase", () => {
 			new MatchId(matchId),
 			pongClient,
 		);
-
-		expect(repo.newPongLoopRepository().delete).toHaveBeenCalledOnce();
 	});
 
 	it("should leave a user but NOT stop loop when there are other users", async () => {
@@ -70,7 +70,7 @@ describe("LeavePongUsecase", () => {
 		pongClientRepo.delete.mockReturnValue(new Set([otherPongClient]));
 
 		const usecase = new LeavePongUsecase(repo);
-		const input = { matchId: matchId, client: pongClient };
+		const input = { matchId: matchId, client: pongClient, userId: undefined };
 		const ret = await usecase.execute(input);
 		expect(ret.value).toBe(matchId);
 

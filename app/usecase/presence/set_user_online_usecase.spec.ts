@@ -2,6 +2,7 @@ import { UserId } from "@domain/model/user";
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IMatchHistoryRepository,
 	IMatchRepository,
 	IPongBallRepository,
 	IPongClientRepository,
@@ -28,6 +29,7 @@ const mockRepo = {
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 	newMatchRepository: () => mock<IMatchRepository>(),
+	newMatchHistoryRepository: () => mock<IMatchHistoryRepository>(),
 };
 
 describe("SetUserOnlineUsecase", () => {

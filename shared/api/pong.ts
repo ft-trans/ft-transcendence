@@ -1,12 +1,11 @@
 export type PongGameEvent = "gameState";
 
-export type PongGamePhase =
-	| "waiting"
-	| "serv_player1"
-	| "serv_player2"
-	| "ended";
+export type PongGamePhase = "serv_player1" | "serv_player2" | "ended";
+
+export type PongPlayerState = "waiting" | "playing" | "left";
 
 export const pongMaxScore = 5;
+export const pongWaitTimeMs = 10000;
 
 export type PongGameStatePayload = {
 	field: { width: number; height: number };
@@ -29,6 +28,8 @@ export type PongGameStatePayload = {
 		rallyTime: number;
 		score: { player1: number; player2: number };
 		phase: PongGamePhase;
+		startedAt: Date;
+		playerStates: { player1: PongPlayerState; player2: PongPlayerState };
 	};
 };
 

@@ -12,6 +12,7 @@ import {
 	pongPaddleDy,
 	pongPaddleSize,
 } from "./pong";
+import { UserId } from "./user";
 
 describe("MatchId", () => {
 	it("should create a MatchId instance with a valid ULID", () => {
@@ -203,7 +204,10 @@ describe("PongGame", () => {
 		const ball = new PongBall({ x: 50, y: 50, dx: 5, dy: 3 });
 		const paddle1 = new PongPaddle({ x: 0, y: 40 });
 		const paddle2 = new PongPaddle({ x: 590, y: 40 });
-		const state = PongMatchState.init();
+		const state = PongMatchState.init({
+			player1: new UserId(ulid()),
+			player2: new UserId(ulid()),
+		});
 		const pongGame = new PongGame(
 			ball,
 			{ player1: paddle1, player2: paddle2 },

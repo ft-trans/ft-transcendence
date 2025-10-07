@@ -1,6 +1,12 @@
-import { type PongGamePhase, pongMaxScore } from "@shared/api/pong";
+import {
+	type PongGamePhase,
+	type PongPlayerState,
+	pongMaxScore,
+	pongWaitTimeMs,
+} from "@shared/api/pong";
 import { isValid } from "ulid";
 import { ErrBadRequest } from "../error";
+import type { UserId } from "./user";
 import { ValueObject } from "./value_object";
 
 export const pongFieldSize = {
@@ -219,19 +225,31 @@ export class PongMatchState {
 	readonly rallyTime: number = 0;
 	readonly score: { player1: number; player2: number };
 	readonly phase: PongGamePhase;
+	readonly startedAt: Date;
+	readonly playerIds: { player1: UserId; player2: UserId };
+	readonly playerStates: { player1: PongPlayerState; player2: PongPlayerState };
 
 	constructor({
 		rallyTime = 0,
 		score = { player1: 0, player2: 0 },
-		phase = "waiting",
+		phase = "serv_player1",
+		startedAt = new Date(),
+		playerIds,
+		playerStates = { player1: "waiting", player2: "waiting" },
 	}: {
 		rallyTime: number;
 		score: { player1: number; player2: number };
 		phase: PongGamePhase;
+		startedAt: Date;
+		playerIds: { player1: UserId; player2: UserId };
+		playerStates: { player1: PongPlayerState; player2: PongPlayerState };
 	}) {
 		this.rallyTime = rallyTime;
 		this.score = score;
 		this.phase = phase;
+		this.startedAt = startedAt;
+		this.playerIds = playerIds;
+		this.playerStates = playerStates;
 	}
 
 	initRallyTime(): PongMatchState {
@@ -239,6 +257,9 @@ export class PongMatchState {
 			rallyTime: 0,
 			score: this.score,
 			phase: this.phase,
+			startedAt: this.startedAt,
+			playerIds: this.playerIds,
+			playerStates: this.playerStates,
 		});
 	}
 	incrementRally(): PongMatchState {
@@ -246,31 +267,79 @@ export class PongMatchState {
 			rallyTime: this.rallyTime + 1,
 			score: this.score,
 			phase: this.phase,
+			startedAt: this.startedAt,
+			playerIds: this.playerIds,
+			playerStates: this.playerStates,
 		});
 	}
 	scorePoint(player: PongPlayer): PongMatchState {
+		const newScore = this.score;
+		let newPhase: PongGamePhase;
 		if (player === "player1") {
-			return new PongMatchState({
-				rallyTime: this.rallyTime,
-				score: { player1: this.score.player1 + 1, player2: this.score.player2 },
-				phase:
-					this.score.player1 + 1 >= pongMaxScore ? "ended" : "serv_player2",
-			});
+			newScore.player1 = this.score.player1 + 1;
+			newPhase = newScore.player1 >= pongMaxScore ? "ended" : "serv_player2";
 		} else {
-			return new PongMatchState({
-				rallyTime: this.rallyTime,
-				score: { player1: this.score.player1, player2: this.score.player2 + 1 },
-				phase:
-					this.score.player2 + 1 >= pongMaxScore ? "ended" : "serv_player1",
-			});
+			newScore.player2 = this.score.player2 + 1;
+			newPhase = newScore.player2 >= pongMaxScore ? "ended" : "serv_player1";
 		}
+
+		return new PongMatchState({
+			rallyTime: this.rallyTime,
+			score: newScore,
+			phase: newPhase,
+			startedAt: this.startedAt,
+			playerIds: this.playerIds,
+			playerStates: this.playerStates,
+		});
 	}
 
-	static init(): PongMatchState {
+	updatePlayerState(
+		player: PongPlayer,
+		state: PongPlayerState,
+	): PongMatchState {
+		const newPlayerStates = { ...this.playerStates };
+		newPlayerStates[player] = state;
+		return new PongMatchState({
+			rallyTime: this.rallyTime,
+			score: this.score,
+			phase: this.phase,
+			startedAt: this.startedAt,
+			playerIds: this.playerIds,
+			playerStates: newPlayerStates,
+		});
+	}
+
+	start(): PongMatchState {
 		return new PongMatchState({
 			rallyTime: 0,
 			score: { player1: 0, player2: 0 },
-			phase: "waiting",
+			phase: "serv_player1",
+			startedAt: new Date(),
+			playerIds: this.playerIds,
+			playerStates: this.playerStates,
+		});
+	}
+
+	isOver(): boolean {
+		return (
+			this.score.player1 >= pongMaxScore || this.score.player2 >= pongMaxScore
+		);
+	}
+
+	static init({
+		player1,
+		player2,
+	}: {
+		player1: UserId;
+		player2: UserId;
+	}): PongMatchState {
+		return new PongMatchState({
+			rallyTime: 0,
+			score: { player1: 0, player2: 0 },
+			phase: "serv_player1",
+			startedAt: new Date(),
+			playerIds: { player1: player1, player2: player2 },
+			playerStates: { player1: "waiting", player2: "waiting" },
 		});
 	}
 }
@@ -286,6 +355,29 @@ export class PongGame {
 		},
 		readonly state: PongMatchState,
 	) {}
+
+	static createAndStart(
+		ball: PongBall | undefined,
+		paddles: {
+			player1: PongPaddle | undefined;
+			player2: PongPaddle | undefined;
+		},
+		state: PongMatchState,
+	): PongGame {
+		const now = new Date();
+		if (
+			state.isOver() ||
+			state.startedAt.getTime() + pongWaitTimeMs > now.getTime()
+		) {
+			return new PongGame(ball, paddles, state);
+		}
+		if (!ball) {
+			ball = PongGame.initialBall(state);
+			const newState = state.initRallyTime();
+			return new PongGame(ball, paddles, newState);
+		}
+		return new PongGame(ball, paddles, state);
+	}
 
 	calculateFrame(): PongGame {
 		if (!this.ball || !this.paddles.player1 || !this.paddles.player2) {

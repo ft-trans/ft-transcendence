@@ -30,9 +30,6 @@ export class MatchesPong extends Component {
 		// TODO 画面遷移時にイベントを削除する
 		document.addEventListener("keydown", (event) => {
 			switch (event.code) {
-				case "Space":
-					socket.send(PONG_COMMAND.START);
-					break;
 				case "KeyW":
 					socket.send(PONG_COMMAND.PADDLE1_UP);
 					break;
@@ -59,7 +56,6 @@ export class MatchesPong extends Component {
     </div>
 	<div class="text-center mt-4 text-gray-700">
 		<small>
-			<p>スペースキーでゲーム開始</p>
 			<p>w/sキーでパドル1を上下移動</p>
 			<p>↑/↓キーでパドル2を上下移動</p>
 		</small>
