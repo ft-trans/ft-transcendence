@@ -1,4 +1,4 @@
-import { ErrInternalServer, ErrNotFound } from "@domain/error";
+import { ErrBadRequest, ErrInternalServer, ErrNotFound } from "@domain/error";
 import { MatchId, PongMatchState, PongPaddle, UserId } from "@domain/model";
 import type { IRepository } from "@domain/repository";
 import { PongLoopService } from "@domain/service";
@@ -71,9 +71,14 @@ export class JoinPongUsecase {
 		if (!match) {
 			throw new ErrNotFound();
 		}
+		if (match.status === "completed") {
+			throw new ErrBadRequest({
+				details: { match: "対戦はすでに終了しています。" },
+			});
+		}
 		if (match.participants.length < 2) {
 			throw new ErrInternalServer({
-				systemMessage: "Not enough participants",
+				systemMessage: "参加者が足りません。",
 			});
 		}
 		const pongMatchStateRepo = this.repo.newPongMatchStateRepository();

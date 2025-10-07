@@ -1,5 +1,5 @@
-import { ErrInternalServer } from "@domain/error";
-import type { PongGameStateResponse } from "@shared/api/pong";
+import { ErrBadRequest, ErrInternalServer, ErrNotFound } from "@domain/error";
+import type { PongGameEvent, PongGameStateResponse } from "@shared/api/pong";
 import {
 	MatchHistory,
 	type MatchId,
@@ -33,31 +33,53 @@ export class PongGameEngineService {
 		const paddle1 = await this.pongPaddleRepo.get(this.matchId, "player1");
 		const paddle2 = await this.pongPaddleRepo.get(this.matchId, "player2");
 		const state = this.pongMatchStateRepo.get(this.matchId);
-		if (state.isOver()) {
-			await this.finishMatch();
-			await this.createMatchHistory(state);
-			await this.stopLoopAndCleanup();
-			return;
+		try {
+			if (state.isOver()) {
+				await this.finishMatch(state);
+				await this.stopLoopAndCleanup();
+				return;
+			}
+			const pongGame = PongGame.createAndStart(
+				ball,
+				{ player1: paddle1, player2: paddle2 },
+				state,
+			);
+			const newPongGame = pongGame.calculateFrame();
+
+			const message = JSON.stringify(this.toResponse("gameState", newPongGame));
+			this.sendData(message);
+
+			await this.saveData(newPongGame);
+		} catch (error) {
+			await this.handleError(error as Error);
 		}
-		const pongGame = PongGame.createAndStart(
-			ball,
-			{ player1: paddle1, player2: paddle2 },
-			state,
-		);
-		const newPongGame = pongGame.calculateFrame();
-
-		this.sendData(newPongGame);
-
-		await this.saveData(newPongGame);
 	}
 
-	private async finishMatch() {
+	async handleError(error: Error) {
+		let errMsg = "エラーが発生しました。";
+		if (error instanceof ErrNotFound) {
+			errMsg = "対戦データが見つかりません。";
+		} else if (error instanceof ErrBadRequest) {
+			errMsg = `不正なリクエストです。 ${error.details?.match} `;
+		} else if (error instanceof ErrInternalServer) {
+			errMsg = `内部サーバーエラーが発生しました。`;
+		}
+		const message = JSON.stringify(this.toResponse("error", undefined, errMsg));
+		this.sendData(message);
+		await this.stopLoopAndCleanup();
+	}
+
+	private async finishMatch(state: PongMatchState) {
 		const match = await this.matchRepo.findById(this.matchId.value);
 		if (!match) {
 			throw new ErrInternalServer({ systemMessage: "Match not found" });
 		}
+		if (match.status === "completed") {
+			return;
+		}
 		match.complete();
 		await this.matchRepo.save(match);
+		await this.createMatchHistory(state);
 	}
 
 	private async createMatchHistory(state: PongMatchState) {
@@ -89,14 +111,15 @@ export class PongGameEngineService {
 		await this.pongPaddleRepo.delete(this.matchId, "player1");
 		await this.pongPaddleRepo.delete(this.matchId, "player2");
 		await this.pongMatchStateRepo.delete(this.matchId);
+		this.pongClientRepo.closeAndDeleteAll(this.matchId);
 	}
 
-	private sendData(newPongGame: PongGame) {
+	private sendData(message: string) {
 		this.pongClientRepo.get(this.matchId)?.forEach((client) => {
 			if (!client.isOpen()) {
 				return;
 			}
-			client.send(JSON.stringify(this.toResponse(newPongGame)));
+			client.send(message);
 		});
 	}
 
@@ -109,15 +132,22 @@ export class PongGameEngineService {
 		}
 	}
 
-	private toResponse(pongGame: PongGame): PongGameStateResponse {
+	private toResponse(
+		event: PongGameEvent,
+		pongGame: PongGame | undefined,
+		message?: string,
+	): PongGameStateResponse {
 		return {
-			event: "gameState",
-			payload: {
-				field: pongGame.field,
-				ball: pongGame.ball,
-				paddles: pongGame.paddles,
-				state: pongGame.state,
-			},
+			event: event,
+			payload: pongGame
+				? {
+						field: pongGame.field,
+						ball: pongGame.ball,
+						paddles: pongGame.paddles,
+						state: pongGame.state,
+					}
+				: undefined,
+			message: message,
 		};
 	}
 }

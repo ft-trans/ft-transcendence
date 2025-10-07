@@ -1,6 +1,12 @@
 import { PONG_COMMAND, type PongGameStateResponse } from "@shared/api/pong";
-import { Component, type RouteParams, SectionTitle } from "client/components";
+import {
+	Component,
+	FloatingBanner,
+	type RouteParams,
+	SectionTitle,
+} from "client/components";
 import { PongGame } from "client/components/pong_game";
+import { navigateTo } from "client/router";
 
 export class MatchesPong extends Component {
 	private readonly pongGame: PongGame;
@@ -24,6 +30,14 @@ export class MatchesPong extends Component {
 
 		socket.onmessage = (event) => {
 			const state: PongGameStateResponse = JSON.parse(event.data);
+			if (state.event === "error") {
+				new FloatingBanner({
+					message: state.message ?? "不明なエラーが発生しました",
+					type: "error",
+				}).show();
+				navigateTo("/matchmaking");
+				return;
+			}
 			this.pongGame.draw(state);
 		};
 

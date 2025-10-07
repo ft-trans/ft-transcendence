@@ -36,6 +36,7 @@ import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
 import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
 import { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
+import { StopPongUsecase } from "@usecase/pong/stop_pong_usecase";
 import { UpdatePongPaddleUsecase } from "@usecase/pong/update_pong_paddle_usecase";
 import {
 	ExtendUserOnlineUsecase,
@@ -322,11 +323,13 @@ const start = async () => {
 		const joinPongUsecase = new JoinPongUsecase(repo);
 		const leavePongUsecase = new LeavePongUsecase(repo);
 		const updatePongPaddleUsecase = new UpdatePongPaddleUsecase(repo);
+		const stopPongUsecase = new StopPongUsecase(repo);
 		app.register(
 			pongController(
 				joinPongUsecase,
 				leavePongUsecase,
 				updatePongPaddleUsecase,
+				stopPongUsecase,
 				authPrehandler,
 			),
 			{ prefix: "/ws" },

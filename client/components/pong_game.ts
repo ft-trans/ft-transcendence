@@ -29,6 +29,9 @@ export class PongGame {
 	}
 
 	draw(gameState: PongGameStateResponse) {
+		if (gameState.payload === undefined) {
+			return;
+		}
 		this.canvas.width = gameState.payload.field.width;
 		this.canvas.height = gameState.payload.field.height;
 
