@@ -1,5 +1,6 @@
 import { ulid } from "ulid";
-import type { User, UserEmail, UserId } from "./user";
+import type { MatchId } from "./pong";
+import type { UserId } from "./user";
 import { ValueObject } from "./value_object";
 
 export class MatchHistoryId extends ValueObject<string, "MatchHistoryId"> {
@@ -13,28 +14,33 @@ export class MatchHistoryId extends ValueObject<string, "MatchHistoryId"> {
 export class MatchHistory {
 	constructor(
 		readonly id: MatchHistoryId,
+		readonly matchId: MatchId,
 		readonly winnerId: UserId,
 		readonly loserId: UserId,
-		readonly winnerEmail: UserEmail,
-		readonly loserEmail: UserEmail,
 		readonly winnerScore: number,
 		readonly loserScore: number,
 		readonly playedAt: Date,
 	) {}
 
-	static create(
-		winner: User,
-		loser: User,
-		winnerScore: number,
-		loserScore: number,
-	): MatchHistory {
+	static create({
+		matchId,
+		winnerId,
+		loserId,
+		winnerScore,
+		loserScore,
+	}: {
+		matchId: MatchId;
+		winnerId: UserId;
+		loserId: UserId;
+		winnerScore: number;
+		loserScore: number;
+	}): MatchHistory {
 		const id = new MatchHistoryId(ulid());
 		return new MatchHistory(
 			id,
-			winner.id,
-			loser.id,
-			winner.email,
-			loser.email,
+			matchId,
+			winnerId,
+			loserId,
 			winnerScore,
 			loserScore,
 			new Date(),

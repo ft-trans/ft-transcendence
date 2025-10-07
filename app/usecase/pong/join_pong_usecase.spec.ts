@@ -2,6 +2,7 @@ import {
 	Match,
 	MatchId,
 	type PongLoopId,
+	PongMatchState,
 	User,
 	UserEmail,
 	Username,
@@ -9,6 +10,7 @@ import {
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IMatchHistoryRepository,
 	IMatchRepository,
 	IPongBallRepository,
 	IPongClientRepository,
@@ -28,6 +30,7 @@ import { JoinPongUsecase } from "./join_pong_usecase";
 const pongClientRepo = mock<IPongClientRepository>();
 const pongLoopRepo = mock<IPongLoopRepository>();
 const matchmakingRepo = mock<IMatchRepository>();
+const pongMatchStateRepo = mock<IPongMatchStateRepository>();
 
 const repo = {
 	newUserRepository: () => mock<IUserRepository>(),
@@ -39,8 +42,9 @@ const repo = {
 	newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
 	newPongClientRepository: () => pongClientRepo,
 	newPongLoopRepository: () => pongLoopRepo,
-	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
+	newPongMatchStateRepository: () => pongMatchStateRepo,
 	newMatchRepository: () => matchmakingRepo,
+	newMatchHistoryRepository: () => mock<IMatchHistoryRepository>(),
 };
 
 describe("JoinPongUsecase", () => {
@@ -62,6 +66,11 @@ describe("JoinPongUsecase", () => {
 		matchmakingRepo.findById.mockResolvedValue(match);
 		const pongClient = mock<IPongClient>();
 		pongLoopRepo.get.mockReturnValue(undefined);
+		const state = PongMatchState.init({
+			player1: player1.id,
+			player2: player2.id,
+		});
+		pongMatchStateRepo.get.mockReturnValue(state);
 
 		const usecase = new JoinPongUsecase(repo);
 		const input = {

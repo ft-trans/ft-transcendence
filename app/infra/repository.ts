@@ -1,6 +1,7 @@
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IMatchHistoryRepository,
 	IMatchRepository,
 	IPongBallRepository,
 	IPongClientRepository,
@@ -14,6 +15,7 @@ import type {
 } from "@domain/repository";
 import { DirectMessageRepository } from "./database/direct_message_repository";
 import { FriendshipRepository } from "./database/friendship_repository";
+import { MatchHistoryRepository } from "./database/match_history_repository";
 import { MatchRepository } from "./database/match_repository";
 import type { Client } from "./database/prisma";
 import { SessionRepository } from "./database/session_repository";
@@ -49,6 +51,14 @@ export class Repository implements IRepository {
 		return new SessionRepository(this.client);
 	}
 
+	newMatchRepository(): IMatchRepository {
+		return new MatchRepository(this.client);
+	}
+
+	newMatchHistoryRepository(): IMatchHistoryRepository {
+		return new MatchHistoryRepository(this.client);
+	}
+
 	// KVS repositories
 	newPongBallRepository(): IPongBallRepository {
 		return new PongBallRepository(this.kvsClient);
@@ -69,8 +79,5 @@ export class Repository implements IRepository {
 	}
 	newPongMatchStateRepository(): IPongMatchStateRepository {
 		return new PongMatchStateRepository();
-	}
-	newMatchRepository(): IMatchRepository {
-		return new MatchRepository(this.client);
 	}
 }

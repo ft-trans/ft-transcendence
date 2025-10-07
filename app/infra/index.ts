@@ -1,3 +1,4 @@
+export * from "./database/match_history_repository";
 export * from "./database/match_repository";
 export * from "./database/matchmaking_queue_repository";
 export * from "./database/transaction";

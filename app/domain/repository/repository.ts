@@ -1,5 +1,6 @@
 import type { IDirectMessageRepository } from "./direct_message_repository";
 import type { IFriendshipRepository } from "./friendship_repository";
+import type { IMatchHistoryRepository } from "./match_history_repository";
 import type { IMatchRepository } from "./match_repository";
 import type { IPongBallRepository } from "./pong_ball_repository";
 import type { IPongClientRepository } from "./pong_client_repository";
@@ -16,6 +17,8 @@ export interface IRepository {
 	newFriendshipRepository(): IFriendshipRepository;
 	newDirectMessageRepository(): IDirectMessageRepository;
 	newSessionRepository(): ISessionRepository;
+	newMatchRepository(): IMatchRepository;
+	newMatchHistoryRepository(): IMatchHistoryRepository;
 
 	// KVS repositories
 	newPongBallRepository(): IPongBallRepository;
@@ -26,5 +29,4 @@ export interface IRepository {
 	newPongClientRepository(): IPongClientRepository;
 	newPongLoopRepository(): IPongLoopRepository;
 	newPongMatchStateRepository(): IPongMatchStateRepository;
-	newMatchRepository(): IMatchRepository;
 }

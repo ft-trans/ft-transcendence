@@ -1,10 +1,6 @@
 export type PongGameEvent = "gameState";
 
-export type PongGamePhase =
-	| "waiting"
-	| "serv_player1"
-	| "serv_player2"
-	| "ended";
+export type PongGamePhase = "serv_player1" | "serv_player2" | "ended";
 
 export type PongPlayerState = "waiting" | "playing" | "left";
 

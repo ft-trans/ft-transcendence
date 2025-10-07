@@ -7,6 +7,7 @@ import {
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IMatchHistoryRepository,
 	IMatchRepository,
 	IPongBallRepository,
 	IPongClientRepository,
@@ -40,6 +41,7 @@ const repo = {
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 	newPongMatchStateRepository: () => pongMatchStateRepo,
 	newMatchRepository: () => mock<IMatchRepository>(),
+	newMatchHistoryRepository: () => mock<IMatchHistoryRepository>(),
 };
 
 describe("UpdatePongPaddleUsecase", () => {

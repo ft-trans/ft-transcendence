@@ -3,6 +3,7 @@ import { DirectMessage } from "@domain/model/direct_message";
 import { Friendship } from "@domain/model/friendship";
 import { User, UserEmail, Username } from "@domain/model/user";
 import type {
+	IMatchHistoryRepository,
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
@@ -40,6 +41,7 @@ const mockRepos = {
 	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 	newMatchRepository: () => mock<IMatchRepository>(),
 	newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
+	newMatchHistoryRepository: () => mock<IMatchHistoryRepository>(),
 };
 tx.exec.mockImplementation(async (callback) => callback(mockRepos));
 

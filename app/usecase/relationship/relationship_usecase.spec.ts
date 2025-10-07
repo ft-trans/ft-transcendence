@@ -2,6 +2,7 @@
 import { ErrBadRequest, ErrForbidden, ErrNotFound } from "@domain/error";
 import { Friendship, User, UserEmail, Username } from "@domain/model";
 import type {
+	IMatchHistoryRepository,
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
@@ -44,6 +45,7 @@ const mockRepos = {
 	newPongLoopRepository: () => mock<IPongLoopRepository>(),
 	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
 	newMatchRepository: () => mock<IMatchRepository>(),
+	newMatchHistoryRepository: () => mock<IMatchHistoryRepository>(),
 };
 tx.exec.mockImplementation(async (callback) => callback(mockRepos));
 

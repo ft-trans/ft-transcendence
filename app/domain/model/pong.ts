@@ -232,7 +232,7 @@ export class PongMatchState {
 	constructor({
 		rallyTime = 0,
 		score = { player1: 0, player2: 0 },
-		phase = "waiting",
+		phase = "serv_player1",
 		startedAt = new Date(),
 		playerIds,
 		playerStates = { player1: "waiting", player2: "waiting" },
@@ -336,7 +336,7 @@ export class PongMatchState {
 		return new PongMatchState({
 			rallyTime: 0,
 			score: { player1: 0, player2: 0 },
-			phase: "waiting",
+			phase: "serv_player1",
 			startedAt: new Date(),
 			playerIds: { player1: player1, player2: player2 },
 			playerStates: { player1: "waiting", player2: "waiting" },

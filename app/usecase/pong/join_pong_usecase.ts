@@ -97,12 +97,17 @@ export class JoinPongUsecase {
 		const pongPaddleRepo = this.repo.newPongPaddleRepository();
 		const pongClientRepo = this.repo.newPongClientRepository();
 		const pongMatchStateRepo = this.repo.newPongMatchStateRepository();
+		const matchRepo = this.repo.newMatchRepository();
+		const matchHistoryRepo = this.repo.newMatchHistoryRepository();
 		const pongGameEngineService = new PongGameEngineService(
 			matchId,
 			pongBallRepo,
 			pongPaddleRepo,
 			pongClientRepo,
 			pongMatchStateRepo,
+			matchRepo,
+			pongLoopService,
+			matchHistoryRepo,
 		);
 		pongLoopService.start(matchId, () => pongGameEngineService.processFrame());
 	}
