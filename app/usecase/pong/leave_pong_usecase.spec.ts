@@ -47,15 +47,17 @@ describe("LeavePongUsecase", () => {
 		const pongClient = mock<IPongClient>();
 		const pongLoopId = mock<PongLoopId>();
 		pongLoopRepo.get.mockReturnValue(pongLoopId);
-		pongClientRepo.delete.mockReturnValue(undefined);
+		pongClientRepo.closeAndDelete.mockReturnValue(undefined);
 
 		const usecase = new LeavePongUsecase(repo);
 		const input = { matchId: matchId, client: pongClient, userId: undefined };
 		const ret = await usecase.execute(input);
 		expect(ret.value).toBe(matchId);
 
-		expect(repo.newPongClientRepository().delete).toHaveBeenCalledOnce();
-		expect(repo.newPongClientRepository().delete).toHaveBeenCalledWith(
+		expect(
+			repo.newPongClientRepository().closeAndDelete,
+		).toHaveBeenCalledOnce();
+		expect(repo.newPongClientRepository().closeAndDelete).toHaveBeenCalledWith(
 			new MatchId(matchId),
 			pongClient,
 		);
@@ -67,15 +69,17 @@ describe("LeavePongUsecase", () => {
 		const otherPongClient = mock<IPongClient>();
 		const pongLoopId = mock<PongLoopId>();
 		pongLoopRepo.get.mockReturnValue(pongLoopId);
-		pongClientRepo.delete.mockReturnValue(new Set([otherPongClient]));
+		pongClientRepo.closeAndDelete.mockReturnValue(new Set([otherPongClient]));
 
 		const usecase = new LeavePongUsecase(repo);
 		const input = { matchId: matchId, client: pongClient, userId: undefined };
 		const ret = await usecase.execute(input);
 		expect(ret.value).toBe(matchId);
 
-		expect(repo.newPongClientRepository().delete).toHaveBeenCalledOnce();
-		expect(repo.newPongClientRepository().delete).toHaveBeenCalledWith(
+		expect(
+			repo.newPongClientRepository().closeAndDelete,
+		).toHaveBeenCalledOnce();
+		expect(repo.newPongClientRepository().closeAndDelete).toHaveBeenCalledWith(
 			new MatchId(matchId),
 			pongClient,
 		);

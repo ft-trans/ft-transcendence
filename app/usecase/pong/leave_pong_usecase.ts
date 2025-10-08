@@ -14,7 +14,7 @@ export class LeavePongUsecase {
 	async execute(input: LeavePongUsecaseInput): Promise<MatchId> {
 		const matchId = new MatchId(input.matchId);
 		const pongClientRepo = this.repo.newPongClientRepository();
-		pongClientRepo.delete(matchId, input.client);
+		pongClientRepo.closeAndDelete(matchId, input.client);
 
 		this.leavePlayer(matchId, input.userId);
 		return matchId;

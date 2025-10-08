@@ -31,11 +31,14 @@ import {
 	SendDirectMessageUsecase,
 	SendGameInviteUsecase,
 } from "@usecase/chat";
+import { GetMatchPlayersUseCase } from "@usecase/game/get_match_players_usecase";
 import { GetMatchUseCase } from "@usecase/game/get_match_usecase";
 import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
 import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
 import { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
+import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
+import { StopPongUsecase } from "@usecase/pong/stop_pong_usecase";
 import { UpdatePongPaddleUsecase } from "@usecase/pong/update_pong_paddle_usecase";
 import {
 	ExtendUserOnlineUsecase,
@@ -296,11 +299,15 @@ const start = async () => {
 		);
 
 		const getMatchUseCase = new GetMatchUseCase(repo.newMatchRepository());
+		const startPongUsecase = new StartPongUsecase(repo);
+		const getMatchPlayersUseCase = new GetMatchPlayersUseCase(repo);
 		await app.register(
 			matchmakingController(
 				getMatchUseCase,
+				getMatchPlayersUseCase,
 				joinMatchmakingUseCase,
 				leaveMatchmakingUseCase,
+				startPongUsecase,
 				authPrehandler,
 			),
 			{
@@ -322,11 +329,14 @@ const start = async () => {
 		const joinPongUsecase = new JoinPongUsecase(repo);
 		const leavePongUsecase = new LeavePongUsecase(repo);
 		const updatePongPaddleUsecase = new UpdatePongPaddleUsecase(repo);
+		const stopPongUsecase = new StopPongUsecase(repo);
 		app.register(
 			pongController(
 				joinPongUsecase,
 				leavePongUsecase,
 				updatePongPaddleUsecase,
+				startPongUsecase,
+				stopPongUsecase,
 				authPrehandler,
 			),
 			{ prefix: "/ws" },

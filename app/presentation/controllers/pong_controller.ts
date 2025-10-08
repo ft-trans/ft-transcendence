@@ -3,6 +3,8 @@ import { PongClient } from "@infra/in_memory/pong_client";
 import { PONG_COMMAND, type PongCommand } from "@shared/api/pong";
 import type { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
 import type { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
+import type { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
+import type { StopPongUsecase } from "@usecase/pong/stop_pong_usecase";
 import type { UpdatePongPaddleUsecase } from "@usecase/pong/update_pong_paddle_usecase";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import type WebSocket from "ws";
@@ -12,6 +14,8 @@ export const pongController = (
 	joinPongUsecase: JoinPongUsecase,
 	leavePongUsecase: LeavePongUsecase,
 	updatePongPaddleUsecase: UpdatePongPaddleUsecase,
+	startPongUsecase: StartPongUsecase,
+	stopPongUsecase: StopPongUsecase,
 	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
@@ -22,6 +26,8 @@ export const pongController = (
 				joinPongUsecase,
 				leavePongUsecase,
 				updatePongPaddleUsecase,
+				startPongUsecase,
+				stopPongUsecase,
 			),
 		);
 	};
@@ -31,6 +37,8 @@ const onConnectClient = (
 	joinPongUsecase: JoinPongUsecase,
 	leavePongUsecase: LeavePongUsecase,
 	updatePongPaddleUsecase: UpdatePongPaddleUsecase,
+	startPongUsecase: StartPongUsecase,
+	stopPongUsecase: StopPongUsecase,
 ) => {
 	return async (
 		socket: WebSocket,
@@ -40,11 +48,20 @@ const onConnectClient = (
 		const userId = req.authenticatedUser?.id;
 		const pongClient = new PongClient(socket);
 
-		await joinPongUsecase.execute({
-			matchId: matchId.value,
-			client: pongClient,
-			userId: userId,
-		});
+		try {
+			await startPongUsecase.execute({ matchId: matchId.value });
+			await joinPongUsecase.execute({
+				matchId: matchId.value,
+				client: pongClient,
+				userId: userId,
+			});
+		} catch (error) {
+			stopPongUsecase.execute({
+				matchId: matchId.value,
+				error: error as Error,
+			});
+			return;
+		}
 
 		socket.onmessage = (event: WebSocket.MessageEvent) => {
 			const message = event.data;

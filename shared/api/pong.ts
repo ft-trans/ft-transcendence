@@ -1,4 +1,4 @@
-export type PongGameEvent = "gameState";
+export type PongGameEvent = "gameState" | "error";
 
 export type PongGamePhase = "serv_player1" | "serv_player2" | "ended";
 
@@ -35,7 +35,8 @@ export type PongGameStatePayload = {
 
 export type PongGameStateResponse = {
 	event: PongGameEvent;
-	payload: PongGameStatePayload;
+	payload: PongGameStatePayload | undefined;
+	message: string | undefined;
 };
 
 export const PONG_COMMAND = {
@@ -52,3 +53,14 @@ export type PongCommand =
 	| typeof PONG_COMMAND.PADDLE1_DOWN
 	| typeof PONG_COMMAND.PADDLE2_UP
 	| typeof PONG_COMMAND.PADDLE2_DOWN;
+
+export type PongPlayerInfo = {
+	userId: string;
+	username: string;
+	avatar: string;
+};
+
+export type GetMatchPlayersResponse = {
+	player1: PongPlayerInfo | undefined;
+	player2: PongPlayerInfo | undefined;
+};
