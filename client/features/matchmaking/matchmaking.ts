@@ -6,6 +6,7 @@ import {
 	Link,
 	SectionTitle,
 } from "client/components";
+import { navigateTo } from "client/router";
 
 type MatchParticipant = { id: string };
 type MatchResult = {
@@ -352,6 +353,9 @@ export class Matchmaking extends Component {
 			const participants = m.participants
 				.map((p) => `<li class="font-mono">${p.id}</li>`)
 				.join("");
+			setTimeout(() => {
+				navigateTo(`/pong/matches/${m.id}`);
+			}, 3000);
 			return `
         <div>
           ${new SectionTitle({ text: "Matchmaking" }).render()}

@@ -2,12 +2,14 @@ import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { GetMatchUseCase } from "@usecase/game/get_match_usecase";
 import type { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import type { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
+import type { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 export const matchmakingController = (
 	getMatchUseCase: GetMatchUseCase,
 	joinMatchmakingUseCase: JoinMatchmakingUseCase,
 	leaveMatchmakingUseCase: LeaveMatchmakingUseCase,
+	startPongUsecase: StartPongUsecase,
 	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
@@ -18,7 +20,7 @@ export const matchmakingController = (
 		fastify.post(
 			"/matchmaking/join",
 			routeOptions,
-			onJoinMatchmaking(joinMatchmakingUseCase),
+			onJoinMatchmaking(joinMatchmakingUseCase, startPongUsecase),
 		);
 
 		fastify.post(
@@ -49,7 +51,10 @@ const onGetMatch = (usecase: GetMatchUseCase) => {
 	};
 };
 
-const onJoinMatchmaking = (usecase: JoinMatchmakingUseCase) => {
+const onJoinMatchmaking = (
+	usecase: JoinMatchmakingUseCase,
+	startPongUsecase: StartPongUsecase,
+) => {
 	return async (request: FastifyRequest, reply: FastifyReply) => {
 		const userId = request.authenticatedUser?.id;
 		if (!userId) {
@@ -58,6 +63,7 @@ const onJoinMatchmaking = (usecase: JoinMatchmakingUseCase) => {
 		const match = await usecase.execute(userId);
 
 		if (match) {
+			await startPongUsecase.execute({ matchId: match.id });
 			return reply.status(200).send({
 				message: "マッチしました！",
 				match: {
