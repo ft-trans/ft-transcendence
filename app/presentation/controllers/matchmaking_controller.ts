@@ -1,4 +1,7 @@
+import { MatchId, type User } from "@domain/model";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import type { PongPlayerInfo } from "@shared/api/pong";
+import type { GetMatchPlayersUseCase } from "@usecase/game/get_match_players_usecase";
 import type { GetMatchUseCase } from "@usecase/game/get_match_usecase";
 import type { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import type { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
@@ -7,6 +10,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 export const matchmakingController = (
 	getMatchUseCase: GetMatchUseCase,
+	getMatchPlayersUseCase: GetMatchPlayersUseCase,
 	joinMatchmakingUseCase: JoinMatchmakingUseCase,
 	leaveMatchmakingUseCase: LeaveMatchmakingUseCase,
 	startPongUsecase: StartPongUsecase,
@@ -17,6 +21,11 @@ export const matchmakingController = (
 			preHandler: [authPrehandler],
 		};
 		fastify.get("/matchmaking", routeOptions, onGetMatch(getMatchUseCase));
+		fastify.get(
+			"/matchmaking/:match_id/players",
+			routeOptions,
+			onGetMatchPlayers(getMatchPlayersUseCase),
+		);
 		fastify.post(
 			"/matchmaking/join",
 			routeOptions,
@@ -48,6 +57,32 @@ const onGetMatch = (usecase: GetMatchUseCase) => {
 			});
 		}
 		return reply.status(204).send();
+	};
+};
+
+const toPongPlayerInfo = (player: User | undefined): PongPlayerInfo => {
+	return player
+		? {
+				userId: player.id.value,
+				username: player.username.value,
+				avatar: player.avatar.value,
+			}
+		: undefined;
+};
+
+const onGetMatchPlayers = (usecase: GetMatchPlayersUseCase) => {
+	return async (
+		request: FastifyRequest<{ Params: { match_id: string } }>,
+		reply: FastifyReply,
+	) => {
+		const matchId = new MatchId(request.params.match_id);
+		const player1 = await usecase.execute(matchId, "player1");
+		const player2 = await usecase.execute(matchId, "player2");
+		const response = {
+			player1: toPongPlayerInfo(player1),
+			player2: toPongPlayerInfo(player2),
+		};
+		return reply.status(200).send(response);
 	};
 };
 

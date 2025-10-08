@@ -6,6 +6,7 @@ import {
 	pongWaitTimeMs,
 } from "@shared/api/pong";
 import { navigateTo } from "../router";
+import { FloatingBanner } from "./floating_banner";
 
 export class PongGame {
 	private readonly canvas: HTMLCanvasElement;
@@ -17,7 +18,10 @@ export class PongGame {
 		this.canvas.height = height;
 		const ctx = this.canvas.getContext("2d");
 		if (!ctx) {
-			// TODO ユーザーに通知
+			new FloatingBanner({
+				message: "ゲーム画面の生成に失敗しました。画面を再読み込みして下さい。",
+				type: "error",
+			}).show();
 			throw new Error("Failed to get 2D context");
 		}
 		this.context = ctx;

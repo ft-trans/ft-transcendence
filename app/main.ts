@@ -31,6 +31,7 @@ import {
 	SendDirectMessageUsecase,
 	SendGameInviteUsecase,
 } from "@usecase/chat";
+import { GetMatchPlayersUseCase } from "@usecase/game/get_match_players_usecase";
 import { GetMatchUseCase } from "@usecase/game/get_match_usecase";
 import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
@@ -299,9 +300,11 @@ const start = async () => {
 
 		const getMatchUseCase = new GetMatchUseCase(repo.newMatchRepository());
 		const startPongUsecase = new StartPongUsecase(repo);
+		const getMatchPlayersUseCase = new GetMatchPlayersUseCase(repo);
 		await app.register(
 			matchmakingController(
 				getMatchUseCase,
+				getMatchPlayersUseCase,
 				joinMatchmakingUseCase,
 				leaveMatchmakingUseCase,
 				startPongUsecase,
@@ -332,6 +335,7 @@ const start = async () => {
 				joinPongUsecase,
 				leavePongUsecase,
 				updatePongPaddleUsecase,
+				startPongUsecase,
 				stopPongUsecase,
 				authPrehandler,
 			),

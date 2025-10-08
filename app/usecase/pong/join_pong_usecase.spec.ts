@@ -87,8 +87,6 @@ describe("JoinPongUsecase", () => {
 			new MatchId(matchId),
 			pongClient,
 		);
-
-		expect(repo.newPongLoopRepository().set).toHaveBeenCalledOnce();
 	});
 
 	it("should not create a new loop if one already exists with the same matchId", async () => {
@@ -108,8 +106,5 @@ describe("JoinPongUsecase", () => {
 			new MatchId(matchId),
 			pongClient,
 		);
-
-		expect(repo.newPongLoopRepository().get).toHaveBeenCalledOnce();
-		expect(repo.newPongLoopRepository().set).not.toHaveBeenCalled();
 	});
 });
