@@ -1,6 +1,7 @@
 import { MatchId } from "@domain/model";
 import { PongClient } from "@infra/in_memory/pong_client";
 import { PONG_COMMAND, type PongCommand } from "@shared/api/pong";
+import type { AddPongClientUsecase } from "@usecase/pong/add_pong_client_usecase";
 import type { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
 import type { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
 import type { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
@@ -11,6 +12,7 @@ import type WebSocket from "ws";
 import type { AuthPrehandler } from "../hooks/auth_prehandler";
 
 export const pongController = (
+	addPongClientUsecase: AddPongClientUsecase,
 	joinPongUsecase: JoinPongUsecase,
 	leavePongUsecase: LeavePongUsecase,
 	updatePongPaddleUsecase: UpdatePongPaddleUsecase,
@@ -23,6 +25,7 @@ export const pongController = (
 			"/pong/matches/:match_id",
 			{ websocket: true, preHandler: authPrehandler },
 			onConnectClient(
+				addPongClientUsecase,
 				joinPongUsecase,
 				leavePongUsecase,
 				updatePongPaddleUsecase,
@@ -34,6 +37,7 @@ export const pongController = (
 };
 
 const onConnectClient = (
+	addPongClientUsecase: AddPongClientUsecase,
 	joinPongUsecase: JoinPongUsecase,
 	leavePongUsecase: LeavePongUsecase,
 	updatePongPaddleUsecase: UpdatePongPaddleUsecase,
@@ -44,15 +48,19 @@ const onConnectClient = (
 		socket: WebSocket,
 		req: FastifyRequest<{ Params: { match_id: string } }>,
 	) => {
-		const matchId = new MatchId(req.params.match_id);
+		const matchId = checkAndCreateMatchId(req.params.match_id, socket);
+		if (!matchId) return;
 		const userId = req.authenticatedUser?.id;
 		const pongClient = new PongClient(socket);
 
 		try {
+			await addPongClientUsecase.execute({
+				matchId: matchId.value,
+				client: pongClient,
+			});
 			await startPongUsecase.execute({ matchId: matchId.value });
 			await joinPongUsecase.execute({
 				matchId: matchId.value,
-				client: pongClient,
 				userId: userId,
 			});
 		} catch (error) {
@@ -89,6 +97,24 @@ const onConnectClient = (
 			});
 		};
 	};
+};
+
+const checkAndCreateMatchId = (
+	matchId: string,
+	socket: WebSocket,
+): MatchId | undefined => {
+	try {
+		return new MatchId(matchId);
+	} catch (_error) {
+		socket.send(
+			JSON.stringify({
+				event: "error",
+				message: "無効なMatch IDです",
+			}),
+		);
+		socket.close();
+		return undefined;
+	}
 };
 
 const execCommand = (

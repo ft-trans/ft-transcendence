@@ -1,6 +1,5 @@
 import {
 	Match,
-	MatchId,
 	type PongLoopId,
 	PongMatchState,
 	User,
@@ -21,7 +20,6 @@ import type {
 	IUserPresenceRepository,
 	IUserRepository,
 } from "@domain/repository";
-import type { IPongClient } from "@domain/service/pong_client";
 import { ulid } from "ulid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
@@ -64,7 +62,6 @@ describe("JoinPongUsecase", () => {
 		const match = Match.create([player1, player2]);
 		const matchId = match.id;
 		matchmakingRepo.findById.mockResolvedValue(match);
-		const pongClient = mock<IPongClient>();
 		pongLoopRepo.get.mockReturnValue(undefined);
 		const state = PongMatchState.init({
 			player1: player1.id,
@@ -75,36 +72,22 @@ describe("JoinPongUsecase", () => {
 		const usecase = new JoinPongUsecase(repo);
 		const input = {
 			matchId: matchId,
-			client: pongClient,
 			userId: player1.id.value,
 		};
 		const ret = await usecase.execute(input);
 
 		expect(ret.value).toBe(matchId);
-
-		expect(repo.newPongClientRepository().add).toHaveBeenCalledOnce();
-		expect(repo.newPongClientRepository().add).toHaveBeenCalledWith(
-			new MatchId(matchId),
-			pongClient,
-		);
 	});
 
 	it("should not create a new loop if one already exists with the same matchId", async () => {
 		const matchId = ulid();
-		const pongClient = mock<IPongClient>();
 		const pongLoopId = mock<PongLoopId>();
 		pongLoopRepo.get.mockReturnValue(pongLoopId);
 
 		const usecase = new JoinPongUsecase(repo);
-		const input = { matchId: matchId, client: pongClient, userId: undefined };
+		const input = { matchId: matchId, userId: undefined };
 		const ret = await usecase.execute(input);
 
 		expect(ret.value).toBe(matchId);
-
-		expect(repo.newPongClientRepository().add).toHaveBeenCalledOnce();
-		expect(repo.newPongClientRepository().add).toHaveBeenCalledWith(
-			new MatchId(matchId),
-			pongClient,
-		);
 	});
 });
