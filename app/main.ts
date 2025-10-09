@@ -59,6 +59,7 @@ import { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_
 import { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
 import { UnblockUserUsecase } from "@usecase/relationship/unblock_user_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
+import { FindUserByUsernameUsecase } from "@usecase/user/find_user_by_username_usecase";
 import { FindUserUsecase } from "@usecase/user/find_user_usecase";
 import { SearchUsersUsecase } from "@usecase/user/search_users_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
@@ -258,6 +259,7 @@ const start = async () => {
 		const unblockUserUsecase = new UnblockUserUsecase(tx);
 		const searchUsersUsecase = new SearchUsersUsecase(tx);
 		const findUserUsecase = new FindUserUsecase(repo);
+		const findUserByUsernameUsecase = new FindUserByUsernameUsecase(repo);
 
 		app.register(
 			relationshipController(
@@ -281,6 +283,7 @@ const start = async () => {
 				searchUsersUsecase,
 				findUserUsecase,
 				getUsersOnlineStatusUsecase,
+				findUserByUsernameUsecase,
 				authPrehandler,
 			),
 			{ prefix: "/api" },

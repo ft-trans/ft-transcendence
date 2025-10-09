@@ -1,7 +1,9 @@
+import { ErrBadRequest } from "@domain/error";
 import type { User } from "@domain/model/user";
 import { UserId } from "@domain/model/user";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { GetUsersOnlineStatusUsecase } from "@usecase/presence";
+import type { FindUserByUsernameUsecase } from "@usecase/user/find_user_by_username_usecase";
 import type { FindUserUsecase } from "@usecase/user/find_user_usecase";
 import type { SearchUsersUsecase } from "@usecase/user/search_users_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
@@ -10,6 +12,7 @@ export const userController = (
 	searchUsersUsecase: SearchUsersUsecase,
 	findUserUsecase: FindUserUsecase,
 	getUsersOnlineStatusUsecase: GetUsersOnlineStatusUsecase,
+	findUserByUsernameUsecase: FindUserByUsernameUsecase,
 	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
@@ -22,6 +25,10 @@ export const userController = (
 			"/users/:userId",
 			{ preHandler: authPrehandler },
 			onGetUser(findUserUsecase, getUsersOnlineStatusUsecase),
+		);
+		fastify.get(
+			"/users/username/:username",
+			onFindUserByUsername(findUserByUsernameUsecase),
 		);
 	};
 };
@@ -121,5 +128,17 @@ const onGetUser = (
 				return reply.status(404).send({ error: "User not found" });
 			}
 		}
+	};
+};
+
+const onFindUserByUsername = (usecase: FindUserByUsernameUsecase) => {
+	return async (
+		req: FastifyRequest<{
+			Params: { username: string };
+		}>,
+		reply: FastifyReply,
+	) => {
+		const user = await usecase.exec(req.params.username);
+		return reply.send(toUserDTO(user));
 	};
 };
