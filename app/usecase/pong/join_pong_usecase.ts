@@ -1,11 +1,9 @@
 import { ErrBadRequest, ErrInternalServer, ErrNotFound } from "@domain/error";
 import { MatchId, PongPaddle, UserId } from "@domain/model";
 import type { IRepository } from "@domain/repository";
-import type { IPongClient } from "@domain/service/pong_client";
 
 export type JoinPongUsecaseInput = {
 	matchId: string;
-	client: IPongClient;
 	userId: string | undefined;
 };
 
@@ -14,7 +12,6 @@ export class JoinPongUsecase {
 
 	async execute(input: JoinPongUsecaseInput): Promise<MatchId> {
 		const matchId = new MatchId(input.matchId);
-		this.repo.newPongClientRepository().add(matchId, input.client);
 		await this.setPaddle(matchId);
 		await this.setPongMatchState(matchId, input.userId);
 		return matchId;
