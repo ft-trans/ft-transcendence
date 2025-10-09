@@ -49,6 +49,7 @@ export class MatchesPong extends Component {
 
 		// TODO 画面遷移時にイベントを削除する
 		document.addEventListener("keydown", (event) => {
+			// TODO Web APIにすべき？
 			switch (event.code) {
 				case "KeyW":
 					socket.send(PONG_COMMAND.PADDLE1_UP);
