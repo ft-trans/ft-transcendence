@@ -1,7 +1,7 @@
-import { ErrBadRequest } from "@domain/error";
 import type { User } from "@domain/model/user";
 import { UserId } from "@domain/model/user";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import type { GetMatchStatsUseCase } from "@usecase/game/get_match_stats_usecase";
 import type { GetUsersOnlineStatusUsecase } from "@usecase/presence";
 import type { FindUserByUsernameUsecase } from "@usecase/user/find_user_by_username_usecase";
 import type { FindUserUsecase } from "@usecase/user/find_user_usecase";
@@ -13,6 +13,7 @@ export const userController = (
 	findUserUsecase: FindUserUsecase,
 	getUsersOnlineStatusUsecase: GetUsersOnlineStatusUsecase,
 	findUserByUsernameUsecase: FindUserByUsernameUsecase,
+	getMatchStatsUseCase: GetMatchStatsUseCase,
 	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
@@ -30,6 +31,7 @@ export const userController = (
 			"/users/username/:username",
 			onFindUserByUsername(findUserByUsernameUsecase),
 		);
+		fastify.get("/users/:userId/stats", onGetUserStats(getMatchStatsUseCase));
 	};
 };
 
@@ -140,5 +142,18 @@ const onFindUserByUsername = (usecase: FindUserByUsernameUsecase) => {
 	) => {
 		const user = await usecase.exec(req.params.username);
 		return reply.send(toUserDTO(user));
+	};
+};
+
+const onGetUserStats = (usecase: GetMatchStatsUseCase) => {
+	return async (
+		req: FastifyRequest<{
+			Params: { userId: string };
+		}>,
+		reply: FastifyReply,
+	) => {
+		const userId = new UserId(req.params.userId);
+		const userStats = await usecase.execute(userId);
+		return reply.send(userStats);
 	};
 };

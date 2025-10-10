@@ -28,4 +28,22 @@ export class MatchHistoryRepository implements IMatchHistoryRepository {
 		);
 	}
 	// async findByUserId(userId: string): Promise<MatchHistory[]> {}
+
+	async countWinByUserId(userId: UserId): Promise<number> {
+		const count = await this.client.matchHistory.count({
+			where: {
+				winnerId: userId.value,
+			},
+		});
+		return count;
+	}
+
+	async countLossByUserId(userId: UserId): Promise<number> {
+		const count = await this.client.matchHistory.count({
+			where: {
+				loserId: userId.value,
+			},
+		});
+		return count;
+	}
 }

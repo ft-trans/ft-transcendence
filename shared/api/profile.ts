@@ -38,3 +38,14 @@ export type UpdateProfileResponse = {
 		status: string;
 	};
 };
+
+export type UserStats = {
+	totalMatches: number;
+	wins: number;
+	losses: number;
+	winRate: number;
+};
+
+export type GetUserStatsResponse = {
+	stats: UserStats;
+};
