@@ -68,6 +68,13 @@ const onConnectClient = (
 				matchId: matchId.value,
 				error: error as Error,
 			});
+			const trace = error instanceof Error ? error.stack : "";
+			req.log.error({
+				matchId: matchId.value,
+				userId: userId,
+				error,
+				trace,
+			});
 			return;
 		}
 
