@@ -33,10 +33,10 @@ export class UserEmail extends ValueObject<string, "UserEmail"> {
 
 export class Username extends ValueObject<string, "Username"> {
 	protected validate(value: string): void {
-		if (value.length < 1 || value.length > 30) {
+		if (value.length < 3 || value.length > 30) {
 			throw new ErrBadRequest({
 				details: {
-					username: "ユーザー名は1文字以上30文字以下である必要があります",
+					username: "ユーザー名は3文字以上30文字以下である必要があります",
 				},
 			});
 		}

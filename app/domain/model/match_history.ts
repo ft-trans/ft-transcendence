@@ -1,7 +1,9 @@
 import { ulid } from "ulid";
 import type { MatchId } from "./pong";
-import type { UserId } from "./user";
+import type { User, UserId } from "./user";
 import { ValueObject } from "./value_object";
+
+export const matchHistoryPageSize = 20;
 
 export class MatchHistoryId extends ValueObject<string, "MatchHistoryId"> {
 	protected validate(value: string): void {
@@ -20,6 +22,8 @@ export class MatchHistory {
 		readonly winnerScore: number,
 		readonly loserScore: number,
 		readonly playedAt: Date,
+		readonly winner?: User | undefined,
+		readonly loser?: User | undefined,
 	) {}
 
 	static create({

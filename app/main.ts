@@ -31,7 +31,9 @@ import {
 	SendDirectMessageUsecase,
 	SendGameInviteUsecase,
 } from "@usecase/chat";
+import { GetMatchHistoriesUseCase } from "@usecase/game/get_match_histories_usecase.js";
 import { GetMatchPlayersUseCase } from "@usecase/game/get_match_players_usecase";
+import { GetMatchStatsUseCase } from "@usecase/game/get_match_stats_usecase.js";
 import { GetMatchUseCase } from "@usecase/game/get_match_usecase";
 import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
@@ -59,6 +61,7 @@ import { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_
 import { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
 import { UnblockUserUsecase } from "@usecase/relationship/unblock_user_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
+import { FindUserByUsernameUsecase } from "@usecase/user/find_user_by_username_usecase";
 import { FindUserUsecase } from "@usecase/user/find_user_usecase";
 import { SearchUsersUsecase } from "@usecase/user/search_users_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
@@ -258,6 +261,9 @@ const start = async () => {
 		const unblockUserUsecase = new UnblockUserUsecase(tx);
 		const searchUsersUsecase = new SearchUsersUsecase(tx);
 		const findUserUsecase = new FindUserUsecase(repo);
+		const findUserByUsernameUsecase = new FindUserByUsernameUsecase(repo);
+		const getMatchStatsUseCase = new GetMatchStatsUseCase(repo);
+		const getMatchHistoriesUseCase = new GetMatchHistoriesUseCase(repo);
 
 		app.register(
 			relationshipController(
@@ -281,6 +287,9 @@ const start = async () => {
 				searchUsersUsecase,
 				findUserUsecase,
 				getUsersOnlineStatusUsecase,
+				findUserByUsernameUsecase,
+				getMatchStatsUseCase,
+				getMatchHistoriesUseCase,
 				authPrehandler,
 			),
 			{ prefix: "/api" },

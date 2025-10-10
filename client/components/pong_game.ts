@@ -82,8 +82,7 @@ export class PongGame {
 		);
 		this.canvas.style.cursor = "pointer";
 		this.canvas.addEventListener("click", () => {
-			// TODO 対戦履歴画面へ遷移
-			navigateTo("/");
+			navigateTo("/matchmaking");
 		});
 
 		return true;

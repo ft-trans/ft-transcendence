@@ -38,3 +38,30 @@ export type UpdateProfileResponse = {
 		status: string;
 	};
 };
+
+export type UserStats = {
+	totalMatches: number;
+	wins: number;
+	losses: number;
+	winRate: number;
+};
+
+export type GetUserStatsResponse = {
+	stats: UserStats;
+};
+
+export type MatchHistoryResponse = {
+	id: string;
+	matchId: string;
+	winnerId: string;
+	winner: { id: string; username: string; avatar: string };
+	loserId: string;
+	loser: { id: string; username: string; avatar: string };
+	winnerScore: number;
+	loserScore: number;
+	playedAt: Date;
+};
+
+export type GetMatchHistoriesResponse = {
+	histories: MatchHistoryResponse[];
+};
