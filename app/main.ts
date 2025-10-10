@@ -31,6 +31,7 @@ import {
 	SendDirectMessageUsecase,
 	SendGameInviteUsecase,
 } from "@usecase/chat";
+import { GetMatchHistoriesUseCase } from "@usecase/game/get_match_histories_usecase.js";
 import { GetMatchPlayersUseCase } from "@usecase/game/get_match_players_usecase";
 import { GetMatchStatsUseCase } from "@usecase/game/get_match_stats_usecase.js";
 import { GetMatchUseCase } from "@usecase/game/get_match_usecase";
@@ -262,6 +263,7 @@ const start = async () => {
 		const findUserUsecase = new FindUserUsecase(repo);
 		const findUserByUsernameUsecase = new FindUserByUsernameUsecase(repo);
 		const getMatchStatsUseCase = new GetMatchStatsUseCase(repo);
+		const getMatchHistoriesUseCase = new GetMatchHistoriesUseCase(repo);
 
 		app.register(
 			relationshipController(
@@ -287,6 +289,7 @@ const start = async () => {
 				getUsersOnlineStatusUsecase,
 				findUserByUsernameUsecase,
 				getMatchStatsUseCase,
+				getMatchHistoriesUseCase,
 				authPrehandler,
 			),
 			{ prefix: "/api" },
