@@ -16,6 +16,7 @@ export class PongGame {
 		this.canvas = document.createElement("canvas");
 		this.canvas.width = width;
 		this.canvas.height = height;
+		this.canvas.classList.add("rounded-xl");
 		const ctx = this.canvas.getContext("2d");
 		if (!ctx) {
 			new FloatingBanner({

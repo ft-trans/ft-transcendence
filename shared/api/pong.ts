@@ -5,7 +5,7 @@ export type PongGamePhase = "serv_player1" | "serv_player2" | "ended";
 export type PongPlayerState = "waiting" | "playing" | "left";
 
 export const pongMaxScore = 5;
-export const pongWaitTimeMs = 10000;
+export const pongWaitTimeMs = 13000;
 
 export type PongGameStatePayload = {
 	field: { width: number; height: number };
