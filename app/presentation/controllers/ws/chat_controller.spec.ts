@@ -1,6 +1,7 @@
 // test/controllers/webSocketController.test.ts
 
 import fastifyWebsocket from "@fastify/websocket";
+import type { IMatchmakingClientRepository } from "@infra/in_memory/matchmaking_client_repository";
 import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
 import type { JoinChatUsecase } from "@usecase/chat/join_chat_usecase";
 import type { LeaveChatUsecase } from "@usecase/chat/leave_chat_usecase";
@@ -17,6 +18,7 @@ describe("webSocketController", () => {
 	const leaveChatUsecase = mock<LeaveChatUsecase>();
 	const sendChatMessageUsecase = mock<SendChatMessageUsecase>();
 	const sendGameInviteUsecase = mock<SendGameInviteUsecase>();
+	const matchmakingClientRepository = mock<IMatchmakingClientRepository>();
 	const mockAuthPrehandler = vi.fn();
 
 	beforeEach(async () => {
@@ -28,6 +30,7 @@ describe("webSocketController", () => {
 				leaveChatUsecase,
 				sendChatMessageUsecase,
 				sendGameInviteUsecase,
+				matchmakingClientRepository,
 				mockAuthPrehandler,
 			),
 		);

@@ -1,4 +1,5 @@
 import { InMemoryChatClient } from "@infra/in_memory/chat_client";
+import type { IMatchmakingClientRepository } from "@infra/in_memory/matchmaking_client_repository";
 import type { ClientMessage } from "@shared/api/chat";
 import { MESSAGE_TYPES } from "@shared/api/chat";
 import type { JoinChatUsecase } from "@usecase/chat/join_chat_usecase";
@@ -21,6 +22,7 @@ export const chatController = (
 	leaveChatUsecase: LeaveChatUsecase,
 	sendChatMessageUsecase: SendChatMessageUsecase | null,
 	sendGameInviteUsecase: SendGameInviteUsecase,
+	matchmakingClientRepository: IMatchmakingClientRepository,
 	// biome-ignore lint/suspicious/noExplicitAny: Type import would cause circular dependency
 	authPrehandler: any,
 ) => {
@@ -36,6 +38,7 @@ export const chatController = (
 				leaveChatUsecase,
 				sendChatMessageUsecase,
 				sendGameInviteUsecase,
+				matchmakingClientRepository,
 			),
 		);
 	};
@@ -46,6 +49,7 @@ const onConnectClient = (
 	leaveChatUsecase: LeaveChatUsecase,
 	_sendChatMessageUsecase: SendChatMessageUsecase | null,
 	sendGameInviteUsecase: SendGameInviteUsecase,
+	matchmakingClientRepository: IMatchmakingClientRepository,
 ) => {
 	return async (connection: unknown, req: FastifyRequest) => {
 		// Use authenticated user from prehandler instead of query parameter
@@ -67,6 +71,10 @@ const onConnectClient = (
 			);
 
 			joinChatUsecase.execute(chatClient);
+
+			// マッチメイキングクライアントリポジトリにも登録（ゲーム招待用）
+			// biome-ignore lint/suspicious/noExplicitAny: Fastify WebSocket connection型の互換性のため必要
+			matchmakingClientRepository.add(userId, connection as any, req);
 
 			connectionWithAny.on("message", async (data: Buffer) => {
 				try {
@@ -95,11 +103,13 @@ const onConnectClient = (
 
 			connectionWithAny.on("close", () => {
 				leaveChatUsecase.execute(chatClient);
+				matchmakingClientRepository.remove(userId);
 			});
 
 			connectionWithAny.on("error", (err: Error) => {
 				console.error(`[WS Chat] Connection error for user ${userId}:`, err);
 				leaveChatUsecase.execute(chatClient);
+				matchmakingClientRepository.remove(userId);
 			});
 		}
 	};
