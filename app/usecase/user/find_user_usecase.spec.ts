@@ -1,6 +1,7 @@
 import { ErrNotFound } from "@domain/error";
 import { User, UserEmail, Username } from "@domain/model";
-import type { IRepository, IUserRepository } from "@domain/repository";
+import type { IUserRepository } from "@domain/repository";
+import { createMockRepository } from "@usecase/test_helper";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { FindUserUsecase } from "./find_user_usecase";
@@ -18,15 +19,15 @@ describe("FindUserUsecase", () => {
 
 		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findById.mockResolvedValue(user);
-		const mockRepo = mock<IRepository>();
-		mockRepo.newUserRepository.mockReturnValue(mockUserRepo);
+		const mockRepo = createMockRepository({
+			newUserRepository: () => mockUserRepo,
+		});
 
 		const usecase = new FindUserUsecase(mockRepo);
 
 		const result = await usecase.run(user.id);
 
 		expect(result).toEqual(user);
-		expect(mockRepo.newUserRepository).toHaveBeenCalledOnce();
 		expect(mockUserRepo.findById).toHaveBeenCalledOnce();
 		expect(mockUserRepo.findById).toHaveBeenCalledWith(user.id);
 	});
@@ -39,13 +40,13 @@ describe("FindUserUsecase", () => {
 
 		const mockUserRepo = mock<IUserRepository>();
 		mockUserRepo.findById.mockResolvedValue(undefined);
-		const mockRepository = mock<IRepository>();
-		mockRepository.newUserRepository.mockReturnValue(mockUserRepo);
+		const mockRepository = createMockRepository({
+			newUserRepository: () => mockUserRepo,
+		});
 
 		const usecase = new FindUserUsecase(mockRepository);
 
 		await expect(usecase.run(user.id)).rejects.toThrow(ErrNotFound);
-		expect(mockRepository.newUserRepository).toHaveBeenCalledOnce();
 		expect(mockUserRepo.findById).toHaveBeenCalledOnce();
 		expect(mockUserRepo.findById).toHaveBeenCalledWith(user.id);
 	});
