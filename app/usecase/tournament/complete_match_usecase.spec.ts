@@ -16,7 +16,7 @@ import {
 } from "@domain/model";
 import { UserId } from "@domain/model/user";
 import type { ITournamentRepository } from "@domain/repository";
-import type { IRepositoryFactory } from "@infra/repository";
+import { createMockRepository } from "@usecase/test_helper";
 import type { ITransaction } from "@usecase/transaction";
 import { ulid } from "ulid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -25,16 +25,18 @@ import { CompleteMatchUsecase } from "./complete_match_usecase";
 
 describe("CompleteMatchUsecase", () => {
 	let mockTx: ITransaction;
-	let mockRepoFactory: IRepositoryFactory;
 	let mockTournamentRepo: ITournamentRepository;
 
 	beforeEach(() => {
 		mockTournamentRepo = mock<ITournamentRepository>();
-		mockRepoFactory = mock<IRepositoryFactory>({
-			newTournamentRepository: () => mockTournamentRepo,
-		});
 		mockTx = mock<ITransaction>({
-			exec: vi.fn((callback) => callback(mockRepoFactory)),
+			exec: vi.fn((callback) =>
+				callback(
+					createMockRepository({
+						newTournamentRepository: () => mockTournamentRepo,
+					}),
+				),
+			),
 		});
 	});
 
