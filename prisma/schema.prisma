@@ -38,6 +38,10 @@ model User {
   // MatchHistory relations
   wonMatches  MatchHistory[] @relation("Winner")
   lostMatches MatchHistory[] @relation("Loser")
+
+  // Tournament relations
+  organizedTournaments Tournament[] @relation("TournamentOrganizer")
+  tournamentParticipations TournamentParticipant[]
 }
 
 model Friendship {
@@ -109,4 +113,69 @@ model Session {
   createdAt   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Tournament {
+  id              String   @id
+  name            String
+  description     String?
+  organizerId     String
+  status          String   @default("registration") // "registration", "in_progress", "completed", "cancelled"
+  maxParticipants Int      @default(8)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organizer    User                    @relation("TournamentOrganizer", fields: [organizerId], references: [id])
+  participants TournamentParticipant[]
+  rounds       TournamentRound[]
+  matches      TournamentMatch[]
+}
+
+model TournamentParticipant {
+  id           String @id
+  tournamentId String
+  userId       String
+  status       String @default("active") // "active", "eliminated", "withdrawn"
+
+  tournament Tournament                    @relation(fields: [tournamentId], references: [id])
+  user       User                          @relation(fields: [userId], references: [id])
+  matches    TournamentMatchParticipant[]
+
+  @@unique([tournamentId, userId])
+}
+
+model TournamentRound {
+  id           String   @id
+  tournamentId String
+  roundNumber  Int
+  status       String   @default("pending") // "pending", "in_progress", "completed"
+  createdAt    DateTime @default(now())
+
+  tournament Tournament        @relation(fields: [tournamentId], references: [id])
+  matches    TournamentMatch[]
+
+  @@unique([tournamentId, roundNumber])
+}
+
+model TournamentMatch {
+  id           String   @id
+  tournamentId String
+  roundId      String
+  winnerId     String?  // TournamentParticipantのID
+  status       String   @default("pending") // "pending", "in_progress", "completed"
+  createdAt    DateTime @default(now())
+
+  tournament   Tournament                   @relation(fields: [tournamentId], references: [id])
+  round        TournamentRound              @relation(fields: [roundId], references: [id])
+  participants TournamentMatchParticipant[]
+}
+
+model TournamentMatchParticipant {
+  matchId       String
+  participantId String
+
+  match       TournamentMatch       @relation(fields: [matchId], references: [id])
+  participant TournamentParticipant @relation(fields: [participantId], references: [id])
+
+  @@id([matchId, participantId])
 }
