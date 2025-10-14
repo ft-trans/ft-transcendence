@@ -57,6 +57,18 @@ export class MessageList extends Component {
 								? "bg-blue-500 text-white"
 								: "bg-gray-200 text-gray-900"
 						}">
+              ${
+								!isOwnMessage
+									? `<p class="text-xs mb-1 ${
+											isOwnMessage ? "text-blue-100" : "text-gray-600"
+										}">
+                <a href="/users/${message.sender.username}" data-link class="hover:underline hover:text-blue-600 cursor-pointer flex items-center gap-1">
+                  <span>👤</span>
+                  <span>${message.sender.username}</span>
+                </a>
+              </p>`
+									: ""
+							}
               <p class="text-sm">${this.escapeHtml(message.content)}</p>
               <p class="text-xs mt-1 ${
 								isOwnMessage ? "text-blue-100" : "text-gray-500"

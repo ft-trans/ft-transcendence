@@ -107,7 +107,16 @@ export class MatchesPong extends Component {
 	private renderPlayer(player: PongPlayerInfo | undefined): string {
 		return `
 <div class="flex flex-col items-center">
-	${player?.avatar ? `<img src="${player.avatar}" alt="Avatar" class="w-12 h-12 rounded-full mb-2">` : `<div class="w-12 h-12 rounded-full bg-gray-300 mb-2"></div>`}
+	${(() => {
+		const defaultAvatar = "/avatars/default.svg";
+		let avatarUrl = defaultAvatar;
+		if (player?.avatar?.trim()) {
+			avatarUrl = player.avatar.startsWith("/avatars/")
+				? player.avatar
+				: `/avatars/${player.avatar}`;
+		}
+		return `<img src="${avatarUrl}" alt="${player?.username || "プレイヤー"}のアバター" class="w-12 h-12 rounded-full mb-2 object-cover" onerror="this.src='${defaultAvatar}'">`;
+	})()}
 	<p>${player?.username ? player.username : ""}</p>
 </div>
 	`;

@@ -36,13 +36,16 @@ export class FriendList extends Component {
 						(friend) => `
           <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
             <div class="flex items-center space-x-3 mb-3">
-              ${
-								friend.avatar
-									? `<img src="${friend.avatar}" alt="${friend.username}" class="w-12 h-12 rounded-full object-cover">`
-									: `<div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                     <span class="text-lg font-medium">${friend.username[0].toUpperCase()}</span>
-                   </div>`
-							}
+              ${(() => {
+								const defaultAvatar = "/avatars/default.svg";
+								let avatarUrl = defaultAvatar;
+								if (friend.avatar?.trim()) {
+									avatarUrl = friend.avatar.startsWith("/avatars/")
+										? friend.avatar
+										: `/avatars/${friend.avatar}`;
+								}
+								return `<img src="${avatarUrl}" alt="${friend.username}のアバター" class="w-12 h-12 rounded-full object-cover" onerror="this.src='${defaultAvatar}'">`;
+							})()}
               <div class="flex-1">
                 <h4 class="font-medium text-gray-900">${friend.username}</h4>
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -59,7 +62,13 @@ export class FriendList extends Component {
                 class="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
                 data-navigate-to="/messages/${friend.id}"
               >
-                メッセージ
+                💬 メッセージ
+              </button>
+              <button 
+                class="px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
+                data-block-friend="${friend.id}"
+              >
+                🚫 ブロック
               </button>
               <button 
                 class="px-3 py-2 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400 transition-colors"

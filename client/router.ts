@@ -1,6 +1,7 @@
 import { pathToRegexp } from "path-to-regexp";
 import { createRouteParams, Navigation } from "./components";
 import { Login, Register } from "./features/auth";
+import { BlockedUsersPage } from "./features/blocked_users/blocked_users_page";
 import { FriendsPage } from "./features/friends";
 import { Home } from "./features/home";
 import { Matchmaking } from "./features/matchmaking";
@@ -51,6 +52,10 @@ export const router = async () => {
 		{
 			path: "/friends",
 			component: new Navigation({ child: new FriendsPage() }),
+		},
+		{
+			path: "/blocked-users",
+			component: new Navigation({ child: new BlockedUsersPage() }),
 		},
 		{
 			path: "/users/:username",

@@ -31,5 +31,6 @@ generated
 *.sqlite3
 coverage
 
-# Avatar uploads
-public/avatars/
+# Avatar uploads - ignore all except default.png
+public/avatars/*
+!public/avatars/default.svg

@@ -25,10 +25,14 @@ export class UserProfile extends Component {
 				message: "ユーザーが存在しません。",
 				type: "error",
 			}).show();
-			// TODO 404ページへ遷移
+			// Navigate to 404 page - redirect to home for now
+			setTimeout(() => {
+				window.location.href = "/";
+			}, 2000);
 		}
 		this.renderStats();
 		this.renderHistories();
+		this.setupEventListeners();
 	}
 
 	render(): string {
@@ -126,15 +130,35 @@ export class UserProfile extends Component {
 		if (!element) {
 			return;
 		}
+		// アバター画像のパス処理を修正
+		const defaultAvatar = "/avatars/default.svg";
+		let avatarUrl = defaultAvatar;
+		if (user.avatar?.trim()) {
+			// アバターパスが既に/avatars/で始まっている場合はそのまま使用
+			avatarUrl = user.avatar.startsWith("/avatars/")
+				? user.avatar
+				: `/avatars/${user.avatar}`;
+		}
+
 		element.innerHTML = `
-		${user.avatar ? `<img src="${user.avatar}" alt="Avatar" class="w-30 h-30 rounded-full mb-2">` : `<div class="w-30 h-30 rounded-full bg-gray-300 mb-2"></div>`}
+		<img 
+			src="${avatarUrl}" 
+			alt="${user.username}のアバター" 
+			class="w-30 h-30 rounded-full mb-2 object-cover border-4 border-gray-200"
+			onerror="this.src='${defaultAvatar}'"
+		>
 		<h2 class="text-2xl font-bold mb-2">${user.username}</h2>
 		${isCurrentUser ? `<p class="text-gray-600 mb-4">${state.user?.email}</p>` : ``}
-		${
-			isCurrentUser
-				? `<a href="/profile/edit" data-link class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">プロフィール編集</a>`
-				: ``
-		}
+		<div class="flex gap-2 mt-4">
+			${
+				isCurrentUser
+					? `<a href="/profile/edit" data-link class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">プロフィール編集</a>`
+					: `
+						<a href="/messages" data-link class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">💬 メッセージ</a>
+						<button id="block-user-btn" data-user-id="${user.id}" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">🚫 ブロック</button>
+					`
+			}
+		</div>
 		`;
 	}
 
@@ -197,11 +221,11 @@ export class UserProfile extends Component {
 					</p>
 					<p class="text-md text-gray-500">${history.winnerScore}</p>
 				</div>
-				${this.historyAvatar(history)}
+				${this.renderPlayerAvatar(history.winner)}
 				<div class="text-4xl">
 					vs
 				</div>
-				${this.historyAvatar(history)}
+				${this.renderPlayerAvatar(history.loser)}
 				<div class="w-1/3 text-left truncate">
 					<p class="font-bold ${history.loserId === this.userId ? "text-red-600" : "text-gray-600"}">
 						${this.profileLink(history.loser.username)}
@@ -212,20 +236,137 @@ export class UserProfile extends Component {
 		</div>
 		`;
 	}
-	private historyAvatar(history: MatchHistoryResponse): string {
+	private renderPlayerAvatar(player: {
+		username: string;
+		avatar?: string;
+	}): string {
+		const defaultAvatar = "/avatars/default.svg";
+		let avatarUrl = defaultAvatar;
+		if (player.avatar?.trim()) {
+			avatarUrl = player.avatar.startsWith("/avatars/")
+				? player.avatar
+				: `/avatars/${player.avatar}`;
+		}
+
 		return `
 		<div class="flex items-center">
-			${
-				history.winner.avatar
-					? `
-				<img src="${history.winner.avatar}" alt="Avatar" class="w-10 h-10 rounded-full inline-block mx-1">`
-					: `<div class="w-10 h-10 rounded-full bg-gray-300 inline-block mx-1"></div>`
-			}
+			<img 
+				src="${avatarUrl}" 
+				alt="${player.username}のアバター" 
+				class="w-10 h-10 rounded-full inline-block mx-1 object-cover" 
+				onerror="this.src='${defaultAvatar}'"
+			>
 		</div>
 		`;
 	}
 
 	private profileLink(username: string): string {
 		return `<a href="/users/${username}">${username}</a>`;
+	}
+
+	private setupEventListeners(): void {
+		document.addEventListener("click", async (event) => {
+			const target = event.target as HTMLElement;
+
+			if (target.id === "block-user-btn") {
+				const userId = target.getAttribute("data-user-id");
+				if (userId) {
+					await this.handleBlockUser(userId);
+				}
+			}
+		});
+	}
+
+	private async handleBlockUser(userId: string): Promise<void> {
+		const button = document.getElementById(
+			"block-user-btn",
+		) as HTMLButtonElement;
+		const isBlocked =
+			button.textContent?.includes("ブロック済み") ||
+			button.textContent?.includes("解除");
+
+		if (isBlocked) {
+			// Unblock user
+			const confirmed = confirm(
+				"このユーザーのブロックを解除しますか？解除すると、このユーザーからのメッセージやゲーム招待を再び受信するようになります。",
+			);
+			if (!confirmed) return;
+
+			if (button) {
+				button.disabled = true;
+				button.textContent = "🔓 解除中...";
+			}
+
+			try {
+				await this.apiClient.delete(`/api/blocks/${userId}`);
+
+				new FloatingBanner({
+					message: "ユーザーのブロックを解除しました",
+					type: "success",
+				}).show();
+
+				// Reset button to original state
+				if (button) {
+					button.disabled = false;
+					button.textContent = "🚫 ブロック";
+					button.classList.remove("bg-gray-500");
+					button.classList.add("bg-red-600", "hover:bg-red-700");
+				}
+			} catch (error) {
+				console.error("Failed to unblock user:", error);
+				new FloatingBanner({
+					message: "ユーザーのブロック解除に失敗しました",
+					type: "error",
+				}).show();
+
+				// Restore blocked state on error
+				if (button) {
+					button.disabled = false;
+					button.textContent = "🔓 ブロック解除";
+				}
+			}
+		} else {
+			// Block user
+			const confirmed = confirm(
+				"このユーザーをブロックしますか？ブロックすると、このユーザーからのメッセージやゲーム招待を受信しなくなります。",
+			);
+			if (!confirmed) return;
+
+			if (button) {
+				button.disabled = true;
+				button.textContent = "🚫 ブロック中...";
+			}
+
+			try {
+				await this.apiClient.post("/api/blocks", {
+					blockedId: userId,
+				});
+
+				new FloatingBanner({
+					message: "ユーザーをブロックしました",
+					type: "success",
+				}).show();
+
+				// Update button to show unblock option
+				if (button) {
+					button.disabled = false;
+					button.textContent = "🔓 ブロック解除";
+					button.classList.remove("bg-red-600", "hover:bg-red-700");
+					button.classList.add("bg-orange-500", "hover:bg-orange-600");
+				}
+			} catch (error) {
+				console.error("Failed to block user:", error);
+				new FloatingBanner({
+					message: "ユーザーのブロックに失敗しました",
+					type: "error",
+				}).show();
+
+				// Re-enable button on error
+				if (button) {
+					button.disabled = false;
+					button.textContent = "🚫 ブロック";
+				}
+			}
+		}
 	}
 }

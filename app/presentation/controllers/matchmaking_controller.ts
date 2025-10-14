@@ -1,6 +1,7 @@
 import { MatchId, type User } from "@domain/model";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { PongPlayerInfo } from "@shared/api/pong";
+import type { AcceptGameInviteUsecase } from "@usecase/game/accept_game_invite_usecase";
 import type { GetMatchPlayersUseCase } from "@usecase/game/get_match_players_usecase";
 import type { GetMatchUseCase } from "@usecase/game/get_match_usecase";
 import type { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
@@ -13,6 +14,7 @@ export const matchmakingController = (
 	getMatchPlayersUseCase: GetMatchPlayersUseCase,
 	joinMatchmakingUseCase: JoinMatchmakingUseCase,
 	leaveMatchmakingUseCase: LeaveMatchmakingUseCase,
+	acceptGameInviteUsecase: AcceptGameInviteUsecase,
 	startPongUsecase: StartPongUsecase,
 	authPrehandler: AuthPrehandler,
 ) => {
@@ -36,6 +38,12 @@ export const matchmakingController = (
 			"/matchmaking/leave",
 			routeOptions,
 			onLeaveMatchmaking(leaveMatchmakingUseCase),
+		);
+
+		fastify.post(
+			"/game/invite/accept",
+			routeOptions,
+			onAcceptGameInvite(acceptGameInviteUsecase),
 		);
 	};
 };
@@ -125,5 +133,37 @@ const onLeaveMatchmaking = (usecase: LeaveMatchmakingUseCase) => {
 		}
 		await usecase.execute(userId);
 		return reply.status(204).send();
+	};
+};
+
+const onAcceptGameInvite = (usecase: AcceptGameInviteUsecase) => {
+	return async (
+		request: FastifyRequest<{ Body: { senderId: string } }>,
+		reply: FastifyReply,
+	) => {
+		const userId = request.authenticatedUser?.id;
+		if (!userId) {
+			return reply.status(401).send({ message: "Unauthorized" });
+		}
+
+		const { senderId } = request.body;
+		if (!senderId) {
+			return reply.status(400).send({ message: "senderId is required" });
+		}
+
+		try {
+			const result = await usecase.execute({
+				accepterId: userId,
+				senderId,
+			});
+
+			return reply.status(200).send({
+				message: "ゲーム招待を受理しました",
+				success: result.success,
+			});
+		} catch (error) {
+			console.error("Failed to accept game invite:", error);
+			return reply.status(500).send({ message: "Internal server error" });
+		}
 	};
 };

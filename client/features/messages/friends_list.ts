@@ -44,15 +44,16 @@ export class FriendsList extends Component {
           >
             <div class="flex items-center space-x-3">
               <div class="flex-shrink-0">
-                ${
-									friend.avatar
-										? `<img src="${friend.avatar}" alt="${friend.username}" class="h-10 w-10 rounded-full object-cover">`
-										: `<div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                       <span class="text-sm font-medium text-gray-700">
-                         ${friend.username.charAt(0).toUpperCase()}
-                       </span>
-                     </div>`
-								}
+                ${(() => {
+									const defaultAvatar = "/avatars/default.svg";
+									let avatarUrl = defaultAvatar;
+									if (friend.avatar?.trim()) {
+										avatarUrl = friend.avatar.startsWith("/avatars/")
+											? friend.avatar
+											: `/avatars/${friend.avatar}`;
+									}
+									return `<img src="${avatarUrl}" alt="${friend.username}のアバター" class="h-10 w-10 rounded-full object-cover" onerror="this.src='${defaultAvatar}'">`;
+								})()}
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-gray-900 truncate">

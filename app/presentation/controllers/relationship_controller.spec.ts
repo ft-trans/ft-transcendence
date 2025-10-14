@@ -11,6 +11,7 @@ import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { GetUsersOnlineStatusUsecase } from "@usecase/presence";
 import type { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
 import type { CancelFriendRequestUsecase } from "@usecase/relationship/cancel_friend_request_usecase";
+import type { GetBlockedUsersUsecase } from "@usecase/relationship/get_blocked_users_usecase";
 import type { GetFriendRequestsUsecase } from "@usecase/relationship/get_friend_requests_usecase";
 import type { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
 import type { GetSentFriendRequestsUsecase } from "@usecase/relationship/get_sent_friend_requests_usecase";
@@ -34,6 +35,7 @@ describe("relationshipController", () => {
 	const cancelFriendRequestUsecase = mock<CancelFriendRequestUsecase>();
 	const blockUserUsecase = mock<BlockUserUsecase>();
 	const unblockUserUsecase = mock<UnblockUserUsecase>();
+	const getBlockedUsersUsecase = mock<GetBlockedUsersUsecase>();
 	const getUsersOnlineStatusUsecase = mock<GetUsersOnlineStatusUsecase>();
 
 	// Mock auth prehandler that sets authenticatedUser
@@ -57,6 +59,7 @@ describe("relationshipController", () => {
 				cancelFriendRequestUsecase,
 				blockUserUsecase,
 				unblockUserUsecase,
+				getBlockedUsersUsecase,
 				getUsersOnlineStatusUsecase,
 				mockAuthPrehandler,
 			),

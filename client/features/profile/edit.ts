@@ -153,11 +153,15 @@ export class EditProfile extends Component {
 			"current-avatar-preview",
 		);
 		if (currentAvatarPreview && this.currentUser) {
-			currentAvatarPreview.innerHTML = this.currentUser.avatar
-				? `<img src="${this.currentUser.avatar}" alt="Current Avatar" class="w-20 h-20 rounded-full object-cover">`
-				: `<div class="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center">
-					 <span class="text-gray-500 text-sm">画像なし</span>
-				   </div>`;
+			// 現在のアバター画像を表示
+			const defaultAvatar = "/avatars/default.svg";
+			let currentAvatarUrl = defaultAvatar;
+			if (this.currentUser.avatar?.trim()) {
+				currentAvatarUrl = this.currentUser.avatar.startsWith("/avatars/")
+					? this.currentUser.avatar
+					: `/avatars/${this.currentUser.avatar}`;
+			}
+			currentAvatarPreview.innerHTML = `<img src="${currentAvatarUrl}" alt="現在のアバター" class="w-20 h-20 rounded-full object-cover" onerror="this.src='${defaultAvatar}'">`;
 		}
 	}
 

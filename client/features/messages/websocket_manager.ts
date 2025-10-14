@@ -17,6 +17,7 @@ export class WebSocketManager {
 
 		// Use cookie-based authentication - cookies are automatically sent with WebSocket connections
 		const wsUrl = `${import.meta.env.VITE_WS_URL || "ws://localhost:3000"}/ws/chat`;
+		console.log("[WS] Attempting to connect to:", wsUrl);
 		this.ws = new WebSocket(wsUrl);
 
 		this.ws.onopen = () => {
@@ -26,15 +27,30 @@ export class WebSocketManager {
 
 		this.ws.onmessage = (event) => {
 			try {
-				const message: ServerMessage = JSON.parse(event.data);
+				const rawMessage = JSON.parse(event.data);
+				console.log("[WS] Received message:", rawMessage);
+
+				// Handle matchFound event (game invite acceptance)
+				if (rawMessage.event === "matchFound") {
+					this.handleMatchFound(rawMessage.data);
+					return;
+				}
+
+				// Handle regular chat messages
+				const message: ServerMessage = rawMessage;
 				this.messageHandlers.forEach((handler) => handler(message));
 			} catch (error) {
 				console.error("[WS] Failed to parse message:", error);
 			}
 		};
 
-		this.ws.onclose = () => {
-			console.log("[WS] Disconnected from chat server");
+		this.ws.onclose = (event) => {
+			console.log(
+				"[WS] Disconnected from chat server. Code:",
+				event.code,
+				"Reason:",
+				event.reason,
+			);
 			this.attemptReconnect();
 		};
 
@@ -87,6 +103,25 @@ export class WebSocketManager {
 	onMessage(handler: MessageHandler): () => void {
 		this.messageHandlers.add(handler);
 		return () => this.messageHandlers.delete(handler);
+	}
+
+	private handleMatchFound(matchData: { id: string }): void {
+		console.log("[WS] Match found:", matchData);
+
+		// Show notification
+		import("../../components/floating_banner").then(({ FloatingBanner }) => {
+			new FloatingBanner({
+				message: "🎉 マッチが成立しました！",
+				type: "success",
+			}).show();
+		});
+
+		// Navigate to game
+		if (matchData.id) {
+			import("../../router").then((router) => {
+				router.navigateTo(`/pong/matches/${matchData.id}`);
+			});
+		}
 	}
 
 	private attemptReconnect(): void {

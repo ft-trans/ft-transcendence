@@ -34,6 +34,7 @@ import {
 	SendDirectMessageUsecase,
 	SendGameInviteUsecase,
 } from "@usecase/chat";
+import { AcceptGameInviteUsecase } from "@usecase/game/accept_game_invite_usecase";
 import { GetMatchHistoriesUseCase } from "@usecase/game/get_match_histories_usecase.js";
 import { GetMatchPlayersUseCase } from "@usecase/game/get_match_players_usecase";
 import { GetMatchStatsUseCase } from "@usecase/game/get_match_stats_usecase.js";
@@ -56,6 +57,7 @@ import {
 } from "@usecase/presence";
 import { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
 import { CancelFriendRequestUsecase } from "@usecase/relationship/cancel_friend_request_usecase";
+import { GetBlockedUsersUsecase } from "@usecase/relationship/get_blocked_users_usecase";
 import { GetFriendRequestsUsecase } from "@usecase/relationship/get_friend_requests_usecase";
 import { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
 import { GetSentFriendRequestsUsecase } from "@usecase/relationship/get_sent_friend_requests_usecase";
@@ -175,17 +177,7 @@ const start = async () => {
 		const leaveChatUsecase = new LeaveChatUsecase(chatClientRepository);
 		const getDirectMessagesUsecase = new GetDirectMessagesUsecase(tx);
 
-		// WebSocketチャットコントローラーを登録
-		app.register(
-			webSocketChatController(
-				joinChatUsecase,
-				leaveChatUsecase,
-				null, // メッセージ送信はAPIで処理
-				sendGameInviteUsecase,
-				authPrehandler,
-			),
-			{ prefix: "/ws" },
-		);
+		// WebSocketチャットコントローラーを後で登録（WebSocketプラグイン登録後）
 
 		// GET ハンドラー - メッセージ履歴取得
 		app.get<{ Params: { partnerId: string } }>(
@@ -269,7 +261,18 @@ const start = async () => {
 		// WebSocketプラグインをHTTPルート登録後に登録
 		await app.register(websocket);
 
-		// WebSocketプラグインを登録済みのため、ルート情報は省略
+		// WebSocketチャットコントローラーを登録（WebSocketプラグイン登録後）
+		app.register(
+			webSocketChatController(
+				joinChatUsecase,
+				leaveChatUsecase,
+				null, // メッセージ送信はAPIで処理
+				sendGameInviteUsecase,
+				matchmakingClientRepository,
+				authPrehandler,
+			),
+			{ prefix: "/ws" },
+		);
 
 		const getFriendsUsecase = new GetFriendsUsecase(tx);
 		const getFriendRequestsUsecase = new GetFriendRequestsUsecase(tx);
@@ -280,6 +283,7 @@ const start = async () => {
 		const cancelFriendRequestUsecase = new CancelFriendRequestUsecase(tx);
 		const blockUserUsecase = new BlockUserUsecase(tx);
 		const unblockUserUsecase = new UnblockUserUsecase(tx);
+		const getBlockedUsersUsecase = new GetBlockedUsersUsecase(tx);
 		const searchUsersUsecase = new SearchUsersUsecase(tx);
 		const findUserUsecase = new FindUserUsecase(repo);
 		const findUserByUsernameUsecase = new FindUserByUsernameUsecase(repo);
@@ -297,6 +301,7 @@ const start = async () => {
 				cancelFriendRequestUsecase,
 				blockUserUsecase,
 				unblockUserUsecase,
+				getBlockedUsersUsecase,
 				getUsersOnlineStatusUsecase,
 				authPrehandler,
 			),
@@ -332,12 +337,17 @@ const start = async () => {
 		const getMatchUseCase = new GetMatchUseCase(repo.newMatchRepository());
 		const startPongUsecase = new StartPongUsecase(repo);
 		const getMatchPlayersUseCase = new GetMatchPlayersUseCase(repo);
+		const acceptGameInviteUsecase = new AcceptGameInviteUsecase(
+			repo.newUserRepository(),
+			matchmakingService,
+		);
 		await app.register(
 			matchmakingController(
 				getMatchUseCase,
 				getMatchPlayersUseCase,
 				joinMatchmakingUseCase,
 				leaveMatchmakingUseCase,
+				acceptGameInviteUsecase,
 				startPongUsecase,
 				authPrehandler,
 			),
