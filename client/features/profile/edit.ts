@@ -41,7 +41,6 @@ export class EditProfile extends Component {
 				const rawData = {
 					email: formData.get("email"),
 					username: formData.get("username"),
-					avatar: formData.get("avatar"),
 				};
 
 				const input = updateProfileFormSchema.safeParse(rawData);
@@ -53,17 +52,73 @@ export class EditProfile extends Component {
 					}).show();
 					return;
 				}
-				// TODO: APIエラーのハンドリング
-				await new ApiClient().put<UpdateProfileRequest, UpdateProfileResponse>(
-					"/api/profile",
-					{
+
+				try {
+					// Profile update (email, username)
+					await new ApiClient().put<
+						UpdateProfileRequest,
+						UpdateProfileResponse
+					>("/api/profile", {
 						user: {
 							email: input.data.email,
 							username: input.data.username,
-							avatar: input.data.avatar,
 						},
-					},
-				);
+					});
+
+					// Avatar upload (if file is selected)
+					const avatarFile = formData.get("avatar-file") as File;
+					if (avatarFile && avatarFile.size > 0) {
+						const avatarFormData = new FormData();
+						avatarFormData.append("file", avatarFile);
+
+						await new ApiClient().postFormData(
+							"/api/profile/avatar",
+							avatarFormData,
+						);
+					}
+
+					new FloatingBanner({
+						message: "プロフィールを更新しました",
+						type: "success",
+					}).show();
+
+					// Reload profile data
+					setTimeout(() => {
+						window.location.reload();
+					}, 1000);
+				} catch (error) {
+					console.error("Profile update failed:", error);
+					new FloatingBanner({
+						message: "プロフィールの更新に失敗しました",
+						type: "error",
+					}).show();
+				}
+			});
+		}
+
+		// File preview functionality
+		const avatarFileInput = document.getElementById(
+			"avatar-file",
+		) as HTMLInputElement;
+		if (avatarFileInput) {
+			avatarFileInput.addEventListener("change", (event) => {
+				const file = (event.target as HTMLInputElement).files?.[0];
+				if (file) {
+					const reader = new FileReader();
+					reader.onload = (e) => {
+						const previewDiv = document.getElementById("new-avatar-preview");
+						const previewImage = document.getElementById(
+							"preview-image",
+						) as HTMLImageElement;
+
+						if (previewDiv && previewImage) {
+							previewImage.src = e.target?.result as string;
+							previewDiv.classList.remove("hidden");
+							previewDiv.classList.add("flex");
+						}
+					};
+					reader.readAsDataURL(file);
+				}
 			});
 		}
 
@@ -85,11 +140,25 @@ export class EditProfile extends Component {
 		const usernameInput = document.getElementById(
 			"username",
 		) as HTMLInputElement;
-		const avatarInput = document.getElementById("avatar") as HTMLInputElement;
 
 		if (emailInput) emailInput.value = this.currentUser.email || "";
 		if (usernameInput) usernameInput.value = this.currentUser.username || "";
-		if (avatarInput) avatarInput.value = this.currentUser.avatar || "";
+
+		// Update current avatar preview
+		this.updateCurrentAvatarPreview();
+	}
+
+	private updateCurrentAvatarPreview(): void {
+		const currentAvatarPreview = document.getElementById(
+			"current-avatar-preview",
+		);
+		if (currentAvatarPreview && this.currentUser) {
+			currentAvatarPreview.innerHTML = this.currentUser.avatar
+				? `<img src="${this.currentUser.avatar}" alt="Current Avatar" class="w-20 h-20 rounded-full object-cover">`
+				: `<div class="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center">
+					 <span class="text-gray-500 text-sm">画像なし</span>
+				   </div>`;
+		}
 	}
 
 	render(): string {
@@ -112,12 +181,29 @@ export class EditProfile extends Component {
 							autocomplete: "username",
 							labelText: "ユーザー名",
 						}).render()}
-            ${new FormInput({
-							id: "avatar",
-							name: "avatar",
-							type: "url",
-							labelText: "アバターURL",
-						}).render()}
+            <div class="space-y-2">
+                <label for="avatar-file" class="block text-sm font-medium text-gray-700">アバター画像</label>
+                <div id="current-avatar-preview" class="flex justify-center mb-4">
+                    ${
+											this.currentUser?.avatar
+												? `<img src="${this.currentUser.avatar}" alt="Current Avatar" class="w-20 h-20 rounded-full object-cover">`
+												: `<div class="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center">
+                             <span class="text-gray-500 text-sm">画像なし</span>
+                           </div>`
+										}
+                </div>
+                <input 
+                    id="avatar-file" 
+                    name="avatar-file" 
+                    type="file" 
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <div id="new-avatar-preview" class="hidden justify-center mt-2">
+                    <img id="preview-image" src="" alt="Preview" class="w-20 h-20 rounded-full object-cover">
+                </div>
+                <p class="text-xs text-gray-500">JPEG、PNG、GIF、WebP形式、5MB以下</p>
+            </div>
             <div class="flex justify-center">
                 ${new Button({
 									width: "full",
