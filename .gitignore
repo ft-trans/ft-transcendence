@@ -30,3 +30,6 @@ generated
 .env
 *.sqlite3
 coverage
+
+# Avatar uploads
+public/avatars/
