@@ -179,6 +179,10 @@ export class Tournament {
 		return this.status.isRegistration();
 	}
 
+	canStartWithParticipants(participantCount: number): boolean {
+		return this.canStart() && participantCount >= 2;
+	}
+
 	isFull(currentParticipantCount: number): boolean {
 		return currentParticipantCount >= this.maxParticipants.value;
 	}
