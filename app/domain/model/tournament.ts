@@ -1,5 +1,6 @@
 import { isValid, ulid } from "ulid";
 import { ErrBadRequest } from "../error";
+import type { MatchId } from "./pong";
 import type { UserId } from "./user";
 import { ValueObject } from "./value_object";
 
@@ -429,53 +430,19 @@ export class TournamentMatchId extends ValueObject<
 	}
 }
 
-export type TournamentMatchStatus = "pending" | "in_progress" | "completed";
-
-export class TournamentMatchStatusValue extends ValueObject<
-	TournamentMatchStatus,
-	"TournamentMatchStatus"
-> {
-	protected validate(value: TournamentMatchStatus): void {
-		const validStatuses: TournamentMatchStatus[] = [
-			"pending",
-			"in_progress",
-			"completed",
-		];
-		if (!validStatuses.includes(value)) {
-			throw new ErrBadRequest({
-				details: {
-					tournamentMatchStatus: "試合ステータスが無効です",
-				},
-			});
-		}
-	}
-
-	isPending(): boolean {
-		return this.value === "pending";
-	}
-
-	isInProgress(): boolean {
-		return this.value === "in_progress";
-	}
-
-	isCompleted(): boolean {
-		return this.value === "completed";
-	}
-}
-
 export class TournamentMatch {
 	constructor(
 		readonly id: TournamentMatchId,
 		readonly tournamentId: TournamentId,
 		readonly roundId: TournamentRoundId,
+		readonly matchId: MatchId,
 		readonly participantIds: TournamentParticipantId[],
-		readonly winnerId: TournamentParticipantId | null,
-		readonly status: TournamentMatchStatusValue,
 	) {}
 
 	static create(
 		tournamentId: TournamentId,
 		roundId: TournamentRoundId,
+		matchId: MatchId,
 		participantIds: TournamentParticipantId[],
 	): TournamentMatch {
 		if (participantIds.length < 1 || participantIds.length > 2) {
@@ -485,14 +452,12 @@ export class TournamentMatch {
 		}
 
 		const id = new TournamentMatchId(ulid());
-		const status = new TournamentMatchStatusValue("pending");
 		return new TournamentMatch(
 			id,
 			tournamentId,
 			roundId,
+			matchId,
 			participantIds,
-			null,
-			status,
 		);
 	}
 
@@ -500,81 +465,20 @@ export class TournamentMatch {
 		id: TournamentMatchId,
 		tournamentId: TournamentId,
 		roundId: TournamentRoundId,
+		matchId: MatchId,
 		participantIds: TournamentParticipantId[],
-		winnerId: TournamentParticipantId | null,
-		status: TournamentMatchStatusValue,
 	): TournamentMatch {
 		return new TournamentMatch(
 			id,
 			tournamentId,
 			roundId,
+			matchId,
 			participantIds,
-			winnerId,
-			status,
-		);
-	}
-
-	start(): TournamentMatch {
-		if (!this.status.isPending()) {
-			throw new ErrBadRequest({
-				userMessage: "待機中の試合のみ開始できます",
-			});
-		}
-		return new TournamentMatch(
-			this.id,
-			this.tournamentId,
-			this.roundId,
-			this.participantIds,
-			this.winnerId,
-			new TournamentMatchStatusValue("in_progress"),
-		);
-	}
-
-	complete(winnerId: TournamentParticipantId): TournamentMatch {
-		if (!this.status.isInProgress()) {
-			throw new ErrBadRequest({
-				userMessage: "進行中の試合のみ完了できます",
-			});
-		}
-
-		// Check if winnerId is one of the participants
-		const isParticipant = this.participantIds.some((id) => id.equals(winnerId));
-		if (!isParticipant) {
-			throw new ErrBadRequest({
-				userMessage: "勝者は試合の参加者である必要があります",
-			});
-		}
-
-		return new TournamentMatch(
-			this.id,
-			this.tournamentId,
-			this.roundId,
-			this.participantIds,
-			winnerId,
-			new TournamentMatchStatusValue("completed"),
 		);
 	}
 
 	// BYE判定（参加者が1人のみの場合）
 	isBye(): boolean {
 		return this.participantIds.length === 1;
-	}
-
-	// BYEの場合は自動的に勝者を決定
-	completeAsBye(): TournamentMatch {
-		if (!this.isBye()) {
-			throw new ErrBadRequest({
-				userMessage: "BYEは参加者が1人の試合のみ適用できます",
-			});
-		}
-
-		return new TournamentMatch(
-			this.id,
-			this.tournamentId,
-			this.roundId,
-			this.participantIds,
-			this.participantIds[0],
-			new TournamentMatchStatusValue("completed"),
-		);
 	}
 }

@@ -1,9 +1,10 @@
+import { ulid } from "ulid";
 import type {
 	TournamentId,
 	TournamentParticipantId,
 	TournamentRoundId,
 } from "../model";
-import { TournamentMatch } from "../model";
+import { MatchId, TournamentMatch } from "../model";
 
 export class TournamentBracketService {
 	constructor(
@@ -19,14 +20,15 @@ export class TournamentBracketService {
 		const shuffledParticipants = this.shuffleFn([...participantIds]);
 
 		for (let i = 0; i < shuffledParticipants.length; i += 2) {
+			const matchId = new MatchId(ulid());
 			if (i + 1 < shuffledParticipants.length) {
-				const match = TournamentMatch.create(tournamentId, roundId, [
+				const match = TournamentMatch.create(tournamentId, roundId, matchId, [
 					shuffledParticipants[i],
 					shuffledParticipants[i + 1],
 				]);
 				matches.push(match);
 			} else {
-				const match = TournamentMatch.create(tournamentId, roundId, [
+				const match = TournamentMatch.create(tournamentId, roundId, matchId, [
 					shuffledParticipants[i],
 				]);
 				matches.push(match);
@@ -48,14 +50,15 @@ export class TournamentBracketService {
 		const matches: TournamentMatch[] = [];
 
 		for (let i = 0; i < winnerIds.length; i += 2) {
+			const matchId = new MatchId(ulid());
 			if (i + 1 < winnerIds.length) {
-				const match = TournamentMatch.create(tournamentId, roundId, [
+				const match = TournamentMatch.create(tournamentId, roundId, matchId, [
 					winnerIds[i],
 					winnerIds[i + 1],
 				]);
 				matches.push(match);
 			} else {
-				const match = TournamentMatch.create(tournamentId, roundId, [
+				const match = TournamentMatch.create(tournamentId, roundId, matchId, [
 					winnerIds[i],
 				]);
 				matches.push(match);

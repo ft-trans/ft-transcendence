@@ -2,20 +2,19 @@ import { ErrBadRequest } from "@domain/error";
 import type {
 	Tournament,
 	TournamentMatch,
+	TournamentParticipantId,
 	TournamentRound,
 } from "@domain/model";
 import {
 	RoundNumber,
 	TournamentMatchId,
-	TournamentParticipantId,
 	TournamentRound as TournamentRoundEntity,
 } from "@domain/model";
 import { TournamentBracketService } from "@domain/service";
 import type { ITransaction } from "@usecase/transaction";
 
 export type CompleteMatchUsecaseInput = {
-	matchId: string;
-	winnerId: string; // TournamentParticipantId
+	matchId: string; // TournamentMatchId
 };
 
 export type CompleteMatchUsecaseOutput = {
@@ -33,27 +32,46 @@ export class CompleteMatchUsecase {
 	async execute(
 		input: CompleteMatchUsecaseInput,
 	): Promise<CompleteMatchUsecaseOutput> {
-		const matchId = new TournamentMatchId(input.matchId);
-		const winnerId = new TournamentParticipantId(input.winnerId);
+		const tournamentMatchId = new TournamentMatchId(input.matchId);
 
 		const result = await this.tx.exec(async (repo) => {
 			const tournamentRepo = repo.newTournamentRepository();
+			const matchHistoryRepo = repo.newMatchHistoryRepository();
 
-			// 試合の存在確認
-			const match = await tournamentRepo.findMatchById(matchId);
-			if (!match) {
+			// トーナメント試合の存在確認
+			const tournamentMatch =
+				await tournamentRepo.findMatchById(tournamentMatchId);
+			if (!tournamentMatch) {
 				throw new ErrBadRequest({
 					userMessage: "試合が見つかりません",
 				});
 			}
 
-			// 試合を完了状態に更新
-			const completedMatch = match.complete(winnerId);
-			await tournamentRepo.updateMatch(completedMatch);
+			// MatchHistoryから勝者を取得
+			const matchHistory = await matchHistoryRepo.findByMatchId(
+				tournamentMatch.matchId,
+			);
+			if (!matchHistory) {
+				throw new ErrBadRequest({
+					userMessage: "試合結果が見つかりません",
+				});
+			}
+
+			// 勝者のTournamentParticipantIdを特定
+			const winnerParticipant =
+				await tournamentRepo.findParticipantByTournamentAndUserId(
+					tournamentMatch.tournamentId,
+					matchHistory.winnerId.value,
+				);
+			if (!winnerParticipant) {
+				throw new ErrBadRequest({
+					userMessage: "勝者の参加者情報が見つかりません",
+				});
+			}
 
 			// 敗者を eliminated に更新
-			const loserIds = completedMatch.participantIds.filter(
-				(id) => !id.equals(winnerId),
+			const loserIds = tournamentMatch.participantIds.filter(
+				(id) => !id.equals(winnerParticipant.id),
 			);
 			for (const loserId of loserIds) {
 				const participant = await tournamentRepo.findParticipantById(loserId);
@@ -64,7 +82,9 @@ export class CompleteMatchUsecase {
 			}
 
 			// 現在のラウンドを取得
-			const currentRound = await tournamentRepo.findRoundById(match.roundId);
+			const currentRound = await tournamentRepo.findRoundById(
+				tournamentMatch.roundId,
+			);
 			if (!currentRound) {
 				throw new ErrBadRequest({
 					userMessage: "ラウンドが見つかりません",
@@ -73,13 +93,14 @@ export class CompleteMatchUsecase {
 
 			// 同じラウンドの全試合を取得
 			const roundMatches = await tournamentRepo.findMatchesByRoundId(
-				match.roundId,
+				tournamentMatch.roundId,
 			);
 
-			// ラウンド完了判定（全試合がcompletedか）
-			const isRoundCompleted = roundMatches.every((m) =>
-				m.status.isCompleted(),
+			// ラウンド完了判定（全試合のMatchHistoryが存在するか）
+			const matchHistories = await Promise.all(
+				roundMatches.map((m) => matchHistoryRepo.findByMatchId(m.matchId)),
 			);
+			const isRoundCompleted = matchHistories.every((h) => h !== undefined);
 
 			let nextRound: TournamentRound | undefined;
 			let nextMatches: TournamentMatch[] | undefined;
@@ -91,9 +112,20 @@ export class CompleteMatchUsecase {
 				await tournamentRepo.updateRound(completedRound);
 
 				// 勝者を収集
-				const winners = roundMatches
-					.map((m) => m.winnerId)
-					.filter((id): id is TournamentParticipantId => id !== null);
+				const winners: TournamentParticipantId[] = [];
+				for (let i = 0; i < roundMatches.length; i++) {
+					const history = matchHistories[i];
+					if (history) {
+						const participant =
+							await tournamentRepo.findParticipantByTournamentAndUserId(
+								tournamentMatch.tournamentId,
+								history.winnerId.value,
+							);
+						if (participant) {
+							winners.push(participant.id);
+						}
+					}
+				}
 
 				// トーナメント完了判定（勝者が1人だけ）
 				const isTournamentCompleted = winners.length === 1;
@@ -101,7 +133,7 @@ export class CompleteMatchUsecase {
 				if (isTournamentCompleted) {
 					// トーナメントを完了状態に更新
 					const tournamentEntity = await tournamentRepo.findById(
-						match.tournamentId,
+						tournamentMatch.tournamentId,
 					);
 					if (tournamentEntity) {
 						tournament = tournamentEntity.complete();
@@ -113,7 +145,7 @@ export class CompleteMatchUsecase {
 						currentRound.roundNumber.value + 1,
 					);
 					nextRound = TournamentRoundEntity.create(
-						match.tournamentId,
+						tournamentMatch.tournamentId,
 						nextRoundNumber,
 					);
 					const createdNextRound = await tournamentRepo.createRound(nextRound);
@@ -121,7 +153,7 @@ export class CompleteMatchUsecase {
 					// 次のラウンドの試合を生成
 					const bracketService = new TournamentBracketService();
 					const newMatches = bracketService.generateNextRoundMatches(
-						match.tournamentId,
+						tournamentMatch.tournamentId,
 						createdNextRound.id,
 						winners,
 					);
@@ -133,7 +165,7 @@ export class CompleteMatchUsecase {
 				}
 
 				return {
-					match: completedMatch,
+					match: tournamentMatch,
 					isRoundCompleted: true,
 					isTournamentCompleted,
 					nextRound: nextRound,
@@ -143,7 +175,7 @@ export class CompleteMatchUsecase {
 			}
 
 			return {
-				match: completedMatch,
+				match: tournamentMatch,
 				isRoundCompleted: false,
 				isTournamentCompleted: false,
 			};

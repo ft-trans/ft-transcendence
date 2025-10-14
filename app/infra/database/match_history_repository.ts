@@ -108,4 +108,26 @@ export class MatchHistoryRepository implements IMatchHistoryRepository {
 		});
 		return count;
 	}
+
+	async findByMatchId(matchId: MatchId): Promise<MatchHistory | undefined> {
+		const hist = await this.client.matchHistory.findUnique({
+			where: {
+				matchId: matchId.value,
+			},
+		});
+
+		if (!hist) {
+			return undefined;
+		}
+
+		return new MatchHistory(
+			new MatchHistoryId(hist.id),
+			new MatchId(hist.matchId),
+			new UserId(hist.winnerId),
+			new UserId(hist.loserId),
+			hist.winnerScore,
+			hist.loserScore,
+			hist.playedAt,
+		);
+	}
 }

@@ -1,6 +1,7 @@
 import { ErrBadRequest } from "@domain/error";
 import type { Tournament, TournamentMatch } from "@domain/model";
 import {
+	Match,
 	RoundNumber,
 	TournamentId,
 	TournamentRound,
@@ -31,6 +32,8 @@ export class StartTournamentUsecase {
 
 		const result = await this.tx.exec(async (repo) => {
 			const tournamentRepo = repo.newTournamentRepository();
+			const matchRepo = repo.newMatchRepository();
+			const userRepo = repo.newUserRepository();
 
 			// トーナメントの存在確認
 			const tournament = await tournamentRepo.findById(tournamentId);
@@ -71,16 +74,43 @@ export class StartTournamentUsecase {
 
 			// ブラケット生成（ドメインサービスを使用）
 			const bracketService = new TournamentBracketService();
-			const matches = bracketService.generateFirstRoundMatches(
+			const tournamentMatches = bracketService.generateFirstRoundMatches(
 				tournamentId,
 				createdRound.id,
 				participants.map((p) => p.id),
 			);
 
 			// 試合を作成
-			const createdMatches = await Promise.all(
-				matches.map((match) => tournamentRepo.createMatch(match)),
-			);
+			const createdMatches: TournamentMatch[] = [];
+			for (const tm of tournamentMatches) {
+				// 参加者のユーザー情報を取得
+				const users = await Promise.all(
+					tm.participantIds.map(async (pid) => {
+						const participant = await tournamentRepo.findParticipantById(pid);
+						if (!participant) {
+							throw new ErrBadRequest({
+								userMessage: "参加者が見つかりません",
+							});
+						}
+						const user = await userRepo.findById(participant.userId);
+						if (!user) {
+							throw new ErrBadRequest({
+								userMessage: "ユーザーが見つかりません",
+							});
+						}
+						return user;
+					}),
+				);
+
+				// Matchエンティティを作成
+				const match = Match.create(users);
+				await matchRepo.save(match);
+
+				// TournamentMatchを作成（既に持っているmatchIdを使用）
+				// ただし、bracketServiceが既にmatchIdを持っているのでそのまま保存
+				const createdMatch = await tournamentRepo.createMatch(tm);
+				createdMatches.push(createdMatch);
+			}
 
 			return {
 				tournament: startedTournament,
