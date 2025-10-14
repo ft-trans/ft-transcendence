@@ -36,6 +36,8 @@ export class MessagesPage extends Component {
 	private selectedFriendId: string | null = null;
 	private selectedFriend: User | null = null;
 	private wsUnsubscribe: (() => void) | null = null;
+	private clickHandler: ((event: Event) => void) | null = null;
+	private messageSentHandler: (() => void) | null = null;
 	render(): string {
 		return `
       <div>
@@ -56,8 +58,19 @@ export class MessagesPage extends Component {
             ${
 							this.selectedFriend
 								? `
-              <div class="p-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">${this.selectedFriend.username}</h3>
+              <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                <a href="/users/${this.selectedFriend.username}" data-link class="text-lg font-medium text-gray-900 hover:text-blue-600 hover:underline cursor-pointer">${this.selectedFriend.username}</a>
+                <div class="flex gap-2">
+                  <a href="/users/${this.selectedFriend.username}" data-link class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors">
+                    👤 Profile
+                  </a>
+                  <button id="game-invite-btn" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors">
+                    🎮 Invite to Game
+                  </button>
+                  <button id="block-user-btn" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors">
+                    🚫 Block
+                  </button>
+                </div>
               </div>
               <div class="flex-1 overflow-y-auto p-4" id="messages-container">
                 ${new MessageList({ messages: this.messages }).render()}
@@ -125,8 +138,16 @@ export class MessagesPage extends Component {
 	}
 
 	private setupEventListeners(): void {
+		// Remove existing event listeners to prevent duplicates
+		if (this.clickHandler) {
+			document.removeEventListener("click", this.clickHandler);
+		}
+		if (this.messageSentHandler) {
+			document.removeEventListener("messageSent", this.messageSentHandler);
+		}
+
 		// Friend selection event
-		document.addEventListener("click", (event) => {
+		this.clickHandler = (event) => {
 			const target = event.target as HTMLElement;
 			const friendItem = target.closest("[data-friend-id]");
 			if (friendItem) {
@@ -135,17 +156,26 @@ export class MessagesPage extends Component {
 					this.selectFriend(friendId);
 				}
 			}
-		});
+			
+			// Handle block and game invite buttons
+			if (target.id === "game-invite-btn" && this.selectedFriendId) {
+				this.handleGameInvite();
+			} else if (target.id === "block-user-btn" && this.selectedFriendId && this.selectedFriend) {
+				this.handleBlockUser();
+			}
+		};
+		document.addEventListener("click", this.clickHandler);
 
 		// Message send event - Reload messages from server to get fresh data
-		document.addEventListener("messageSent", (() => {
+		this.messageSentHandler = () => {
 			// Instead of manually adding the message, reload from server to get accurate data
 			if (this.selectedFriendId) {
 				this.loadMessages(this.selectedFriendId).then(() => {
 					this.updateMessagesContainer();
 				});
 			}
-		}) as EventListener);
+		};
+		document.addEventListener("messageSent", this.messageSentHandler);
 	}
 
 	private async selectFriend(friendId: string): Promise<void> {
@@ -168,6 +198,127 @@ export class MessagesPage extends Component {
 					receiverId: this.selectedFriendId,
 				});
 				messageForm.onLoad();
+			}
+		}
+	}
+
+	private async handleGameInvite(): Promise<void> {
+		if (!this.selectedFriendId || !this.selectedFriend) return;
+		
+		try {
+			// Send game invite via WebSocket
+			wsManager.sendGameInvite(this.selectedFriendId);
+			
+			// Show success feedback
+			const btn = document.getElementById("game-invite-btn") as HTMLButtonElement;
+			if (btn) {
+				const originalText = btn.textContent;
+				btn.textContent = "✓ Invited!";
+				btn.disabled = true;
+				btn.classList.add("bg-gray-500");
+				btn.classList.remove("bg-green-600", "hover:bg-green-700");
+				
+				// Reset button after 3 seconds
+				setTimeout(() => {
+					btn.textContent = originalText;
+					btn.disabled = false;
+					btn.classList.remove("bg-gray-500");
+					btn.classList.add("bg-green-600", "hover:bg-green-700");
+				}, 3000);
+			}
+		} catch (error) {
+			console.error("Failed to send game invite:", error);
+			new FloatingBanner({
+				message: "ゲーム招待の送信に失敗しました",
+				type: "error",
+			}).show();
+		}
+	}
+
+	private async handleBlockUser(): Promise<void> {
+		if (!this.selectedFriendId || !this.selectedFriend) return;
+		
+		const button = document.getElementById("block-user-btn") as HTMLButtonElement;
+		const isBlocked = button.textContent?.includes("解除");
+		const friendName = this.selectedFriend.username;
+		
+		if (isBlocked) {
+			// Unblock user
+			const confirmed = confirm(`${friendName}のブロックを解除しますか？解除すると、このユーザーからのメッセージやゲーム招待を再び受信するようになります。`);
+			if (!confirmed) return;
+			
+			if (button) {
+				button.disabled = true;
+				button.textContent = "🔓 解除中...";
+			}
+			
+			try {
+				await new ApiClient().delete(`/api/blocks/${this.selectedFriendId}`);
+				
+				new FloatingBanner({
+					message: `${friendName}のブロックを解除しました`,
+					type: "success",
+				}).show();
+				
+				// Reset button
+				if (button) {
+					button.disabled = false;
+					button.textContent = "🚫 Block";
+					button.classList.remove("bg-orange-500", "hover:bg-orange-600");
+					button.classList.add("bg-red-600", "hover:bg-red-700");
+				}
+			} catch (error) {
+				console.error("Failed to unblock user:", error);
+				new FloatingBanner({
+					message: "ブロック解除に失敗しました",
+					type: "error",
+				}).show();
+				
+				// Restore blocked state on error
+				if (button) {
+					button.disabled = false;
+					button.textContent = "🔓 ブロック解除";
+				}
+			}
+		} else {
+			// Block user
+			const confirmed = confirm(`${friendName}をブロックしますか？この操作により、友達リストから削除され、今後のコミュニケーションが制限されます。`);
+			if (!confirmed) return;
+			
+			if (button) {
+				button.disabled = true;
+				button.textContent = "🚫 ブロック中...";
+			}
+			
+			try {
+				await new ApiClient().post("/api/blocks", {
+					blockedId: this.selectedFriendId
+				});
+				
+				new FloatingBanner({
+					message: `${friendName}をブロックしました`,
+					type: "success",
+				}).show();
+				
+				// Update button to show unblock option
+				if (button) {
+					button.disabled = false;
+					button.textContent = "🔓 ブロック解除";
+					button.classList.remove("bg-red-600", "hover:bg-red-700");
+					button.classList.add("bg-orange-500", "hover:bg-orange-600");
+				}
+			} catch (error) {
+				console.error("Failed to block user:", error);
+				new FloatingBanner({
+					message: "ユーザーのブロックに失敗しました",
+					type: "error",
+				}).show();
+				
+				// Re-enable button on error
+				if (button) {
+					button.disabled = false;
+					button.textContent = "🚫 Block";
+				}
 			}
 		}
 	}
