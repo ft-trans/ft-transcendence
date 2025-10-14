@@ -11,6 +11,23 @@ export const updateProfileFormSchema = z.object({
 	avatar: z.string().max(500).optional(),
 });
 
+export const uploadAvatarFormSchema = z.object({
+	file: z
+		.any()
+		.refine((file) => file instanceof File, "ファイルが必要です")
+		.refine(
+			(file) => file.size <= 5 * 1024 * 1024,
+			"ファイルサイズは5MB以下にしてください",
+		)
+		.refine(
+			(file) =>
+				["image/jpeg", "image/png", "image/gif", "image/webp"].includes(
+					file.type,
+				),
+			"サポートされていないファイル形式です（JPEG、PNG、GIF、WebPのみ）",
+		),
+});
+
 export type GetProfileResponse = {
 	user: {
 		id: string;
@@ -26,6 +43,18 @@ export type UpdateProfileRequest = {
 		email?: string;
 		username?: string;
 		avatar?: string;
+	};
+};
+
+export type UploadAvatarRequest = FormData;
+
+export type UploadAvatarResponse = {
+	user: {
+		id: string;
+		email: string;
+		username: string;
+		avatar: string;
+		status: string;
 	};
 };
 

@@ -1,7 +1,10 @@
 import { resolve } from "node:path";
+import { AvatarUploadService } from "@domain/service/avatar_upload_service";
 import { MatchmakingService } from "@domain/service/matchmaking_service";
 import FastifyCookie from "@fastify/cookie";
+import FastifyMultipart from "@fastify/multipart";
 import FastifyRedis from "@fastify/redis";
+import FastifyStatic from "@fastify/static";
 import FastifyVite from "@fastify/vite";
 import websocket from "@fastify/websocket";
 import { MatchmakingQueueRepository } from "@infra/database/matchmaking_queue_repository";
@@ -65,6 +68,7 @@ import { FindUserByUsernameUsecase } from "@usecase/user/find_user_by_username_u
 import { FindUserUsecase } from "@usecase/user/find_user_usecase";
 import { SearchUsersUsecase } from "@usecase/user/search_users_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
+import { UploadAvatarUsecase } from "@usecase/user/upload_avatar_usecase";
 import Fastify from "fastify";
 import { otelInstrumentation } from "./observability/otel.js";
 
@@ -84,6 +88,13 @@ const start = async () => {
 		});
 
 		await app.register(FastifyCookie);
+		await app.register(FastifyMultipart);
+
+		// Serve static files from public/avatars
+		await app.register(FastifyStatic, {
+			root: resolve(import.meta.dirname, "..", "public", "avatars"),
+			prefix: "/avatars/",
+		});
 
 		const redisUrl = process.env.REDIS_URL;
 		if (!redisUrl) {
@@ -112,6 +123,11 @@ const start = async () => {
 		);
 		const updateUserUsecase = new UpdateUserUsecase(tx);
 		const deleteUserUsecase = new DeleteUserUsecase(tx);
+		const avatarUploadService = new AvatarUploadService();
+		const uploadAvatarUsecase = new UploadAvatarUsecase(
+			tx,
+			avatarUploadService,
+		);
 		const queueRepo = new MatchmakingQueueRepository(app.redis, {
 			prefix: "mm",
 		});
@@ -140,7 +156,12 @@ const start = async () => {
 		const isUserOnlineUsecase = new IsUserOnlineUsecase(repo);
 
 		await app.register(
-			profileController(updateUserUsecase, deleteUserUsecase),
+			profileController(
+				updateUserUsecase,
+				deleteUserUsecase,
+				uploadAvatarUsecase,
+				authPrehandler,
+			),
 			{ prefix: "/api" },
 		);
 
