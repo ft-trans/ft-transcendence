@@ -156,11 +156,15 @@ export class MessagesPage extends Component {
 					this.selectFriend(friendId);
 				}
 			}
-			
+
 			// Handle block and game invite buttons
 			if (target.id === "game-invite-btn" && this.selectedFriendId) {
 				this.handleGameInvite();
-			} else if (target.id === "block-user-btn" && this.selectedFriendId && this.selectedFriend) {
+			} else if (
+				target.id === "block-user-btn" &&
+				this.selectedFriendId &&
+				this.selectedFriend
+			) {
 				this.handleBlockUser();
 			}
 		};
@@ -204,20 +208,22 @@ export class MessagesPage extends Component {
 
 	private async handleGameInvite(): Promise<void> {
 		if (!this.selectedFriendId || !this.selectedFriend) return;
-		
+
 		try {
 			// Send game invite via WebSocket
 			wsManager.sendGameInvite(this.selectedFriendId);
-			
+
 			// Show success feedback
-			const btn = document.getElementById("game-invite-btn") as HTMLButtonElement;
+			const btn = document.getElementById(
+				"game-invite-btn",
+			) as HTMLButtonElement;
 			if (btn) {
 				const originalText = btn.textContent;
 				btn.textContent = "✓ Invited!";
 				btn.disabled = true;
 				btn.classList.add("bg-gray-500");
 				btn.classList.remove("bg-green-600", "hover:bg-green-700");
-				
+
 				// Reset button after 3 seconds
 				setTimeout(() => {
 					btn.textContent = originalText;
@@ -237,29 +243,33 @@ export class MessagesPage extends Component {
 
 	private async handleBlockUser(): Promise<void> {
 		if (!this.selectedFriendId || !this.selectedFriend) return;
-		
-		const button = document.getElementById("block-user-btn") as HTMLButtonElement;
+
+		const button = document.getElementById(
+			"block-user-btn",
+		) as HTMLButtonElement;
 		const isBlocked = button.textContent?.includes("解除");
 		const friendName = this.selectedFriend.username;
-		
+
 		if (isBlocked) {
 			// Unblock user
-			const confirmed = confirm(`${friendName}のブロックを解除しますか？解除すると、このユーザーからのメッセージやゲーム招待を再び受信するようになります。`);
+			const confirmed = confirm(
+				`${friendName}のブロックを解除しますか？解除すると、このユーザーからのメッセージやゲーム招待を再び受信するようになります。`,
+			);
 			if (!confirmed) return;
-			
+
 			if (button) {
 				button.disabled = true;
 				button.textContent = "🔓 解除中...";
 			}
-			
+
 			try {
 				await new ApiClient().delete(`/api/blocks/${this.selectedFriendId}`);
-				
+
 				new FloatingBanner({
 					message: `${friendName}のブロックを解除しました`,
 					type: "success",
 				}).show();
-				
+
 				// Reset button
 				if (button) {
 					button.disabled = false;
@@ -273,7 +283,7 @@ export class MessagesPage extends Component {
 					message: "ブロック解除に失敗しました",
 					type: "error",
 				}).show();
-				
+
 				// Restore blocked state on error
 				if (button) {
 					button.disabled = false;
@@ -282,24 +292,26 @@ export class MessagesPage extends Component {
 			}
 		} else {
 			// Block user
-			const confirmed = confirm(`${friendName}をブロックしますか？この操作により、友達リストから削除され、今後のコミュニケーションが制限されます。`);
+			const confirmed = confirm(
+				`${friendName}をブロックしますか？この操作により、友達リストから削除され、今後のコミュニケーションが制限されます。`,
+			);
 			if (!confirmed) return;
-			
+
 			if (button) {
 				button.disabled = true;
 				button.textContent = "🚫 ブロック中...";
 			}
-			
+
 			try {
 				await new ApiClient().post("/api/blocks", {
-					blockedId: this.selectedFriendId
+					blockedId: this.selectedFriendId,
 				});
-				
+
 				new FloatingBanner({
 					message: `${friendName}をブロックしました`,
 					type: "success",
 				}).show();
-				
+
 				// Update button to show unblock option
 				if (button) {
 					button.disabled = false;
@@ -313,7 +325,7 @@ export class MessagesPage extends Component {
 					message: "ユーザーのブロックに失敗しました",
 					type: "error",
 				}).show();
-				
+
 				// Re-enable button on error
 				if (button) {
 					button.disabled = false;

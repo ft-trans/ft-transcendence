@@ -61,7 +61,7 @@ export class MessageList extends Component {
 								!isOwnMessage
 									? `<p class="text-xs mb-1 ${
 											isOwnMessage ? "text-blue-100" : "text-gray-600"
-									  }">
+										}">
                 <a href="/users/${message.sender.username}" data-link class="hover:underline hover:text-blue-600 cursor-pointer flex items-center gap-1">
                   <span>👤</span>
                   <span>${message.sender.username}</span>

@@ -37,13 +37,15 @@ export class FriendList extends Component {
           <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
             <div class="flex items-center space-x-3 mb-3">
               ${(() => {
-									const defaultAvatar = "/avatars/default.svg";
-									let avatarUrl = defaultAvatar;
-									if (friend.avatar && friend.avatar.trim()) {
-										avatarUrl = friend.avatar.startsWith('/avatars/') ? friend.avatar : `/avatars/${friend.avatar}`;
-									}
-									return `<img src="${avatarUrl}" alt="${friend.username}のアバター" class="w-12 h-12 rounded-full object-cover" onerror="this.src='${defaultAvatar}'">`;
-								})()}
+								const defaultAvatar = "/avatars/default.svg";
+								let avatarUrl = defaultAvatar;
+								if (friend.avatar?.trim()) {
+									avatarUrl = friend.avatar.startsWith("/avatars/")
+										? friend.avatar
+										: `/avatars/${friend.avatar}`;
+								}
+								return `<img src="${avatarUrl}" alt="${friend.username}のアバター" class="w-12 h-12 rounded-full object-cover" onerror="this.src='${defaultAvatar}'">`;
+							})()}
               <div class="flex-1">
                 <h4 class="font-medium text-gray-900">${friend.username}</h4>
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${

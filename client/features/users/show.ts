@@ -133,11 +133,13 @@ export class UserProfile extends Component {
 		// アバター画像のパス処理を修正
 		const defaultAvatar = "/avatars/default.svg";
 		let avatarUrl = defaultAvatar;
-		if (user.avatar && user.avatar.trim()) {
+		if (user.avatar?.trim()) {
 			// アバターパスが既に/avatars/で始まっている場合はそのまま使用
-			avatarUrl = user.avatar.startsWith('/avatars/') ? user.avatar : `/avatars/${user.avatar}`;
+			avatarUrl = user.avatar.startsWith("/avatars/")
+				? user.avatar
+				: `/avatars/${user.avatar}`;
 		}
-		
+
 		element.innerHTML = `
 		<img 
 			src="${avatarUrl}" 
@@ -234,13 +236,18 @@ export class UserProfile extends Component {
 		</div>
 		`;
 	}
-	private renderPlayerAvatar(player: { username: string; avatar?: string }): string {
+	private renderPlayerAvatar(player: {
+		username: string;
+		avatar?: string;
+	}): string {
 		const defaultAvatar = "/avatars/default.svg";
 		let avatarUrl = defaultAvatar;
-		if (player.avatar && player.avatar.trim()) {
-			avatarUrl = player.avatar.startsWith('/avatars/') ? player.avatar : `/avatars/${player.avatar}`;
+		if (player.avatar?.trim()) {
+			avatarUrl = player.avatar.startsWith("/avatars/")
+				? player.avatar
+				: `/avatars/${player.avatar}`;
 		}
-		
+
 		return `
 		<div class="flex items-center">
 			<img 
@@ -260,7 +267,7 @@ export class UserProfile extends Component {
 	private setupEventListeners(): void {
 		document.addEventListener("click", async (event) => {
 			const target = event.target as HTMLElement;
-			
+
 			if (target.id === "block-user-btn") {
 				const userId = target.getAttribute("data-user-id");
 				if (userId) {
@@ -271,27 +278,33 @@ export class UserProfile extends Component {
 	}
 
 	private async handleBlockUser(userId: string): Promise<void> {
-		const button = document.getElementById("block-user-btn") as HTMLButtonElement;
-		const isBlocked = button.textContent?.includes("ブロック済み") || button.textContent?.includes("解除");
-		
+		const button = document.getElementById(
+			"block-user-btn",
+		) as HTMLButtonElement;
+		const isBlocked =
+			button.textContent?.includes("ブロック済み") ||
+			button.textContent?.includes("解除");
+
 		if (isBlocked) {
 			// Unblock user
-			const confirmed = confirm("このユーザーのブロックを解除しますか？解除すると、このユーザーからのメッセージやゲーム招待を再び受信するようになります。");
+			const confirmed = confirm(
+				"このユーザーのブロックを解除しますか？解除すると、このユーザーからのメッセージやゲーム招待を再び受信するようになります。",
+			);
 			if (!confirmed) return;
-			
+
 			if (button) {
 				button.disabled = true;
 				button.textContent = "🔓 解除中...";
 			}
-			
+
 			try {
 				await this.apiClient.delete(`/api/blocks/${userId}`);
-				
+
 				new FloatingBanner({
 					message: "ユーザーのブロックを解除しました",
 					type: "success",
 				}).show();
-				
+
 				// Reset button to original state
 				if (button) {
 					button.disabled = false;
@@ -305,7 +318,7 @@ export class UserProfile extends Component {
 					message: "ユーザーのブロック解除に失敗しました",
 					type: "error",
 				}).show();
-				
+
 				// Restore blocked state on error
 				if (button) {
 					button.disabled = false;
@@ -314,24 +327,26 @@ export class UserProfile extends Component {
 			}
 		} else {
 			// Block user
-			const confirmed = confirm("このユーザーをブロックしますか？ブロックすると、このユーザーからのメッセージやゲーム招待を受信しなくなります。");
+			const confirmed = confirm(
+				"このユーザーをブロックしますか？ブロックすると、このユーザーからのメッセージやゲーム招待を受信しなくなります。",
+			);
 			if (!confirmed) return;
-			
+
 			if (button) {
 				button.disabled = true;
 				button.textContent = "🚫 ブロック中...";
 			}
-			
+
 			try {
 				await this.apiClient.post("/api/blocks", {
-					blockedId: userId
+					blockedId: userId,
 				});
-				
+
 				new FloatingBanner({
 					message: "ユーザーをブロックしました",
 					type: "success",
 				}).show();
-				
+
 				// Update button to show unblock option
 				if (button) {
 					button.disabled = false;
@@ -345,7 +360,7 @@ export class UserProfile extends Component {
 					message: "ユーザーのブロックに失敗しました",
 					type: "error",
 				}).show();
-				
+
 				// Re-enable button on error
 				if (button) {
 					button.disabled = false;

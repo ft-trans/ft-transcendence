@@ -306,22 +306,21 @@ const onCancelFriendRequest = (usecase: CancelFriendRequestUsecase) => {
 };
 
 const onGetBlockedUsers = (usecase: GetBlockedUsersUsecase) => {
-	return async (
-		req: FastifyRequest,
-		reply: FastifyReply,
-	) => {
+	return async (req: FastifyRequest, reply: FastifyReply) => {
 		const userId = req.authenticatedUser?.id;
 
 		const blockedUsers = await usecase.execute({
 			blockerId: userId,
 		});
 
-		reply.send(blockedUsers.map(user => ({
-			id: user.id.value,
-			email: user.email.value,
-			username: user.username.value,
-			avatar: user.avatar?.value || null,
-		})));
+		reply.send(
+			blockedUsers.map((user) => ({
+				id: user.id.value,
+				email: user.email.value,
+				username: user.username.value,
+				avatar: user.avatar?.value || null,
+			})),
+		);
 	};
 };
 

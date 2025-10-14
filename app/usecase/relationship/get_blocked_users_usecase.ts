@@ -16,7 +16,9 @@ export class GetBlockedUsersUsecase {
 			const friendshipRepository = repo.newFriendshipRepository();
 
 			// Get all users blocked by the current user
-			return await friendshipRepository.findBlockedUsersByBlockerId(blockerId.value);
+			return await friendshipRepository.findBlockedUsersByBlockerId(
+				blockerId.value,
+			);
 		});
 	}
 }

@@ -156,8 +156,10 @@ export class EditProfile extends Component {
 			// 現在のアバター画像を表示
 			const defaultAvatar = "/avatars/default.svg";
 			let currentAvatarUrl = defaultAvatar;
-			if (this.currentUser.avatar && this.currentUser.avatar.trim()) {
-				currentAvatarUrl = this.currentUser.avatar.startsWith('/avatars/') ? this.currentUser.avatar : `/avatars/${this.currentUser.avatar}`;
+			if (this.currentUser.avatar?.trim()) {
+				currentAvatarUrl = this.currentUser.avatar.startsWith("/avatars/")
+					? this.currentUser.avatar
+					: `/avatars/${this.currentUser.avatar}`;
 			}
 			currentAvatarPreview.innerHTML = `<img src="${currentAvatarUrl}" alt="現在のアバター" class="w-20 h-20 rounded-full object-cover" onerror="this.src='${defaultAvatar}'">`;
 		}

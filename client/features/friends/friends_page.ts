@@ -89,11 +89,13 @@ export class FriendsPage extends Component {
                 <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                   <div class="flex items-center space-x-3">
                     ${(() => {
-										const defaultAvatar = "/avatars/default.svg";
-										let avatarUrl = defaultAvatar;
-										if (requester?.avatar && requester.avatar.trim()) {
-											avatarUrl = requester.avatar.startsWith('/avatars/') ? requester.avatar : `/avatars/${requester.avatar}`;
-										}
+											const defaultAvatar = "/avatars/default.svg";
+											let avatarUrl = defaultAvatar;
+											if (requester?.avatar?.trim()) {
+												avatarUrl = requester.avatar.startsWith("/avatars/")
+													? requester.avatar
+													: `/avatars/${requester.avatar}`;
+											}
 											return `<img src="${avatarUrl}" alt="${username}のアバター" class="w-10 h-10 rounded-full object-cover" onerror="this.src='${defaultAvatar}'">`;
 										})()}
                     <div>
@@ -141,16 +143,16 @@ export class FriendsPage extends Component {
 									return `
                 <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                   <div class="flex items-center space-x-3">
-                    ${
-										(() => {
-								const defaultAvatar = "/avatars/default.svg";
-								let avatarUrl = defaultAvatar;
-								if (receiver?.avatar && receiver.avatar.trim()) {
-									avatarUrl = receiver.avatar.startsWith('/avatars/') ? receiver.avatar : `/avatars/${receiver.avatar}`;
-								}
+                    ${(() => {
+											const defaultAvatar = "/avatars/default.svg";
+											let avatarUrl = defaultAvatar;
+											if (receiver?.avatar?.trim()) {
+												avatarUrl = receiver.avatar.startsWith("/avatars/")
+													? receiver.avatar
+													: `/avatars/${receiver.avatar}`;
+											}
 											return `<img src="${avatarUrl}" alt="${username}のアバター" class="w-10 h-10 rounded-full object-cover" onerror="this.src='${defaultAvatar}'">`;
-										})()
-										}
+										})()}
                     <div>
                       <p class="font-medium text-gray-900">${username}</p>
                       <p class="text-sm text-gray-500">友達申請を送信中</p>
@@ -189,11 +191,16 @@ export class FriendsPage extends Component {
 
 	async onLoad(): Promise<void> {
 		console.log("[DEBUG] FriendsPage onLoad - Starting data load");
-		
+
 		// Check authentication state
 		const authState = authStore.getState();
-		console.log("[DEBUG] Auth state:", authState.isAuthenticated, "User:", authState.user?.username);
-		
+		console.log(
+			"[DEBUG] Auth state:",
+			authState.isAuthenticated,
+			"User:",
+			authState.user?.username,
+		);
+
 		if (!authState.isAuthenticated) {
 			console.error("[ERROR] User not authenticated");
 			new FloatingBanner({
@@ -202,7 +209,7 @@ export class FriendsPage extends Component {
 			}).show();
 			return;
 		}
-		
+
 		try {
 			// First load friend-related data that loadAllUsers depends on
 			await this.loadFriends();
@@ -212,10 +219,10 @@ export class FriendsPage extends Component {
 			await this.loadAllUsers();
 
 			this.initializeChildComponents();
-			
+
 			// Update UI after all data is loaded
 			this.updateView();
-			
+
 			console.log("[DEBUG] FriendsPage onLoad - Completed successfully");
 		} catch (error) {
 			console.error("[ERROR] FriendsPage onLoad - Critical error:", error);
@@ -232,15 +239,23 @@ export class FriendsPage extends Component {
 			const response = await new ApiClient().get<User[]>("/api/friends");
 			console.log("[DEBUG] loadFriends - Raw response:", response);
 			this.friends = response;
-			console.log("[DEBUG] loadFriends - Success, loaded", this.friends.length, "friends");
+			console.log(
+				"[DEBUG] loadFriends - Success, loaded",
+				this.friends.length,
+				"friends",
+			);
 		} catch (error) {
 			console.error("[ERROR] Failed to load friends from /api/friends:", error);
 			console.error("[ERROR] Error type:", typeof error);
-			console.error("[ERROR] Error message:", error instanceof Error ? error.message : String(error));
+			console.error(
+				"[ERROR] Error message:",
+				error instanceof Error ? error.message : String(error),
+			);
 			// Set empty array to prevent errors
 			this.friends = [];
 		}
-	}	private async loadReceivedFriendRequests(): Promise<void> {
+	}
+	private async loadReceivedFriendRequests(): Promise<void> {
 		try {
 			this.receivedFriendRequests = await new ApiClient().get<FriendRequest[]>(
 				"/api/friends/requests/received",
@@ -310,18 +325,30 @@ export class FriendsPage extends Component {
 			const response = await new ApiClient().get<User[]>("/api/blocks");
 			console.log("[DEBUG] loadBlockedUsers - Raw response:", response);
 			console.log("[DEBUG] loadBlockedUsers - Response type:", typeof response);
-			console.log("[DEBUG] loadBlockedUsers - Is Array:", Array.isArray(response));
-			
+			console.log(
+				"[DEBUG] loadBlockedUsers - Is Array:",
+				Array.isArray(response),
+			);
+
 			// Ensure response is an array
 			if (Array.isArray(response)) {
 				this.blockedUsers = response;
 			} else {
-				console.warn("[WARN] loadBlockedUsers - Response is not an array, setting to empty array");
+				console.warn(
+					"[WARN] loadBlockedUsers - Response is not an array, setting to empty array",
+				);
 				this.blockedUsers = [];
 			}
-			console.log("[DEBUG] loadBlockedUsers - Success, loaded", this.blockedUsers.length, "blocked users");
+			console.log(
+				"[DEBUG] loadBlockedUsers - Success, loaded",
+				this.blockedUsers.length,
+				"blocked users",
+			);
 		} catch (error) {
-			console.error("[ERROR] Failed to load blocked users from /api/blocks:", error);
+			console.error(
+				"[ERROR] Failed to load blocked users from /api/blocks:",
+				error,
+			);
 			// Set empty array to prevent filtering errors and continue without blocking
 			this.blockedUsers = [];
 			console.log("[INFO] Continuing without blocked users filtering");
@@ -334,68 +361,107 @@ export class FriendsPage extends Component {
 			console.log("[DEBUG] loadAllUsers - Starting API call to /api/users");
 			const response = await new ApiClient().get<User[]>("/api/users");
 			console.log("[DEBUG] loadAllUsers - Raw response:", response);
-			
+
 			// Ensure response is an array
 			if (!Array.isArray(response)) {
-				console.error("[ERROR] loadAllUsers - Response is not an array:", typeof response);
+				console.error(
+					"[ERROR] loadAllUsers - Response is not an array:",
+					typeof response,
+				);
 				throw new Error("Invalid response format: expected array");
 			}
-			
+
 			const allUsers = response;
 			const currentUserId = authStore.getState().user?.id;
-			
+
 			console.log("[DEBUG] loadAllUsers - Total users:", allUsers.length);
 			console.log("[DEBUG] loadAllUsers - Current user ID:", currentUserId);
-			console.log("[DEBUG] loadAllUsers - Current friends:", this.friends.length);
-			console.log("[DEBUG] loadAllUsers - Sent requests:", this.sentFriendRequests.length);
-			console.log("[DEBUG] loadAllUsers - Received requests:", this.receivedFriendRequests.length);
-			console.log("[DEBUG] loadAllUsers - Blocked users:", this.blockedUsers.length);
-			
+			console.log(
+				"[DEBUG] loadAllUsers - Current friends:",
+				this.friends.length,
+			);
+			console.log(
+				"[DEBUG] loadAllUsers - Sent requests:",
+				this.sentFriendRequests.length,
+			);
+			console.log(
+				"[DEBUG] loadAllUsers - Received requests:",
+				this.receivedFriendRequests.length,
+			);
+			console.log(
+				"[DEBUG] loadAllUsers - Blocked users:",
+				this.blockedUsers.length,
+			);
+
 			// Filter out current user, existing friends, and users with pending requests
-			this.allUsers = allUsers.filter(user => {
+			this.allUsers = allUsers.filter((user) => {
 				console.log(`[DEBUG] Checking user ${user.username} (${user.id})`);
-				
+
 				// Don't show current user
 				if (user.id === currentUserId) {
 					console.log(`[DEBUG] Filtering out current user: ${user.username}`);
 					return false;
 				}
-				
-			// Don't show existing friends
-			if (Array.isArray(this.friends) && this.friends.some(friend => friend.id === user.id)) {
-				console.log(`[DEBUG] Filtering out existing friend: ${user.username}`);
-				return false;
-			}
-			
-			// Don't show users with pending friend requests (sent or received)
-			const hasPendingRequest = (Array.isArray(this.sentFriendRequests) && this.sentFriendRequests.some(req => 
-				req.receiverId === user.id && req.status === "pending"
-			)) || (Array.isArray(this.receivedFriendRequests) && this.receivedFriendRequests.some(req => 
-				req.requesterId === user.id && req.status === "pending"
-			));
-			
-			if (hasPendingRequest) {
-				console.log(`[DEBUG] Filtering out user with pending request: ${user.username}`);
-				return false;
-			}
-			
-			// Don't show blocked users
-			if (Array.isArray(this.blockedUsers) && this.blockedUsers.some(blockedUser => blockedUser.id === user.id)) {
-				console.log(`[DEBUG] Filtering out blocked user: ${user.username}`);
-				return false;
-			}
-			
-			console.log(`[DEBUG] User ${user.username} will be shown in search`);
-			return true;
+
+				// Don't show existing friends
+				if (
+					Array.isArray(this.friends) &&
+					this.friends.some((friend) => friend.id === user.id)
+				) {
+					console.log(
+						`[DEBUG] Filtering out existing friend: ${user.username}`,
+					);
+					return false;
+				}
+
+				// Don't show users with pending friend requests (sent or received)
+				const hasPendingRequest =
+					(Array.isArray(this.sentFriendRequests) &&
+						this.sentFriendRequests.some(
+							(req) => req.receiverId === user.id && req.status === "pending",
+						)) ||
+					(Array.isArray(this.receivedFriendRequests) &&
+						this.receivedFriendRequests.some(
+							(req) => req.requesterId === user.id && req.status === "pending",
+						));
+
+				if (hasPendingRequest) {
+					console.log(
+						`[DEBUG] Filtering out user with pending request: ${user.username}`,
+					);
+					return false;
+				}
+
+				// Don't show blocked users
+				if (
+					Array.isArray(this.blockedUsers) &&
+					this.blockedUsers.some((blockedUser) => blockedUser.id === user.id)
+				) {
+					console.log(`[DEBUG] Filtering out blocked user: ${user.username}`);
+					return false;
+				}
+
+				console.log(`[DEBUG] User ${user.username} will be shown in search`);
+				return true;
 			});
-			
-			console.log("[DEBUG] loadAllUsers - Success, filtered to", this.allUsers.length, "available users");
-			console.log("[DEBUG] Available users:", this.allUsers.map(u => u.username));
+
+			console.log(
+				"[DEBUG] loadAllUsers - Success, filtered to",
+				this.allUsers.length,
+				"available users",
+			);
+			console.log(
+				"[DEBUG] Available users:",
+				this.allUsers.map((u) => u.username),
+			);
 		} catch (error) {
 			console.error("[ERROR] Failed to load all users from /api/users:", error);
 			console.error("[ERROR] Error type:", typeof error);
-			console.error("[ERROR] Error message:", error instanceof Error ? error.message : String(error));
-			if (error && typeof error === 'object' && 'response' in error) {
+			console.error(
+				"[ERROR] Error message:",
+				error instanceof Error ? error.message : String(error),
+			);
+			if (error && typeof error === "object" && "response" in error) {
 				console.error("[ERROR] HTTP Response:", error.response);
 			}
 			new FloatingBanner({
@@ -420,7 +486,7 @@ export class FriendsPage extends Component {
 				);
 				this.updateUserResults(filteredUsers);
 			});
-			
+
 			// Show initial results (all available users)
 			this.updateUserResults(this.allUsers);
 		} else {
@@ -429,7 +495,11 @@ export class FriendsPage extends Component {
 	}
 
 	private updateUserResults(filteredUsers: User[]): void {
-		console.log("[DEBUG] updateUserResults - Updating with", filteredUsers.length, "users");
+		console.log(
+			"[DEBUG] updateUserResults - Updating with",
+			filteredUsers.length,
+			"users",
+		);
 		const container = document.getElementById("user-results");
 		if (container) {
 			container.innerHTML = this.renderUserResults(filteredUsers);
@@ -465,11 +535,13 @@ export class FriendsPage extends Component {
           <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
             <div class="flex items-center space-x-3">
               ${(() => {
-						const defaultAvatar = "/avatars/default.svg";
-						let avatarUrl = defaultAvatar;
-						if (user.avatar && user.avatar.trim()) {
-							avatarUrl = user.avatar.startsWith('/avatars/') ? user.avatar : `/avatars/${user.avatar}`;
-						}
+								const defaultAvatar = "/avatars/default.svg";
+								let avatarUrl = defaultAvatar;
+								if (user.avatar?.trim()) {
+									avatarUrl = user.avatar.startsWith("/avatars/")
+										? user.avatar
+										: `/avatars/${user.avatar}`;
+								}
 								return `<img src="${avatarUrl}" alt="${user.username}のアバター" class="w-10 h-10 rounded-full object-cover" onerror="this.src='${defaultAvatar}'">`;
 							})()}
               <div>
@@ -503,7 +575,10 @@ export class FriendsPage extends Component {
 			document.removeEventListener("click", this.clickHandler);
 		}
 		if (this.friendRequestHandler) {
-			document.removeEventListener("friendRequestSent", this.friendRequestHandler);
+			document.removeEventListener(
+				"friendRequestSent",
+				this.friendRequestHandler,
+			);
 		}
 
 		// Friend request actions
@@ -511,13 +586,15 @@ export class FriendsPage extends Component {
 			const target = event.target as HTMLElement;
 
 			// Accept friend request
-			const acceptBtn = target.closest("[data-accept-request]") as HTMLButtonElement;
+			const acceptBtn = target.closest(
+				"[data-accept-request]",
+			) as HTMLButtonElement;
 			if (acceptBtn) {
 				// Additional protection: check if button is already disabled
 				if (acceptBtn.disabled) {
 					return;
 				}
-				
+
 				const requesterId = acceptBtn.getAttribute("data-accept-request");
 				if (requesterId) {
 					await this.respondToFriendRequest(requesterId, "accept");
@@ -526,13 +603,15 @@ export class FriendsPage extends Component {
 			}
 
 			// Reject friend request
-			const rejectBtn = target.closest("[data-reject-request]") as HTMLButtonElement;
+			const rejectBtn = target.closest(
+				"[data-reject-request]",
+			) as HTMLButtonElement;
 			if (rejectBtn) {
 				// Additional protection: check if button is already disabled
 				if (rejectBtn.disabled) {
 					return;
 				}
-				
+
 				const requesterId = rejectBtn.getAttribute("data-reject-request");
 				if (requesterId) {
 					await this.respondToFriendRequest(requesterId, "reject");
@@ -541,13 +620,15 @@ export class FriendsPage extends Component {
 			}
 
 			// Block friend
-			const blockBtn = target.closest("[data-block-friend]") as HTMLButtonElement;
+			const blockBtn = target.closest(
+				"[data-block-friend]",
+			) as HTMLButtonElement;
 			if (blockBtn) {
 				// Additional protection: check if button is already disabled
 				if (blockBtn.disabled) {
 					return;
 				}
-				
+
 				const friendId = blockBtn.getAttribute("data-block-friend");
 				if (friendId) {
 					await this.blockFriend(friendId);
@@ -566,7 +647,9 @@ export class FriendsPage extends Component {
 			}
 
 			// Navigate to blocked users page
-			const blockedUsersBtn = target.closest(".blocked-users-link") as HTMLButtonElement;
+			const blockedUsersBtn = target.closest(
+				".blocked-users-link",
+			) as HTMLButtonElement;
 			if (blockedUsersBtn) {
 				console.log("[DEBUG] Blocked users button clicked");
 				const link = blockedUsersBtn.getAttribute("data-link");
@@ -590,13 +673,15 @@ export class FriendsPage extends Component {
 			}
 
 			// Send friend request
-			const sendBtn = target.closest("[data-send-request]") as HTMLButtonElement;
+			const sendBtn = target.closest(
+				"[data-send-request]",
+			) as HTMLButtonElement;
 			if (sendBtn) {
 				// Additional protection: check if button is already disabled
 				if (sendBtn.disabled) {
 					return;
 				}
-				
+
 				const userId = sendBtn.getAttribute("data-send-request");
 				if (userId) {
 					await this.sendFriendRequest(userId);
@@ -605,13 +690,15 @@ export class FriendsPage extends Component {
 			}
 
 			// Cancel sent friend request
-			const cancelBtn = target.closest("[data-cancel-request]") as HTMLButtonElement;
+			const cancelBtn = target.closest(
+				"[data-cancel-request]",
+			) as HTMLButtonElement;
 			if (cancelBtn) {
 				// Additional protection: check if button is already disabled
 				if (cancelBtn.disabled) {
 					return;
 				}
-				
+
 				const receiverId = cancelBtn.getAttribute("data-cancel-request");
 				if (receiverId) {
 					await this.cancelFriendRequest(receiverId);
@@ -638,8 +725,12 @@ export class FriendsPage extends Component {
 		action: "accept" | "reject",
 	): Promise<void> {
 		// Disable buttons to prevent double clicks
-		const acceptBtn = document.querySelector(`[data-accept-request="${requesterId}"]`) as HTMLButtonElement;
-		const rejectBtn = document.querySelector(`[data-reject-request="${requesterId}"]`) as HTMLButtonElement;
+		const acceptBtn = document.querySelector(
+			`[data-accept-request="${requesterId}"]`,
+		) as HTMLButtonElement;
+		const rejectBtn = document.querySelector(
+			`[data-reject-request="${requesterId}"]`,
+		) as HTMLButtonElement;
 		if (acceptBtn) {
 			acceptBtn.disabled = true;
 			acceptBtn.textContent = "処理中...";
@@ -660,7 +751,7 @@ export class FriendsPage extends Component {
 				this.loadReceivedFriendRequests(),
 				this.loadSentFriendRequests(),
 			]);
-			
+
 			// Reload all users to update search results
 			await this.loadAllUsers();
 
@@ -693,14 +784,18 @@ export class FriendsPage extends Component {
 	}
 
 	private async blockFriend(friendId: string): Promise<void> {
-		const friend = this.friends.find(f => f.id === friendId);
+		const friend = this.friends.find((f) => f.id === friendId);
 		const friendName = friend?.username || "このユーザー";
-		
-		const confirmed = confirm(`${friendName}をブロックしますか？ブロックすると、このユーザーからのメッセージやゲーム招待を受信しなくなり、友達リストからも削除されます。`);
+
+		const confirmed = confirm(
+			`${friendName}をブロックしますか？ブロックすると、このユーザーからのメッセージやゲーム招待を受信しなくなり、友達リストからも削除されます。`,
+		);
 		if (!confirmed) return;
 
 		// Disable button to prevent double clicks
-		const button = document.querySelector(`[data-block-friend="${friendId}"]`) as HTMLButtonElement;
+		const button = document.querySelector(
+			`[data-block-friend="${friendId}"]`,
+		) as HTMLButtonElement;
 		if (button) {
 			button.disabled = true;
 			button.textContent = "🚫 ブロック中...";
@@ -708,7 +803,7 @@ export class FriendsPage extends Component {
 
 		try {
 			await new ApiClient().post("/api/blocks", {
-				blockedId: friendId
+				blockedId: friendId,
 			});
 
 			// Reload friends list and blocked users list
@@ -735,8 +830,6 @@ export class FriendsPage extends Component {
 			}
 		}
 	}
-
-
 
 	private async removeFriend(friendId: string): Promise<void> {
 		if (!confirm("このユーザーを友達から削除しますか？")) {
@@ -765,7 +858,9 @@ export class FriendsPage extends Component {
 
 	private async sendFriendRequest(receiverId: string): Promise<void> {
 		// Disable the button to prevent double clicks
-		const button = document.querySelector(`[data-send-request="${receiverId}"]`) as HTMLButtonElement;
+		const button = document.querySelector(
+			`[data-send-request="${receiverId}"]`,
+		) as HTMLButtonElement;
 		if (button) {
 			button.disabled = true;
 			button.textContent = "送信中...";
@@ -773,15 +868,15 @@ export class FriendsPage extends Component {
 
 		try {
 			await new ApiClient().post("/api/friends/requests", { receiverId });
-			
+
 			console.log("[DEBUG] Friend request sent successfully to:", receiverId);
 
 			// Reload sent friend requests first to update the state
 			await this.loadSentFriendRequests();
-			
+
 			// Re-filter all users to remove the user we just sent a request to
 			await this.loadAllUsers();
-			
+
 			// Update the UI completely
 			this.updateView();
 
@@ -791,13 +886,13 @@ export class FriendsPage extends Component {
 			}).show();
 		} catch (error) {
 			console.error("Failed to send friend request:", error);
-			
+
 			// Don't modify UI state on error, just show error message and re-enable button
 			new FloatingBanner({
 				message: "友達申請の送信に失敗しました",
 				type: "error",
 			}).show();
-			
+
 			// Re-enable the button on error
 			if (button) {
 				button.disabled = false;
@@ -812,7 +907,9 @@ export class FriendsPage extends Component {
 		}
 
 		// Disable button to prevent double clicks
-		const button = document.querySelector(`[data-cancel-request="${receiverId}"]`) as HTMLButtonElement;
+		const button = document.querySelector(
+			`[data-cancel-request="${receiverId}"]`,
+		) as HTMLButtonElement;
 		if (button) {
 			button.disabled = true;
 			button.textContent = "取り消し中...";
@@ -824,10 +921,10 @@ export class FriendsPage extends Component {
 
 			// 送信済み友達申請を再読み込み
 			await this.loadSentFriendRequests();
-			
+
 			// 全ユーザーリストを再読み込みして、キャンセルしたユーザーが検索結果に再表示されるようにする
 			await this.loadAllUsers();
-			
+
 			this.updateView();
 
 			new FloatingBanner({

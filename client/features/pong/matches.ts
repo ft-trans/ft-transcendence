@@ -109,10 +109,12 @@ export class MatchesPong extends Component {
 	${(() => {
 		const defaultAvatar = "/avatars/default.svg";
 		let avatarUrl = defaultAvatar;
-		if (player?.avatar && player.avatar.trim()) {
-			avatarUrl = player.avatar.startsWith('/avatars/') ? player.avatar : `/avatars/${player.avatar}`;
+		if (player?.avatar?.trim()) {
+			avatarUrl = player.avatar.startsWith("/avatars/")
+				? player.avatar
+				: `/avatars/${player.avatar}`;
 		}
-		return `<img src="${avatarUrl}" alt="${player?.username || 'プレイヤー'}のアバター" class="w-12 h-12 rounded-full mb-2 object-cover" onerror="this.src='${defaultAvatar}'">`;
+		return `<img src="${avatarUrl}" alt="${player?.username || "プレイヤー"}のアバター" class="w-12 h-12 rounded-full mb-2 object-cover" onerror="this.src='${defaultAvatar}'">`;
 	})()}
 	<p>${player?.username ? player.username : ""}</p>
 </div>

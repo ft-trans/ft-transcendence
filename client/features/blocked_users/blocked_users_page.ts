@@ -33,7 +33,7 @@ export class BlockedUsersPage extends Component {
 			console.error("[ERROR] BlockedUsersPage - #app container not found");
 			return;
 		}
-		
+
 		container.innerHTML = this.render();
 		this.setupEventListeners();
 		console.log("[DEBUG] BlockedUsersPage updateView - Completed");
@@ -45,17 +45,29 @@ export class BlockedUsersPage extends Component {
 			const response = await this.apiClient.get<User[]>("/api/blocks");
 			console.log("[DEBUG] BlockedUsersPage - Raw response:", response);
 			console.log("[DEBUG] BlockedUsersPage - Response type:", typeof response);
-			console.log("[DEBUG] BlockedUsersPage - Is Array:", Array.isArray(response));
-			
+			console.log(
+				"[DEBUG] BlockedUsersPage - Is Array:",
+				Array.isArray(response),
+			);
+
 			if (Array.isArray(response)) {
 				this.blockedUsers = response;
 			} else {
-				console.warn("[WARN] BlockedUsersPage - Response is not an array, setting to empty array");
+				console.warn(
+					"[WARN] BlockedUsersPage - Response is not an array, setting to empty array",
+				);
 				this.blockedUsers = [];
 			}
-			console.log("[DEBUG] BlockedUsersPage - Loaded", this.blockedUsers.length, "blocked users");
+			console.log(
+				"[DEBUG] BlockedUsersPage - Loaded",
+				this.blockedUsers.length,
+				"blocked users",
+			);
 		} catch (error) {
-			console.error("[ERROR] BlockedUsersPage - Failed to load blocked users:", error);
+			console.error(
+				"[ERROR] BlockedUsersPage - Failed to load blocked users:",
+				error,
+			);
 			new FloatingBanner({
 				message: "ブロックしたユーザー一覧の読み込みに失敗しました",
 				type: "error",
@@ -66,7 +78,11 @@ export class BlockedUsersPage extends Component {
 	}
 
 	render(): string {
-		console.log("[DEBUG] BlockedUsersPage render - Rendering with", this.blockedUsers.length, "blocked users");
+		console.log(
+			"[DEBUG] BlockedUsersPage render - Rendering with",
+			this.blockedUsers.length,
+			"blocked users",
+		);
 		return `
 			<div class="min-h-screen bg-gray-100 py-6">
 				<div class="max-w-4xl mx-auto px-4">
@@ -98,7 +114,7 @@ export class BlockedUsersPage extends Component {
 				</p>
 				
 				<div class="divide-y divide-gray-200">
-					${this.blockedUsers.map(user => this.renderBlockedUserItem(user)).join("")}
+					${this.blockedUsers.map((user) => this.renderBlockedUserItem(user)).join("")}
 				</div>
 			</div>
 		`;
@@ -108,10 +124,12 @@ export class BlockedUsersPage extends Component {
 		// デフォルトのアバター画像のパスを修正
 		const defaultAvatar = "/avatars/default.svg";
 		let avatarUrl = defaultAvatar;
-		if (user.avatar && user.avatar.trim()) {
-			avatarUrl = user.avatar.startsWith('/avatars/') ? user.avatar : `/avatars/${user.avatar}`;
+		if (user.avatar?.trim()) {
+			avatarUrl = user.avatar.startsWith("/avatars/")
+				? user.avatar
+				: `/avatars/${user.avatar}`;
 		}
-		
+
 		return `
 			<div class="py-4 flex items-center justify-between user-item" data-user-id="${user.id}">
 				<div class="flex items-center space-x-4">
@@ -178,7 +196,9 @@ export class BlockedUsersPage extends Component {
 
 		if (!userId || !username) return;
 
-		const confirmed = confirm(`${username}のブロックを解除しますか？解除すると、このユーザーからのメッセージやゲーム招待を再び受信するようになります。`);
+		const confirmed = confirm(
+			`${username}のブロックを解除しますか？解除すると、このユーザーからのメッセージやゲーム招待を再び受信するようになります。`,
+		);
 		if (!confirmed) return;
 
 		// Disable button to prevent double clicks
@@ -195,9 +215,10 @@ export class BlockedUsersPage extends Component {
 			}).show();
 
 			// Remove the user from the list and re-render
-			this.blockedUsers = this.blockedUsers.filter(user => user.id !== userId);
+			this.blockedUsers = this.blockedUsers.filter(
+				(user) => user.id !== userId,
+			);
 			this.updateView();
-
 		} catch (error) {
 			console.error("Failed to unblock user:", error);
 			new FloatingBanner({
