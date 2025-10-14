@@ -76,8 +76,9 @@ model Match {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  participants MatchParticipant[]
-  history      MatchHistory?
+  participants     MatchParticipant[]
+  history          MatchHistory?
+  tournamentMatch  TournamentMatch?
 }
 
 // MatchとUserの多対多を表現する中間テーブル
@@ -159,12 +160,12 @@ model TournamentMatch {
   id           String   @id
   tournamentId String
   roundId      String
-  winnerId     String?  // TournamentParticipantのID
-  status       String   @default("pending") // "pending", "in_progress", "completed"
+  matchId      String   @unique // 実際のMatchへの参照
   createdAt    DateTime @default(now())
 
   tournament   Tournament                   @relation(fields: [tournamentId], references: [id])
   round        TournamentRound              @relation(fields: [roundId], references: [id])
+  match        Match                        @relation(fields: [matchId], references: [id])
   participants TournamentMatchParticipant[]
 }
 
