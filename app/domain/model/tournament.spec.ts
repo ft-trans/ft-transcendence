@@ -56,8 +56,7 @@ describe("TournamentStatusValue", () => {
 
 	it("should throw a BadRequestError for invalid status", () => {
 		expect(
-			() =>
-				new TournamentStatusValue("invalid" as unknown as TournamentStatus),
+			() => new TournamentStatusValue("invalid" as unknown as TournamentStatus),
 		).toThrowError(ErrBadRequest);
 	});
 
@@ -268,8 +267,7 @@ describe("TournamentParticipant", () => {
 describe("TournamentParticipantStatusValue", () => {
 	it("should create a TournamentParticipantStatusValue instance with valid status", () => {
 		const activeStatus = new TournamentParticipantStatusValue("active");
-		const eliminatedStatus =
-			new TournamentParticipantStatusValue("eliminated");
+		const eliminatedStatus = new TournamentParticipantStatusValue("eliminated");
 		const withdrawnStatus = new TournamentParticipantStatusValue("withdrawn");
 
 		expect(activeStatus.value).toBe("active");
@@ -389,7 +387,9 @@ describe("TournamentMatch", () => {
 		const tournamentId = new TournamentId(ulid());
 		const roundId = new TournamentRoundId(ulid());
 
-		expect(() => TournamentMatch.create(tournamentId, roundId, [])).toThrowError(
+		expect(() =>
+			TournamentMatch.create(tournamentId, roundId, []),
+		).toThrowError(
 			new ErrBadRequest({
 				userMessage: "試合には1人または2人の参加者が必要です",
 			}),

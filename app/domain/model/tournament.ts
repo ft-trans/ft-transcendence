@@ -1,7 +1,7 @@
 import { isValid, ulid } from "ulid";
 import { ErrBadRequest } from "../error";
-import { ValueObject } from "./value_object";
 import type { UserId } from "./user";
+import { ValueObject } from "./value_object";
 
 export class TournamentId extends ValueObject<string, "TournamentId"> {
 	protected validate(value: string): void {
@@ -99,7 +99,12 @@ export class Tournament {
 			new MaxParticipants(MaxParticipants.DEFAULT_PARTICIPANTS);
 		const status = new TournamentStatusValue("registration");
 
-		return new Tournament(id, params.organizerId, status, defaultMaxParticipants);
+		return new Tournament(
+			id,
+			params.organizerId,
+			status,
+			defaultMaxParticipants,
+		);
 	}
 
 	static reconstruct(params: {
@@ -283,7 +288,10 @@ export class TournamentParticipant {
 	}
 }
 
-export class TournamentRoundId extends ValueObject<string, "TournamentRoundId"> {
+export class TournamentRoundId extends ValueObject<
+	string,
+	"TournamentRoundId"
+> {
 	protected validate(value: string): void {
 		if (!isValid(value)) {
 			throw new ErrBadRequest({
@@ -397,7 +405,10 @@ export class TournamentRound {
 	}
 }
 
-export class TournamentMatchId extends ValueObject<string, "TournamentMatchId"> {
+export class TournamentMatchId extends ValueObject<
+	string,
+	"TournamentMatchId"
+> {
 	protected validate(value: string): void {
 		if (!isValid(value)) {
 			throw new ErrBadRequest({
