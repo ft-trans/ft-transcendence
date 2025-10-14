@@ -21,7 +21,7 @@ function initializeWebSocket(): void {
 
 	if (state.user?.id) {
 		console.log("[Main] Initializing WebSocket for user:", state.user.id);
-		
+
 		// Connect to WebSocket for global notifications
 		wsManager.connect();
 
@@ -29,10 +29,8 @@ function initializeWebSocket(): void {
 		wsManager.onMessage((message) => {
 			if (message.type === MESSAGE_TYPES.GAME_INVITE) {
 				const { senderId, senderName } = message.payload;
-				
-				console.log("[Main] Received game invite from:", senderName);
 
-				// Show game invite notification
+				console.log("[Main] Received game invite from:", senderName); // Show game invite notification
 				const gameInviteNotification = new GameInviteNotification();
 				gameInviteNotification.show({
 					senderId,
@@ -41,6 +39,8 @@ function initializeWebSocket(): void {
 			}
 		});
 	} else {
-		console.log("[Main] User not authenticated, skipping WebSocket initialization");
+		console.log(
+			"[Main] User not authenticated, skipping WebSocket initialization",
+		);
 	}
 }

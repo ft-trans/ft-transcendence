@@ -13,7 +13,9 @@ export class AcceptGameInviteUsecase {
 		private readonly matchmakingService: MatchmakingService,
 	) {}
 
-	async execute(input: AcceptGameInviteRequest): Promise<{ success: boolean; matchId?: string }> {
+	async execute(
+		input: AcceptGameInviteRequest,
+	): Promise<{ success: boolean; matchId?: string }> {
 		// Get both users
 		const accepterId = new UserId(input.accepterId);
 		const senderId = new UserId(input.senderId);

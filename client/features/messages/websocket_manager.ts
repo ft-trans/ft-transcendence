@@ -29,13 +29,13 @@ export class WebSocketManager {
 			try {
 				const rawMessage = JSON.parse(event.data);
 				console.log("[WS] Received message:", rawMessage);
-				
+
 				// Handle matchFound event (game invite acceptance)
 				if (rawMessage.event === "matchFound") {
 					this.handleMatchFound(rawMessage.data);
 					return;
 				}
-				
+
 				// Handle regular chat messages
 				const message: ServerMessage = rawMessage;
 				this.messageHandlers.forEach((handler) => handler(message));
@@ -45,7 +45,12 @@ export class WebSocketManager {
 		};
 
 		this.ws.onclose = (event) => {
-			console.log("[WS] Disconnected from chat server. Code:", event.code, "Reason:", event.reason);
+			console.log(
+				"[WS] Disconnected from chat server. Code:",
+				event.code,
+				"Reason:",
+				event.reason,
+			);
 			this.attemptReconnect();
 		};
 
@@ -100,9 +105,9 @@ export class WebSocketManager {
 		return () => this.messageHandlers.delete(handler);
 	}
 
-	private handleMatchFound(matchData: any): void {
+	private handleMatchFound(matchData: { id: string }): void {
 		console.log("[WS] Match found:", matchData);
-		
+
 		// Show notification
 		import("../../components/floating_banner").then(({ FloatingBanner }) => {
 			new FloatingBanner({

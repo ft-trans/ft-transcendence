@@ -111,9 +111,9 @@ export class GameInviteNotification {
 
 		try {
 			// Send acceptance response to backend (implement this API endpoint)
-			const response = await this.apiClient.post("/api/game/invite/accept", {
+			const response = (await this.apiClient.post("/api/game/invite/accept", {
 				senderId: inviteData.senderId,
-			}) as { success: boolean; matchId?: string };
+			})) as { success: boolean; matchId?: string };
 
 			new FloatingBanner({
 				message: "ゲームに参加しています...",
