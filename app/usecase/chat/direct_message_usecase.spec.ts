@@ -2,20 +2,10 @@ import { ErrBadRequest, ErrForbidden, ErrNotFound } from "@domain/error";
 import { DirectMessage } from "@domain/model/direct_message";
 import { Friendship } from "@domain/model/friendship";
 import { User, UserEmail, Username } from "@domain/model/user";
-import type {
-	IMatchHistoryRepository,
-	IPongBallRepository,
-	IPongClientRepository,
-	IPongLoopRepository,
-	IPongMatchStateRepository,
-	IPongPaddleRepository,
-} from "@domain/repository";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
-import type { IMatchRepository } from "@domain/repository/match_repository";
-import type { ISessionRepository } from "@domain/repository/session_repository";
-import type { IUserPresenceRepository } from "@domain/repository/user_presence_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
+import { createMockRepository } from "@usecase/test_helper";
 import type { ITransaction } from "@usecase/transaction";
 import { ulid } from "ulid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -29,20 +19,11 @@ const messageRepo = mock<IDirectMessageRepository>();
 const friendshipRepo = mock<IFriendshipRepository>();
 const tx = mock<ITransaction>();
 
-const mockRepos = {
+const mockRepos = createMockRepository({
 	newUserRepository: () => userRepo,
 	newDirectMessageRepository: () => messageRepo,
 	newFriendshipRepository: () => friendshipRepo,
-	newSessionRepository: () => mock<ISessionRepository>(),
-	newPongBallRepository: () => mock<IPongBallRepository>(),
-	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
-	newPongClientRepository: () => mock<IPongClientRepository>(),
-	newPongLoopRepository: () => mock<IPongLoopRepository>(),
-	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
-	newMatchRepository: () => mock<IMatchRepository>(),
-	newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
-	newMatchHistoryRepository: () => mock<IMatchHistoryRepository>(),
-};
+});
 tx.exec.mockImplementation(async (callback) => callback(mockRepos));
 
 beforeEach(() => {

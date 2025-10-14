@@ -1,20 +1,10 @@
 // ==> app/usecase/relationship/relationship_usecase.spec.ts <==
 import { ErrBadRequest, ErrForbidden, ErrNotFound } from "@domain/error";
 import { Friendship, User, UserEmail, Username } from "@domain/model";
-import type {
-	IMatchHistoryRepository,
-	IPongBallRepository,
-	IPongClientRepository,
-	IPongLoopRepository,
-	IPongMatchStateRepository,
-	IPongPaddleRepository,
-	IUserPresenceRepository,
-} from "@domain/repository";
 import type { IDirectMessageRepository } from "@domain/repository/direct_message_repository";
 import type { IFriendshipRepository } from "@domain/repository/friendship_repository";
-import type { IMatchRepository } from "@domain/repository/match_repository";
-import type { ISessionRepository } from "@domain/repository/session_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
+import { createMockRepository } from "@usecase/test_helper";
 import type { ITransaction } from "@usecase/transaction";
 import { ulid } from "ulid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -33,20 +23,11 @@ const directMessageRepo = mock<IDirectMessageRepository>();
 const tx = mock<ITransaction>();
 
 // トランザクションのモック実装
-const mockRepos = {
+const mockRepos = createMockRepository({
 	newUserRepository: () => userRepo,
 	newFriendshipRepository: () => friendshipRepo,
 	newDirectMessageRepository: () => directMessageRepo,
-	newSessionRepository: () => mock<ISessionRepository>(),
-	newPongBallRepository: () => mock<IPongBallRepository>(),
-	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
-	newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
-	newPongClientRepository: () => mock<IPongClientRepository>(),
-	newPongLoopRepository: () => mock<IPongLoopRepository>(),
-	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
-	newMatchRepository: () => mock<IMatchRepository>(),
-	newMatchHistoryRepository: () => mock<IMatchHistoryRepository>(),
-};
+});
 tx.exec.mockImplementation(async (callback) => callback(mockRepos));
 
 // 各テストの前にモックをクリア

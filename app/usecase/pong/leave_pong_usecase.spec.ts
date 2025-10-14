@@ -1,19 +1,10 @@
 import { MatchId, type PongLoopId } from "@domain/model/pong";
 import type {
-	IDirectMessageRepository,
-	IFriendshipRepository,
-	IMatchHistoryRepository,
-	IMatchRepository,
-	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
-	IPongMatchStateRepository,
-	IPongPaddleRepository,
-	ISessionRepository,
-	IUserPresenceRepository,
-	IUserRepository,
 } from "@domain/repository";
 import type { IPongClient } from "@domain/service/pong_client";
+import { createMockRepository } from "@usecase/test_helper";
 import { ulid } from "ulid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
@@ -22,20 +13,10 @@ import { LeavePongUsecase } from "./leave_pong_usecase";
 const pongClientRepo = mock<IPongClientRepository>();
 const pongLoopRepo = mock<IPongLoopRepository>();
 
-const repo = {
-	newUserRepository: () => mock<IUserRepository>(),
-	newFriendshipRepository: () => mock<IFriendshipRepository>(),
-	newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
-	newSessionRepository: () => mock<ISessionRepository>(),
-	newPongBallRepository: () => mock<IPongBallRepository>(),
-	newPongPaddleRepository: () => mock<IPongPaddleRepository>(),
-	newUserPresenceRepository: () => mock<IUserPresenceRepository>(),
+const repo = createMockRepository({
 	newPongClientRepository: () => pongClientRepo,
 	newPongLoopRepository: () => pongLoopRepo,
-	newPongMatchStateRepository: () => mock<IPongMatchStateRepository>(),
-	newMatchRepository: () => mock<IMatchRepository>(),
-	newMatchHistoryRepository: () => mock<IMatchHistoryRepository>(),
-};
+});
 
 describe("LeavePongUsecase", () => {
 	beforeEach(() => {
