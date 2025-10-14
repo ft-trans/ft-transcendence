@@ -54,20 +54,53 @@ export class Username extends ValueObject<string, "Username"> {
 
 export class UserAvatar extends ValueObject<string, "UserAvatar"> {
 	static readonly DEFAULT_AVATAR = "";
+	static readonly ALLOWED_EXTENSIONS = [
+		".jpg",
+		".jpeg",
+		".png",
+		".gif",
+		".webp",
+	];
+	static readonly MAX_PATH_LENGTH = 500;
 
 	protected validate(value: string): void {
 		// 空文字列の場合はデフォルトアバターを使用
 		if (value === UserAvatar.DEFAULT_AVATAR) {
 			return;
 		}
-		// URLまたはファイルパスの基本的な検証
-		if (value.length > 500) {
+
+		// パスの長さ検証
+		if (value.length > UserAvatar.MAX_PATH_LENGTH) {
 			throw new ErrBadRequest({
 				details: {
-					userAvatar: "アバターのパスは500文字以下である必要があります",
+					userAvatar: `アバターのパスは${UserAvatar.MAX_PATH_LENGTH}文字以下である必要があります`,
 				},
 			});
 		}
+
+		// ファイル拡張子の検証（アップロードされたファイルの場合）
+		if (value.startsWith("/avatars/")) {
+			const extension = value.substring(value.lastIndexOf(".")).toLowerCase();
+			if (!UserAvatar.ALLOWED_EXTENSIONS.includes(extension)) {
+				throw new ErrBadRequest({
+					details: {
+						userAvatar: `サポートされていないファイル形式です。使用可能な形式: ${UserAvatar.ALLOWED_EXTENSIONS.join(", ")}`,
+					},
+				});
+			}
+		}
+	}
+
+	static fromUploadedFile(filename: string): UserAvatar {
+		return new UserAvatar(`/avatars/${filename}`);
+	}
+
+	get isDefaultAvatar(): boolean {
+		return this.value === UserAvatar.DEFAULT_AVATAR;
+	}
+
+	get isUploadedFile(): boolean {
+		return this.value.startsWith("/avatars/");
 	}
 }
 
