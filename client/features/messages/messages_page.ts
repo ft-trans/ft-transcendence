@@ -353,10 +353,8 @@ export class MessagesPage extends Component {
 			return;
 		}
 
-		// Connect to WebSocket
-		wsManager.connect();
-
-		// Setup message handler
+		// WebSocket is already connected globally, just setup message handler for this page
+		// Setup message handler for chat messages only (game invites are handled globally)
 		this.wsUnsubscribe = wsManager.onMessage((message: ServerMessage) => {
 			if (message.type === MESSAGE_TYPES.NEW_MESSAGE) {
 				const { senderId, senderName, content, timestamp } = message.payload;
@@ -383,6 +381,7 @@ export class MessagesPage extends Component {
 					this.updateMessagesContainer();
 				}
 			}
+			// Game invite handling is now done globally in main.ts
 		});
 
 		// Cleanup on page unload
@@ -396,6 +395,7 @@ export class MessagesPage extends Component {
 			this.wsUnsubscribe();
 			this.wsUnsubscribe = null;
 		}
-		wsManager.disconnect();
+		// Don't disconnect WebSocket as it's managed globally
+		// wsManager.disconnect();
 	}
 }
