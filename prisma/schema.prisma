@@ -117,8 +117,6 @@ model Session {
 
 model Tournament {
   id              String   @id
-  name            String
-  description     String?
   organizerId     String
   status          String   @default("registration") // "registration", "in_progress", "completed", "cancelled"
   maxParticipants Int      @default(8)
