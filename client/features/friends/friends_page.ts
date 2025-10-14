@@ -65,9 +65,13 @@ export class FriendsPage extends Component {
 									return `
                 <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                   <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                      <span class="text-sm font-medium">${username[0].toUpperCase()}</span>
-                    </div>
+                    ${
+											requester?.avatar
+												? `<img src="${requester.avatar}" alt="${username}" class="w-10 h-10 rounded-full object-cover">`
+												: `<div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                           <span class="text-sm font-medium">${username[0].toUpperCase()}</span>
+                         </div>`
+										}
                     <div>
                       <p class="font-medium text-gray-900">${username}</p>
                       <p class="text-sm text-gray-500">友達申請を送信しました</p>
@@ -113,9 +117,13 @@ export class FriendsPage extends Component {
 									return `
                 <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                   <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                      <span class="text-sm font-medium">${username[0].toUpperCase()}</span>
-                    </div>
+                    ${
+											receiver?.avatar
+												? `<img src="${receiver.avatar}" alt="${username}" class="w-10 h-10 rounded-full object-cover">`
+												: `<div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                           <span class="text-sm font-medium">${username[0].toUpperCase()}</span>
+                         </div>`
+										}
                     <div>
                       <p class="font-medium text-gray-900">${username}</p>
                       <p class="text-sm text-gray-500">友達申請を送信中</p>
@@ -302,9 +310,13 @@ export class FriendsPage extends Component {
 						(user) => `
           <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
             <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                <span class="text-sm font-medium">${user.username[0].toUpperCase()}</span>
-              </div>
+              ${
+								user.avatar
+									? `<img src="${user.avatar}" alt="${user.username}" class="w-10 h-10 rounded-full object-cover">`
+									: `<div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                     <span class="text-sm font-medium">${user.username[0].toUpperCase()}</span>
+                   </div>`
+							}
               <div>
                 <p class="font-medium text-gray-900">${user.username}</p>
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${

@@ -36,9 +36,13 @@ export class FriendList extends Component {
 						(friend) => `
           <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
             <div class="flex items-center space-x-3 mb-3">
-              <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                <span class="text-lg font-medium">${friend.username[0].toUpperCase()}</span>
-              </div>
+              ${
+								friend.avatar
+									? `<img src="${friend.avatar}" alt="${friend.username}" class="w-12 h-12 rounded-full object-cover">`
+									: `<div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                     <span class="text-lg font-medium">${friend.username[0].toUpperCase()}</span>
+                   </div>`
+							}
               <div class="flex-1">
                 <h4 class="font-medium text-gray-900">${friend.username}</h4>
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
