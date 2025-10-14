@@ -4,6 +4,7 @@ import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { GetUsersOnlineStatusUsecase } from "@usecase/presence";
 import type { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
 import type { CancelFriendRequestUsecase } from "@usecase/relationship/cancel_friend_request_usecase";
+import type { GetBlockedUsersUsecase } from "@usecase/relationship/get_blocked_users_usecase";
 import type { GetFriendRequestsUsecase } from "@usecase/relationship/get_friend_requests_usecase";
 import type { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
 import type { GetSentFriendRequestsUsecase } from "@usecase/relationship/get_sent_friend_requests_usecase";
@@ -24,6 +25,7 @@ export const relationshipController = (
 	cancelFriendRequestUsecase: CancelFriendRequestUsecase,
 	blockUserUsecase: BlockUserUsecase,
 	unblockUserUsecase: UnblockUserUsecase,
+	getBlockedUsersUsecase: GetBlockedUsersUsecase,
 	getUsersOnlineStatusUsecase: GetUsersOnlineStatusUsecase,
 	authPrehandler: AuthPrehandler,
 ) => {
@@ -62,6 +64,11 @@ export const relationshipController = (
 			"/friends/requests/:receiverId",
 			{ preHandler: authPrehandler },
 			onCancelFriendRequest(cancelFriendRequestUsecase),
+		);
+		fastify.get(
+			"/blocks",
+			{ preHandler: authPrehandler },
+			onGetBlockedUsers(getBlockedUsersUsecase),
 		);
 		fastify.post(
 			"/blocks",
@@ -295,6 +302,26 @@ const onCancelFriendRequest = (usecase: CancelFriendRequestUsecase) => {
 			receiverId: req.params.receiverId,
 		});
 		reply.status(204).send();
+	};
+};
+
+const onGetBlockedUsers = (usecase: GetBlockedUsersUsecase) => {
+	return async (
+		req: FastifyRequest,
+		reply: FastifyReply,
+	) => {
+		const userId = req.authenticatedUser?.id;
+
+		const blockedUsers = await usecase.execute({
+			blockerId: userId,
+		});
+
+		reply.send(blockedUsers.map(user => ({
+			id: user.id.value,
+			email: user.email.value,
+			username: user.username.value,
+			avatar: user.avatar?.value || null,
+		})));
 	};
 };
 

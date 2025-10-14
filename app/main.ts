@@ -56,6 +56,7 @@ import {
 } from "@usecase/presence";
 import { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
 import { CancelFriendRequestUsecase } from "@usecase/relationship/cancel_friend_request_usecase";
+import { GetBlockedUsersUsecase } from "@usecase/relationship/get_blocked_users_usecase";
 import { GetFriendRequestsUsecase } from "@usecase/relationship/get_friend_requests_usecase";
 import { GetFriendsUsecase } from "@usecase/relationship/get_friends_usecase";
 import { GetSentFriendRequestsUsecase } from "@usecase/relationship/get_sent_friend_requests_usecase";
@@ -280,6 +281,7 @@ const start = async () => {
 		const cancelFriendRequestUsecase = new CancelFriendRequestUsecase(tx);
 		const blockUserUsecase = new BlockUserUsecase(tx);
 		const unblockUserUsecase = new UnblockUserUsecase(tx);
+		const getBlockedUsersUsecase = new GetBlockedUsersUsecase(tx);
 		const searchUsersUsecase = new SearchUsersUsecase(tx);
 		const findUserUsecase = new FindUserUsecase(repo);
 		const findUserByUsernameUsecase = new FindUserByUsernameUsecase(repo);
@@ -297,6 +299,7 @@ const start = async () => {
 				cancelFriendRequestUsecase,
 				blockUserUsecase,
 				unblockUserUsecase,
+				getBlockedUsersUsecase,
 				getUsersOnlineStatusUsecase,
 				authPrehandler,
 			),
