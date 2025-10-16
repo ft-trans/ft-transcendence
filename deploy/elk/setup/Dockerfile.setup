@@ -1,0 +1,10 @@
+ARG STACK_VERSION=9.1.5
+FROM docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+
+USER root
+
+COPY dashboard.ndjson /usr/share/elasticsearch/config/dashboard.ndjson
+COPY setup.sh /usr/local/bin/setup.sh
+RUN chmod +x /usr/local/bin/setup.sh
+
+ENTRYPOINT ["/usr/local/bin/setup.sh"]

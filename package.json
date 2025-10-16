@@ -17,6 +17,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.0.5",
+		"@fastify/otel": "^0.9.4",
 		"@swc-node/register": "^1.10.10",
 		"@swc/cli": "^0.7.7",
 		"@swc/core": "^1.12.5",
@@ -63,6 +64,8 @@
 		"lodash-es": "^4.17.21",
 		"mime-types": "^3.0.1",
 		"path-to-regexp": "^8.2.0",
+		"pino": "^10.0.0",
+		"pino-elasticsearch": "^8.1.0",
 		"tailwindcss": "^4.1.10",
 		"ulid": "^3.0.1",
 		"ws": "^8.18.3",
