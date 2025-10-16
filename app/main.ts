@@ -30,49 +30,59 @@ import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import Fastify from "fastify";
+import type { TransportTargetOptions } from "pino";
 import { otelInstrumentation } from "./observability/otel.js";
 
-// const app = Fastify({ logger: true });
+const isProd = process.env.NODE_ENV === "production";
 
-const elasticPassword = process.env.ELASTIC_PASSWORD;
-if (!elasticPassword) {
-	console.error("[boot] ELASTIC_PASSWORD is missing");
-	process.exit(1);
+const logToEs = process.env.LOG_TO_ES
+	? process.env.LOG_TO_ES === "true"
+	: isProd;
+const logStdout = process.env.LOG_STDOUT
+	? process.env.LOG_STDOUT === "true"
+	: !isProd;
+
+const targets: TransportTargetOptions[] = [];
+
+if (logStdout) {
+	targets.push({
+		target: "pino/file",
+		level: isProd ? "info" : "debug",
+		options: { destination: 1 }, // stdout
+	});
+}
+
+if (logToEs) {
+	const elasticCaPath = process.env.ELASTIC_CA || "/app/certs/ca/ca.crt";
+	const elasticPassword = process.env.ELASTIC_PASSWORD;
+	if (!elasticPassword) {
+		console.error("[boot] missing ELASTIC_PASSWORD");
+		process.exit(1);
+	}
+	targets.push({
+		target: "pino-elasticsearch",
+		level: "info",
+		options: {
+			index: "app-logs",
+			node: "https://es01:9200",
+			esVersion: 9,
+			auth: { username: "elastic", password: elasticPassword },
+			tls: { ca: readFileSync(elasticCaPath), rejectUnauthorized: true },
+		},
+	});
 }
 
 const app = Fastify({
-	logger: {
-		level: "debug",
-		timestamp: () => `,"@timestamp":"${new Date().toISOString()}"`,
-		transport: {
-			targets: [
-				{
-					// 開発用
-					target: "pino/file",
-					level: "debug",
-					options: { destination: 1 }, // stdout
-				},
-				{
-					// 本番用
-					target: "pino-elasticsearch",
-					level: "info",
-					options: {
-						index: "ft-transcendence-app",
-						node: "https://es01:9200", // Docker compose上のElasticsearch
-						esVersion: 8,
-						auth: {
-							username: "elastic",
-							password: elasticPassword,
-						},
-						tls: {
-							ca: readFileSync("/app/certs/app_ca.crt"),
-							rejectUnauthorized: false,
-						},
-					},
-				},
-			],
-		},
-	},
+	logger: targets.length
+		? {
+				level: isProd ? "info" : "debug",
+				timestamp: () => `,"@timestamp":"${new Date().toISOString()}"`,
+				transport: { targets },
+			}
+		: {
+				level: isProd ? "info" : "debug",
+				timestamp: () => `,"@timestamp":"${new Date().toISOString()}"`,
+			},
 });
 
 const start = async () => {
