@@ -45,4 +45,17 @@ export class ApiClient {
 			.patch<Response>(path, body)
 			.then((response) => response.data);
 	}
+
+	async postFormData<Response>(
+		path: string,
+		formData: FormData,
+	): Promise<Response> {
+		return this.client
+			.post<Response>(path, formData, {
+				headers: {
+					"Content-Type": "multipart/form-data",
+				},
+			})
+			.then((response) => response.data);
+	}
 }

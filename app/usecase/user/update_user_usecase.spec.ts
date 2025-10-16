@@ -1,15 +1,8 @@
 // ==> app/usecase/user/update_user_usecase.spec.ts <==
 import { ErrBadRequest, ErrNotFound } from "@domain/error";
 import { User, UserEmail, Username } from "@domain/model";
-import type {
-	IDirectMessageRepository,
-	IFriendshipRepository,
-	IPongBallRepository,
-	IPongClientRepository,
-	IPongLoopRepository,
-	ISessionRepository,
-	IUserRepository,
-} from "@domain/repository";
+import type { IUserRepository } from "@domain/repository";
+import { createMockRepository } from "@usecase/test_helper";
 import type { ITransaction } from "@usecase/transaction";
 import { ulid } from "ulid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -17,15 +10,9 @@ import { mock } from "vitest-mock-extended";
 import { UpdateUserUsecase } from "./update_user_usecase";
 
 const mockUserRepo = mock<IUserRepository>();
-const repo = {
+const repo = createMockRepository({
 	newUserRepository: () => mockUserRepo,
-	newFriendshipRepository: () => mock<IFriendshipRepository>(),
-	newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
-	newPongBallRepository: () => mock<IPongBallRepository>(),
-	newPongClientRepository: () => mock<IPongClientRepository>(),
-	newPongLoopRepository: () => mock<IPongLoopRepository>(),
-	newSessionRepository: () => mock<ISessionRepository>(),
-};
+});
 
 const mockTx = mock<ITransaction>();
 mockTx.exec.mockImplementation(async (callback) => {

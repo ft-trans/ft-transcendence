@@ -24,7 +24,9 @@ export class Navigation extends Component {
 	render(): string {
 		const navContent = this.isAuthenticated
 			? `
-				${new Link({ href: "/profile/edit", text: "プロフィール編集" }).render()}
+				${new Link({ href: "/friends", text: "友達" }).render()}
+				${new Link({ href: "/messages", text: "メッセージ" }).render()}
+				${new Link({ href: `/users/me`, text: "プロフィール" }).render()}
 				${new Button({ id: "logout-btn", text: "ログアウト", color: "gray" }).render()}
 			`
 			: `

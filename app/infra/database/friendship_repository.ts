@@ -93,11 +93,18 @@ export class FriendshipRepository implements IFriendshipRepository {
 			},
 		});
 
-		return friendships.map((f) =>
-			f.requesterId === userId
-				? toUserDomain(f.receiver)
-				: toUserDomain(f.requester),
-		);
+		// 重複を除去するためにSetを使用
+		const friendsMap = new Map<string, User>();
+
+		friendships.forEach((f) => {
+			const friend =
+				f.requesterId === userId
+					? toUserDomain(f.receiver)
+					: toUserDomain(f.requester);
+			friendsMap.set(friend.id.value, friend);
+		});
+
+		return Array.from(friendsMap.values());
 	}
 
 	async findPendingRequestsByReceiverId(userId: string): Promise<Friendship[]> {
@@ -108,6 +115,32 @@ export class FriendshipRepository implements IFriendshipRepository {
 			},
 		});
 		return pending.map(toFriendshipDomain);
+	}
+
+	async findPendingRequestsByRequesterId(
+		userId: string,
+	): Promise<Friendship[]> {
+		const pending = await this.client.friendship.findMany({
+			where: {
+				requesterId: userId,
+				status: "pending",
+			},
+		});
+		return pending.map(toFriendshipDomain);
+	}
+
+	async findBlockedUsersByBlockerId(blockerId: string): Promise<User[]> {
+		const blockedFriendships = await this.client.friendship.findMany({
+			where: {
+				requesterId: blockerId,
+				status: "blocked",
+			},
+			include: {
+				receiver: true,
+			},
+		});
+
+		return blockedFriendships.map((f) => toUserDomain(f.receiver));
 	}
 
 	async delete(friendship: Friendship): Promise<void> {

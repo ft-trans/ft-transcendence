@@ -31,5 +31,6 @@ generated
 *.sqlite3
 coverage
 
-# TLS certificate
-deploy/shared/app_ca.crt
+# Avatar uploads - ignore all except default.png
+public/avatars/*
+!public/avatars/default.svg

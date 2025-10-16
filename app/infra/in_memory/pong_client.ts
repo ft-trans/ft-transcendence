@@ -11,4 +11,8 @@ export class PongClient implements IPongClient {
 	send(data: string): void {
 		this.client.send(data);
 	}
+
+	close(): void {
+		this.client.close();
+	}
 }

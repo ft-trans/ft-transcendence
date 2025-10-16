@@ -1,13 +1,21 @@
 import { pathToRegexp } from "path-to-regexp";
 import { createRouteParams, Navigation } from "./components";
 import { Login, Register } from "./features/auth";
+import { BlockedUsersPage } from "./features/blocked_users/blocked_users_page";
+import { FriendsPage } from "./features/friends";
 import { Home } from "./features/home";
+import { Matchmaking } from "./features/matchmaking";
+import { MessagesPage } from "./features/messages";
 import { MatchesPong } from "./features/pong/matches";
 import { EditProfile } from "./features/profile";
+import { UserProfile } from "./features/users/show";
 
 export const router = async () => {
-	// biome-ignore lint/style/noNonNullAssertion: app container は必ず存在する
-	const container = document.querySelector<HTMLElement>("#app")!;
+	const container = document.querySelector<HTMLElement>("#app");
+	if (!container) {
+		console.error("App container not found");
+		return;
+	}
 	const routes = [
 		{
 			path: "/",
@@ -26,8 +34,32 @@ export const router = async () => {
 			component: new Navigation({ child: new EditProfile() }),
 		},
 		{
+			path: "/matchmaking",
+			component: new Navigation({ child: new Matchmaking() }),
+		},
+		{
 			path: "/pong/matches/:match_id",
 			component: new Navigation({ child: new MatchesPong() }),
+		},
+		{
+			path: "/messages",
+			component: new Navigation({ child: new MessagesPage() }),
+		},
+		{
+			path: "/messages/:userId",
+			component: new Navigation({ child: new MessagesPage() }),
+		},
+		{
+			path: "/friends",
+			component: new Navigation({ child: new FriendsPage() }),
+		},
+		{
+			path: "/blocked-users",
+			component: new Navigation({ child: new BlockedUsersPage() }),
+		},
+		{
+			path: "/users/:username",
+			component: new Navigation({ child: new UserProfile() }),
 		},
 	];
 
@@ -39,11 +71,11 @@ export const router = async () => {
 		if (match) {
 			container.innerHTML = route.component.render();
 			if (keys.length === 0) {
-				route.component.onLoad();
+				await route.component.onLoad();
 				return;
 			} else {
 				const params = createRouteParams(keys, match);
-				route.component.onLoad(params);
+				await route.component.onLoad(params);
 				return;
 			}
 		}
@@ -79,3 +111,36 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 window.addEventListener("popstate", router);
+
+// Debug helpers - 開発環境でのみ利用可能
+if (import.meta.env.DEV) {
+	(
+		window as unknown as {
+			debugRouter: () => void;
+			testMessagesPage: () => void;
+		}
+	).debugRouter = () => {
+		console.log("Current path:", window.location.pathname);
+		console.log("Calling router manually...");
+		router();
+	};
+
+	(
+		window as unknown as {
+			debugRouter: () => void;
+			testMessagesPage: () => void;
+		}
+	).testMessagesPage = () => {
+		console.log("Testing MessagesPage directly...");
+		const messagesPage = new MessagesPage();
+		console.log("MessagesPage created:", messagesPage);
+		try {
+			const html = messagesPage.render();
+			console.log("render() succeeded, HTML length:", html.length);
+			messagesPage.onLoad();
+			console.log("onLoad() called");
+		} catch (error) {
+			console.error("Error in MessagesPage:", error);
+		}
+	};
+}

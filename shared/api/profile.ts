@@ -11,6 +11,23 @@ export const updateProfileFormSchema = z.object({
 	avatar: z.string().max(500).optional(),
 });
 
+export const uploadAvatarFormSchema = z.object({
+	file: z
+		.any()
+		.refine((file) => file instanceof File, "ファイルが必要です")
+		.refine(
+			(file) => file.size <= 5 * 1024 * 1024,
+			"ファイルサイズは5MB以下にしてください",
+		)
+		.refine(
+			(file) =>
+				["image/jpeg", "image/png", "image/gif", "image/webp"].includes(
+					file.type,
+				),
+			"サポートされていないファイル形式です（JPEG、PNG、GIF、WebPのみ）",
+		),
+});
+
 export type GetProfileResponse = {
 	user: {
 		id: string;
@@ -29,6 +46,18 @@ export type UpdateProfileRequest = {
 	};
 };
 
+export type UploadAvatarRequest = FormData;
+
+export type UploadAvatarResponse = {
+	user: {
+		id: string;
+		email: string;
+		username: string;
+		avatar: string;
+		status: string;
+	};
+};
+
 export type UpdateProfileResponse = {
 	user: {
 		id: string;
@@ -37,4 +66,31 @@ export type UpdateProfileResponse = {
 		avatar: string;
 		status: string;
 	};
+};
+
+export type UserStats = {
+	totalMatches: number;
+	wins: number;
+	losses: number;
+	winRate: number;
+};
+
+export type GetUserStatsResponse = {
+	stats: UserStats;
+};
+
+export type MatchHistoryResponse = {
+	id: string;
+	matchId: string;
+	winnerId: string;
+	winner: { id: string; username: string; avatar: string };
+	loserId: string;
+	loser: { id: string; username: string; avatar: string };
+	winnerScore: number;
+	loserScore: number;
+	playedAt: Date;
+};
+
+export type GetMatchHistoriesResponse = {
+	histories: MatchHistoryResponse[];
 };

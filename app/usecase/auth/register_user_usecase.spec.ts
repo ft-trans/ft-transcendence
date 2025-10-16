@@ -1,15 +1,8 @@
 // ==> app/usecase/auth/register_user_usecase.spec.ts <==
 import { ErrBadRequest } from "@domain/error";
 import { User, UserEmail, Username } from "@domain/model";
-import type {
-	IDirectMessageRepository,
-	IFriendshipRepository,
-	IPongBallRepository,
-	IPongClientRepository,
-	IPongLoopRepository,
-	ISessionRepository,
-	IUserRepository,
-} from "@domain/repository";
+import type { IUserRepository } from "@domain/repository";
+import { createMockRepository } from "@usecase/test_helper";
 import type { ITransaction } from "@usecase/transaction";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
@@ -31,15 +24,9 @@ describe("RegisterUserUsecase", () => {
 		mockUserRepo.findByUsername.mockResolvedValue(undefined);
 		const mockTx = mock<ITransaction>();
 		mockTx.exec.mockImplementation(async (callback) => {
-			const repo = {
+			const repo = createMockRepository({
 				newUserRepository: () => mockUserRepo,
-				newFriendshipRepository: () => mock<IFriendshipRepository>(),
-				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
-				newSessionRepository: () => mock<ISessionRepository>(),
-				newPongBallRepository: () => mock<IPongBallRepository>(),
-				newPongClientRepository: () => mock<IPongClientRepository>(),
-				newPongLoopRepository: () => mock<IPongLoopRepository>(),
-			};
+			});
 			return callback(repo);
 		});
 
@@ -60,15 +47,9 @@ describe("RegisterUserUsecase", () => {
 		mockUserRepo.findByEmail.mockResolvedValue(undefined);
 		const mockTx = mock<ITransaction>();
 		mockTx.exec.mockImplementation(async (callback) => {
-			const repo = {
+			const repo = createMockRepository({
 				newUserRepository: () => mockUserRepo,
-				newFriendshipRepository: () => mock<IFriendshipRepository>(),
-				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
-				newSessionRepository: () => mock<ISessionRepository>(),
-				newPongBallRepository: () => mock<IPongBallRepository>(),
-				newPongClientRepository: () => mock<IPongClientRepository>(),
-				newPongLoopRepository: () => mock<IPongLoopRepository>(),
-			};
+			});
 			return callback(repo);
 		});
 
@@ -92,15 +73,9 @@ describe("RegisterUserUsecase", () => {
 		mockUserRepo.findByUsername.mockResolvedValue(undefined);
 		const mockTx = mock<ITransaction>();
 		mockTx.exec.mockImplementation(async (callback) => {
-			const repo = {
+			const repo = createMockRepository({
 				newUserRepository: () => mockUserRepo,
-				newFriendshipRepository: () => mock<IFriendshipRepository>(),
-				newDirectMessageRepository: () => mock<IDirectMessageRepository>(),
-				newSessionRepository: () => mock<ISessionRepository>(),
-				newPongBallRepository: () => mock<IPongBallRepository>(),
-				newPongClientRepository: () => mock<IPongClientRepository>(),
-				newPongLoopRepository: () => mock<IPongLoopRepository>(),
-			};
+			});
 			return callback(repo);
 		});
 

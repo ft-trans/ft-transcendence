@@ -1,22 +1,32 @@
 import type {
 	IDirectMessageRepository,
 	IFriendshipRepository,
+	IMatchHistoryRepository,
+	IMatchRepository,
 	IPongBallRepository,
 	IPongClientRepository,
 	IPongLoopRepository,
+	IPongMatchStateRepository,
+	IPongPaddleRepository,
 	IRepository,
 	ISessionRepository,
+	IUserPresenceRepository,
 	IUserRepository,
 } from "@domain/repository";
 import { DirectMessageRepository } from "./database/direct_message_repository";
 import { FriendshipRepository } from "./database/friendship_repository";
+import { MatchHistoryRepository } from "./database/match_history_repository";
+import { MatchRepository } from "./database/match_repository";
 import type { Client } from "./database/prisma";
 import { SessionRepository } from "./database/session_repository";
 import { UserRepository } from "./database/user_repository";
 import { PongClientRepository } from "./in_memory/pong_client_repository";
 import { PongLoopRepository } from "./in_memory/pong_loop_repository";
+import { PongMatchStateRepository } from "./in_memory/pong_match_state_repository";
 import type { KvsClient } from "./kvs/client";
 import { PongBallRepository } from "./kvs/pong_ball_repository";
+import { PongPaddleRepository } from "./kvs/pong_paddle_repository";
+import { UserPresenceRepository } from "./kvs/user_presence_repository";
 
 export class Repository implements IRepository {
 	constructor(
@@ -41,9 +51,23 @@ export class Repository implements IRepository {
 		return new SessionRepository(this.client);
 	}
 
+	newMatchRepository(): IMatchRepository {
+		return new MatchRepository(this.client);
+	}
+
+	newMatchHistoryRepository(): IMatchHistoryRepository {
+		return new MatchHistoryRepository(this.client);
+	}
+
 	// KVS repositories
 	newPongBallRepository(): IPongBallRepository {
 		return new PongBallRepository(this.kvsClient);
+	}
+	newPongPaddleRepository(): IPongPaddleRepository {
+		return new PongPaddleRepository(this.kvsClient);
+	}
+	newUserPresenceRepository(): IUserPresenceRepository {
+		return new UserPresenceRepository(this.kvsClient);
 	}
 
 	// in-memory repositories
@@ -52,5 +76,8 @@ export class Repository implements IRepository {
 	}
 	newPongLoopRepository(): IPongLoopRepository {
 		return new PongLoopRepository();
+	}
+	newPongMatchStateRepository(): IPongMatchStateRepository {
+		return new PongMatchStateRepository();
 	}
 }

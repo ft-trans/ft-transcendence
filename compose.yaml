@@ -44,6 +44,7 @@ services:
       target: production
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - nginx-logs:/var/log/nginx
     networks:

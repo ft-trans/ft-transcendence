@@ -23,14 +23,24 @@ export class PongClientRepository implements IPongClientRepository {
 		return clients;
 	}
 
-	delete(
+	closeAndDelete(
 		matchId: MatchId,
 		pongClient: IPongClient,
 	): Set<IPongClient> | undefined {
+		pongClient.close();
 		PongClientRepository.clients.get(matchId.value)?.delete(pongClient);
 		if (PongClientRepository.clients.get(matchId.value)?.size === 0) {
 			PongClientRepository.clients.delete(matchId.value);
 		}
 		return PongClientRepository.clients.get(matchId.value);
+	}
+
+	closeAndDeleteAll(matchId: MatchId): void {
+		PongClientRepository.clients.get(matchId.value)?.forEach((client) => {
+			if (client.isOpen()) {
+				client.close();
+			}
+		});
+		PongClientRepository.clients.delete(matchId.value);
 	}
 }

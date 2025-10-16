@@ -1,6 +1,11 @@
-import type { MatchHistory } from "../model/match_history";
+import type { MatchHistory, UserId } from "../model";
 
 export interface IMatchHistoryRepository {
-	save(matchHistory: MatchHistory): Promise<MatchHistory>;
-	findByUserId(userId: string): Promise<MatchHistory[]>;
+	create(matchHistory: MatchHistory): Promise<MatchHistory>;
+	findByUserIdWithPagination(
+		userId: UserId,
+		page: number,
+	): Promise<MatchHistory[]>;
+	countWinByUserId(userId: UserId): Promise<number>;
+	countLossByUserId(userId: UserId): Promise<number>;
 }

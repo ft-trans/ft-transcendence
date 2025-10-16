@@ -1,9 +1,10 @@
-type BannerType = "info" | "warning" | "error";
+type BannerType = "info" | "warning" | "error" | "success";
 
 const bannerStyles: { [key in BannerType]: string } = {
 	info: "bg-sky-500",
 	warning: "bg-amber-500",
 	error: "bg-red-600",
+	success: "bg-green-600",
 };
 
 type Props = {
