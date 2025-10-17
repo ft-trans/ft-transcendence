@@ -11,6 +11,9 @@ export class Home extends Component {
           <div class="mt-8 flex justify-center">
             ${new Link({ href: "/matchmaking", text: "マッチを探す" }).render()}
           </div>
+          <div class="mt-8 flex justify-center">
+            ${new Link({ href: "/tournaments/new", text: "トーナメント" }).render()}
+          </div>
         </div>
       </div>
     `;

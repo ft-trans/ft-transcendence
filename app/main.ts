@@ -38,13 +38,13 @@ import {
 	SendGameInviteUsecase,
 } from "@usecase/chat";
 import { AcceptGameInviteUsecase } from "@usecase/game/accept_game_invite_usecase";
-import { GetMatchHistoriesUseCase } from "@usecase/game/get_match_histories_usecase.js";
+import { GetMatchHistoriesUseCase } from "@usecase/game/get_match_histories_usecase";
 import { GetMatchPlayersUseCase } from "@usecase/game/get_match_players_usecase";
-import { GetMatchStatsUseCase } from "@usecase/game/get_match_stats_usecase.js";
+import { GetMatchStatsUseCase } from "@usecase/game/get_match_stats_usecase";
 import { GetMatchUseCase } from "@usecase/game/get_match_usecase";
 import { JoinMatchmakingUseCase } from "@usecase/game/join_matchmaking_usecase";
 import { LeaveMatchmakingUseCase } from "@usecase/game/leave_matchmaking_usecase";
-import { AddPongClientUsecase } from "@usecase/pong/add_pong_client_usecase.js";
+import { AddPongClientUsecase } from "@usecase/pong/add_pong_client_usecase";
 import { JoinPongUsecase } from "@usecase/pong/join_pong_usecase";
 import { LeavePongUsecase } from "@usecase/pong/leave_pong_usecase";
 import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
@@ -68,7 +68,10 @@ import { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase
 import { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_friend_request_usecase";
 import { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
 import { UnblockUserUsecase } from "@usecase/relationship/unblock_user_usecase";
-import { CreateTournamentUsecase } from "@usecase/tournament/create_tournament_usecase.js";
+import { CreateTournamentUsecase } from "@usecase/tournament/create_tournament_usecase";
+import { GetTournamentUsecase } from "@usecase/tournament/get_tournament_usecase";
+import { RegisterTournamentUsecase } from "@usecase/tournament/register_tournament_usecase";
+import { UnregisterTournamentUsecase } from "@usecase/tournament/unregister_tournament_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { FindUserByUsernameUsecase } from "@usecase/user/find_user_by_username_usecase";
 import { FindUserUsecase } from "@usecase/user/find_user_usecase";
@@ -413,8 +416,17 @@ const start = async () => {
 		);
 
 		const createTournamentUsecase = new CreateTournamentUsecase(tx);
+		const getTournamentUsecase = new GetTournamentUsecase(tx);
+		const registerTournamentUsecase = new RegisterTournamentUsecase(tx);
+		const unregisterTournamentUsecase = new UnregisterTournamentUsecase(tx);
 		await app.register(
-			tournamentController(createTournamentUsecase, authPrehandler),
+			tournamentController(
+				createTournamentUsecase,
+				getTournamentUsecase,
+				registerTournamentUsecase,
+				unregisterTournamentUsecase,
+				authPrehandler,
+			),
 			{
 				prefix: "/api",
 			},

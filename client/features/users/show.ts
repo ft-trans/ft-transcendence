@@ -141,9 +141,9 @@ export class UserProfile extends Component {
 		}
 
 		element.innerHTML = `
-		<img 
-			src="${avatarUrl}" 
-			alt="${user.username}のアバター" 
+		<img
+			src="${avatarUrl}"
+			alt="${user.username}のアバター"
 			class="w-30 h-30 rounded-full mb-2 object-cover border-4 border-gray-200"
 			onerror="this.src='${defaultAvatar}'"
 		>
@@ -250,10 +250,10 @@ export class UserProfile extends Component {
 
 		return `
 		<div class="flex items-center">
-			<img 
-				src="${avatarUrl}" 
-				alt="${player.username}のアバター" 
-				class="w-10 h-10 rounded-full inline-block mx-1 object-cover" 
+			<img
+				src="${avatarUrl}"
+				alt="${player.username}のアバター"
+				class="w-10 h-10 rounded-full inline-block mx-1 object-cover"
 				onerror="this.src='${defaultAvatar}'"
 			>
 		</div>

@@ -56,7 +56,8 @@ export class NewTournament extends Component {
 							message: "トーナメントが作成されました",
 							type: "info",
 						}).show();
-						navigateTo("/");
+						console.log("Tournament created:", response.tournament);
+						navigateTo(`/tournaments/${response.tournament.id}/`);
 					}
 				} catch (error) {
 					console.error("Create tournament failed:", error);
@@ -74,12 +75,17 @@ export class NewTournament extends Component {
         ${new SectionTitle({ text: "トーナメント作成" }).render()}
         <div class="max-w-md mx-auto">
             <form id="tournament-form" novalidate class="space-y-6">
-                ${new FormInput({
-									id: "maxParticipants",
-									name: "maxParticipants",
-									type: "number",
-									labelText: "人数",
-								}).render()}
+				<div class="invisible">
+					${
+						// 簡単のためinvisible(4人で固定)
+						new FormInput({
+							id: "maxParticipants",
+							name: "maxParticipants",
+							type: "number",
+							labelText: "人数",
+						}).render()
+					}
+				</div>
                 <div class="flex justify-center">
                     ${new Button({
 											width: "full",

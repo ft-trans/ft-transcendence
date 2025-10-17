@@ -11,8 +11,6 @@ export type CreateTournamentResponse = {
 		id: string;
 		organizerId: string;
 		maxParticipants: number;
-		createdAt: string;
-		updatedAt: string;
 	};
 };
 
@@ -25,3 +23,34 @@ export const createTournamentFormSchema = z.object({
 			message: "参加人数は2,4,8,16,32,64のいずれかである必要があります",
 		}),
 });
+
+export type GetTournamentResponse = {
+	tournament: {
+		id: string;
+		organizerId: string;
+		status: string;
+		maxParticipants: number;
+
+		participants: {
+			id: string;
+			userId: string;
+			username: string;
+			avatarUrl?: string;
+			status: string;
+		}[];
+	};
+};
+
+export type RegisterTournamentRequest = {
+	tournamentId: string;
+	userId: string;
+};
+
+export type RegisterTournamentResponse = {
+	participant: {
+		id: string;
+		userId: string;
+		tournamentId: string;
+		status: string;
+	};
+};

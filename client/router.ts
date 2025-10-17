@@ -8,7 +8,7 @@ import { Matchmaking } from "./features/matchmaking";
 import { MessagesPage } from "./features/messages";
 import { MatchesPong } from "./features/pong/matches";
 import { EditProfile } from "./features/profile";
-import { NewTournament } from "./features/tournament";
+import { NewTournament, ShowTournament } from "./features/tournament";
 import { UserProfile } from "./features/users/show";
 
 export const router = async () => {
@@ -65,6 +65,10 @@ export const router = async () => {
 		{
 			path: "/tournaments/new",
 			component: new Navigation({ child: new NewTournament() }),
+		},
+		{
+			path: "/tournaments/:tournamentId",
+			component: new Navigation({ child: new ShowTournament() }),
 		},
 	];
 
