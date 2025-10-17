@@ -8,10 +8,6 @@ RUN set -x \
   && /home/generate_certs.sh \
   && rm -f /home/generate_certs.sh
 
-RUN rm -f /var/log/nginx/access.log /var/log/nginx/error.log \
- && touch /var/log/nginx/access.log /var/log/nginx/error.log \
- && chown -R nginx:nginx /var/log/nginx
-
 COPY --chown=nginx:nginx deploy/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY --chown=nginx:nginx deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --chown=nginx:nginx deploy/nginx/metrics.conf /etc/nginx/conf.d/metrics.conf

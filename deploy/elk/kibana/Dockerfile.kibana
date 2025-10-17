@@ -1,7 +1,0 @@
-ARG STACK_VERSION=9.1.5
-FROM docker.elastic.co/kibana/kibana:${STACK_VERSION}
-
-COPY --chown=kibana:kibana config/kibana.yml /usr/share/kibana/config/kibana.yml
-COPY --chown=kibana:kibana --chmod=0755 kibana-entrypoint.sh /usr/local/bin/kibana-entrypoint.sh
-
-ENTRYPOINT ["/usr/local/bin/kibana-entrypoint.sh"]
