@@ -34,3 +34,4 @@ coverage
 # Avatar uploads - ignore all except default.png
 public/avatars/*
 !public/avatars/default.svg
+secrets/
