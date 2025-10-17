@@ -10,16 +10,25 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
+      NODE_ENV: production
+      ELASTIC_CA: /app/certs/ca/ca.crt
+    secrets:
+      - elasticsearch_password
     networks:
       - transcendence_net
     # TODO 提出前に削除, metrics確認用
     ports:
       - "9464:9464"
     depends_on:
+      setup:
+        condition: service_completed_successfully
+      es01:
+        condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
       - prisma:/app/dist/prisma
+      - certs:/app/certs:ro
     # TODO 提出前にコメントアウトを外す
     # restart: always
     healthcheck:
@@ -35,6 +44,9 @@ services:
       target: production
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - nginx-logs:/var/log/nginx
     networks:
       - transcendence_net
     depends_on:
@@ -113,15 +125,143 @@ services:
     networks:
       - transcendence_net
 
+  setup: # TLS証明書を作成
+    build:
+      context: ./deploy/elk/setup
+      dockerfile: Dockerfile.setup
+      args:
+        STACK_VERSION: ${STACK_VERSION}
+    restart: "no"
+    secrets:
+      - elasticsearch_password
+      - kibana_password
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs
+    networks:
+      - transcendence_net
+    healthcheck: 
+      test: ["CMD-SHELL", "[ -f /usr/share/elasticsearch/config/certs/es01/es01.crt ]"]
+      start_period: 5s
+      interval: 1s
+      timeout: 5s
+      retries: 120
+
+  es01:
+    build:
+      context: ./deploy/elk/elasticsearch
+      dockerfile: Dockerfile.elasticsearch
+      args:
+        STACK_VERSION: ${STACK_VERSION}
+    environment:
+      - ELASTIC_PASSWORD_FILE=/run/secrets/elasticsearch_password
+      - CLUSTER_NAME=${CLUSTER_NAME}
+    ports:
+      - ${ES_PORT}:9200
+    secrets:
+      - elasticsearch_password
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs:ro
+      - esdata01:/usr/share/elasticsearch/data
+    mem_limit: ${ES_MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - transcendence_net
+    depends_on:
+      setup:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL","curl -fsS --cacert config/certs/ca/ca.crt https://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s >/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+
+  kibana:
+    build:
+      context: ./deploy/elk/kibana
+      dockerfile: Dockerfile.kibana
+      args:
+        STACK_VERSION: ${STACK_VERSION}
+    ports:
+      - ${KIBANA_PORT}:5601
+    secrets:
+      - kibana_password
+      - kbn_security_key
+      - kbn_eso_key
+      - kbn_reporting_key
+    volumes:
+      - certs:/usr/share/kibana/config/certs
+      - kibanadata:/usr/share/kibana/data
+    mem_limit: ${KB_MEM_LIMIT}
+    networks:
+      - transcendence_net
+    depends_on:
+      es01:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL","curl -fsS --cacert config/certs/ca/ca.crt https://localhost:5601/api/status | grep -q '\"level\":\"available\"'"]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+
+  logstash01:
+    build:
+      context: ./deploy/elk/logstash
+      dockerfile: Dockerfile.logstash
+      args:
+        STACK_VERSION: ${STACK_VERSION}
+    environment:
+      - ELASTIC_HOSTS=https://es01:9200
+      - ELASTIC_USER=elastic
+      - xpack.monitoring.enabled=false
+    secrets:
+      - elasticsearch_password
+    volumes:
+      - logstashdata01:/usr/share/logstash/data
+      - nginx-logs:/usr/share/logstash/nginx:ro
+      - certs:/usr/share/logstash/config/certs:ro
+    depends_on:
+      es01:
+        condition: service_healthy
+    networks:
+      - transcendence_net
+    command: >
+      sh -lc '
+        export ELASTIC_PASSWORD="$(tr -d "\r\n" </run/secrets/elasticsearch_password)";
+        exec /usr/local/bin/docker-entrypoint logstash -f /usr/share/logstash/pipeline/logstash.conf
+      '
+    healthcheck:
+      test: ["CMD-SHELL","curl -fsS http://localhost:9600/_node/pipelines | grep -q '\"pipelines\"'"]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+
 volumes:
   redis:
   prisma:
   prometheus-data:
   grafana-data:
+  certs:
+  esdata01:
+  kibanadata:
+  logstashdata01:
+  nginx-logs:
 
 secrets:
   grafana_admin_password:
     file: ./secrets/grafana_admin_password.txt
+  elasticsearch_password:
+    file: ./secrets/elasticsearch_password.txt
+  kibana_password:
+    file: ./secrets/kibana_password.txt
+  kbn_security_key:
+    file: ./secrets/kbn_security_key.txt
+  kbn_eso_key:
+    file: ./secrets/kbn_eso_key.txt
+  kbn_reporting_key:
+    file: ./secrets/kbn_reporting_key.txt
 
 networks:
   transcendence_net:

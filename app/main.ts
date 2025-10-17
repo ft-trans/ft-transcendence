@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { resolve } from "node:path";
 import { AvatarUploadService } from "@domain/service/avatar_upload_service";
 import { MatchmakingService } from "@domain/service/matchmaking_service";
@@ -72,11 +74,63 @@ import { SearchUsersUsecase } from "@usecase/user/search_users_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import { UploadAvatarUsecase } from "@usecase/user/upload_avatar_usecase";
 import Fastify from "fastify";
+import type { TransportTargetOptions } from "pino";
 import { otelInstrumentation } from "./observability/otel.js";
 
-const app = Fastify({ logger: true });
+const isProd = process.env.NODE_ENV === "production";
+
+const logToEs = process.env.LOG_TO_ES
+	? process.env.LOG_TO_ES === "true"
+	: isProd;
+const logStdout = process.env.LOG_STDOUT
+	? process.env.LOG_STDOUT === "true"
+	: !isProd;
+
+const targets: TransportTargetOptions[] = [];
+
+if (logStdout) {
+	targets.push({
+		target: "pino/file",
+		level: isProd ? "info" : "debug",
+		options: { destination: 1 }, // stdout
+	});
+}
+
+if (logToEs) {
+	const elasticCaPath = process.env.ELASTIC_CA || "/app/certs/ca/ca.crt";
+	const elasticPassword = process.env.ELASTIC_PASSWORD;
+	if (!elasticPassword) {
+		console.error("[boot] missing ELASTIC_PASSWORD");
+		process.exit(1);
+	}
+	targets.push({
+		target: "pino-elasticsearch",
+		level: "info",
+		options: {
+			index: "app-logs",
+			node: "https://es01:9200",
+			esVersion: 9,
+			auth: { username: "elastic", password: elasticPassword },
+			tls: { ca: readFileSync(elasticCaPath), rejectUnauthorized: true },
+		},
+	});
+}
+
+const app = Fastify({
+	logger: targets.length
+		? {
+				level: isProd ? "info" : "debug",
+				timestamp: () => `,"@timestamp":"${new Date().toISOString()}"`,
+				transport: { targets },
+			}
+		: {
+				level: isProd ? "info" : "debug",
+				timestamp: () => `,"@timestamp":"${new Date().toISOString()}"`,
+			},
+});
 
 const start = async () => {
+	app.log.info("Testing logger to ES");
 	try {
 		app.get("/api/health", async () => ({ message: "OK" }));
 
