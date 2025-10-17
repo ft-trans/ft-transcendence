@@ -52,9 +52,9 @@ openssl x509 -req -days 365 \
 # CSRファイルを削除（不要）
 rm $CERT_DIR/server.csr $CERT_DIR/server.cnf
 
-# 権限設定 コンテナコピー時に設定するので不要
-# chmod 600 $CERT_DIR/server.key
-# chmod 644 $CERT_DIR/server.crt
+# 権限設定
+chmod 600 $CERT_DIR/server.key
+chmod 644 $CERT_DIR/server.crt
 
 echo "SSL certificates generated successfully!"
 
