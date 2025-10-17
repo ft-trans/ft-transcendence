@@ -57,12 +57,8 @@ COPY --from=dependency /app/node_modules /app/node_modules
 RUN set -x \
   && chown -R app:app /app
 
-USER root
-COPY deploy/app-entrypoint.sh /usr/local/bin/app-entrypoint.sh
-RUN chmod 0755 /usr/local/bin/app-entrypoint.sh && chown app:app /usr/local/bin/app-entrypoint.sh
-
 USER app
+
 EXPOSE 3000
 
-ENTRYPOINT ["/usr/local/bin/app-entrypoint.sh"]
 CMD ["node", "--import", "./dist/app/observability/otel.js", "dist/app/main.js"]
