@@ -37,4 +37,4 @@ public/avatars/*
 
 # secrets
 secrets/*.txt
-!secrets/*.txt.sample
+!secrets/*.sample
