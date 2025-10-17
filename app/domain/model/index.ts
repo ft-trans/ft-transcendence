@@ -5,5 +5,6 @@ export * from "./match_history";
 export * from "./password";
 export * from "./pong";
 export * from "./session";
+export * from "./tournament";
 export * from "./user";
 export * from "./value_object";

@@ -8,6 +8,7 @@ import type { IPongLoopRepository } from "./pong_loop_repository";
 import type { IPongMatchStateRepository } from "./pong_match_state_repository";
 import type { IPongPaddleRepository } from "./pong_paddle_repository";
 import type { ISessionRepository } from "./session_repository";
+import type { ITournamentRepository } from "./tournament_repository";
 import type { IUserPresenceRepository } from "./user_presence_repository";
 import type { IUserRepository } from "./user_repository";
 
@@ -19,6 +20,7 @@ export interface IRepository {
 	newSessionRepository(): ISessionRepository;
 	newMatchRepository(): IMatchRepository;
 	newMatchHistoryRepository(): IMatchHistoryRepository;
+	newTournamentRepository(): ITournamentRepository;
 
 	// KVS repositories
 	newPongBallRepository(): IPongBallRepository;

@@ -9,5 +9,6 @@ export * from "./pong_match_state_repository";
 export * from "./pong_paddle_repository";
 export * from "./repository";
 export * from "./session_repository";
+export * from "./tournament_repository";
 export * from "./user_presence_repository";
 export * from "./user_repository";
