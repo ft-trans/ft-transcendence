@@ -22,6 +22,7 @@ import { matchmakingWsController } from "@presentation/controllers/matchmaking_w
 import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
 import { relationshipController } from "@presentation/controllers/relationship_controller";
+import { tournamentController } from "@presentation/controllers/tournament_controller";
 import { userController } from "@presentation/controllers/user_controller";
 import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
@@ -67,6 +68,7 @@ import { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase
 import { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_friend_request_usecase";
 import { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
 import { UnblockUserUsecase } from "@usecase/relationship/unblock_user_usecase";
+import { CreateTournamentUsecase } from "@usecase/tournament/create_tournament_usecase.js";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { FindUserByUsernameUsecase } from "@usecase/user/find_user_by_username_usecase";
 import { FindUserUsecase } from "@usecase/user/find_user_usecase";
@@ -405,6 +407,14 @@ const start = async () => {
 				startPongUsecase,
 				authPrehandler,
 			),
+			{
+				prefix: "/api",
+			},
+		);
+
+		const createTournamentUsecase = new CreateTournamentUsecase(tx);
+		await app.register(
+			tournamentController(createTournamentUsecase, authPrehandler),
 			{
 				prefix: "/api",
 			},
