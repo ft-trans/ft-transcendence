@@ -23,6 +23,7 @@ import { relationshipController } from "@presentation/controllers/relationship_c
 import { userController } from "@presentation/controllers/user_controller";
 import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import { errorHandler } from "@presentation/hooks/error_handler";
 import { MESSAGE_TYPES } from "@shared/api/chat";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
 import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
@@ -105,6 +106,10 @@ const start = async () => {
 		}
 
 		await app.register(FastifyRedis, { url: redisUrl });
+
+		// グローバルエラーハンドラを設定
+		app.setErrorHandler(errorHandler);
+
 		const repo = new Repository(prisma, app.redis);
 		const tx = new Transaction(prisma, app.redis);
 		const registerUserUsecase = new RegisterUserUsecase(tx);
