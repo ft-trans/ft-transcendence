@@ -46,7 +46,7 @@ up: docker.up
 down: docker.down
 
 .PHONY: docker.up
-docker.up:
+docker.up: secrets.generate secrets.check
 	docker compose -f $(COMPOSE_YML) up -d
 
 .PHONY: docker.down
