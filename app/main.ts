@@ -109,7 +109,7 @@ if (logToEs) {
 		level: "info",
 		options: {
 			index: "app-logs",
-			node: "https://es01:9200",
+			node: "https://elasticsearch:9200",
 			esVersion: 9,
 			auth: { username: "elastic", password: elasticPassword },
 			tls: { ca: readFileSync(elasticCaPath), rejectUnauthorized: true },

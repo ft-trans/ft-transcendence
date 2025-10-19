@@ -10,7 +10,7 @@ KIBANA_PASSWORD="$(tr -d '\r\n' < /run/secrets/kibana_password)"
 
 ES_HOME="/usr/share/elasticsearch"
 CERTS="$ES_HOME/config/certs"
-ES_URL="https://es01:9200"
+ES_URL="https://elasticsearch:9200"
 KBN_URL="https://kibana:5601"
 ES_USER="elastic"
 ES_PASS="${ELASTIC_PASSWORD}"
@@ -23,18 +23,18 @@ if [ ! -f "$CERTS/ca/ca.crt" ]; then
 fi
 
 # instance certs
-if [ ! -f "$CERTS/es01/es01.crt" ]; then
+if [ ! -f "$CERTS/elasticsearch/elasticsearch.crt" ]; then
   echo "[setup] creating instance certs"
   cat > "$CERTS/instances.yml" <<'YML'
 instances:
-  - name: es01
-    dns: [es01, localhost]
+  - name: elasticsearch
+    dns: [elasticsearch, localhost]
     ip:  [127.0.0.1]
   - name: kibana
     dns: [kibana, localhost]
     ip:  [127.0.0.1]
-  - name: logstash01
-    dns: [logstash01, localhost]
+  - name: logstash
+    dns: [logstash, localhost]
     ip:  [127.0.0.1]
 YML
   "$ES_HOME/bin/elasticsearch-certutil" cert --silent --pem \
@@ -76,7 +76,7 @@ done
 echo "[setup] setting kibana_system password"
 until curl -s -X POST --cacert "$CERTS/ca/ca.crt" \
   -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" \
-  https://es01:9200/_security/user/kibana_system/_password \
+  https://elasticsearch:9200/_security/user/kibana_system/_password \
   -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q '^{}'; do
   sleep 5
 done

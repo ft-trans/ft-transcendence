@@ -22,7 +22,7 @@ services:
     depends_on:
       setup:
         condition: service_completed_successfully
-      es01:
+      elasticsearch:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -140,13 +140,13 @@ services:
     networks:
       - transcendence_net
     healthcheck: 
-      test: ["CMD-SHELL", "[ -f /usr/share/elasticsearch/config/certs/es01/es01.crt ]"]
+      test: ["CMD-SHELL", "[ -f /usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.crt ]"]
       start_period: 5s
       interval: 1s
       timeout: 5s
       retries: 120
 
-  es01:
+  elasticsearch:
     build:
       context: ./deploy/elk/elasticsearch
       dockerfile: Dockerfile.elasticsearch
@@ -161,7 +161,7 @@ services:
       - elasticsearch_password
     volumes:
       - certs:/usr/share/elasticsearch/config/certs:ro
-      - esdata01:/usr/share/elasticsearch/data
+      - elasticsearch-data:/usr/share/elasticsearch/data
     mem_limit: ${ES_MEM_LIMIT}
     ulimits:
       memlock:
@@ -193,12 +193,12 @@ services:
       - kbn_reporting_key
     volumes:
       - certs:/usr/share/kibana/config/certs
-      - kibanadata:/usr/share/kibana/data
+      - kibana-data:/usr/share/kibana/data
     mem_limit: ${KB_MEM_LIMIT}
     networks:
       - transcendence_net
     depends_on:
-      es01:
+      elasticsearch:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL","curl -fsS --cacert config/certs/ca/ca.crt https://localhost:5601/api/status | grep -q '\"level\":\"available\"'"]
@@ -206,24 +206,24 @@ services:
       timeout: 10s
       retries: 120
 
-  logstash01:
+  logstash:
     build:
       context: ./deploy/elk/logstash
       dockerfile: Dockerfile.logstash
       args:
         STACK_VERSION: ${STACK_VERSION}
     environment:
-      - ELASTIC_HOSTS=https://es01:9200
+      - ELASTIC_HOSTS=https://elasticsearch:9200
       - ELASTIC_USER=elastic
       - xpack.monitoring.enabled=false
     secrets:
       - elasticsearch_password
     volumes:
-      - logstashdata01:/usr/share/logstash/data
+      - logstash-data:/usr/share/logstash/data
       - nginx-logs:/usr/share/logstash/nginx:ro
       - certs:/usr/share/logstash/config/certs:ro
     depends_on:
-      es01:
+      elasticsearch:
         condition: service_healthy
     networks:
       - transcendence_net
@@ -244,9 +244,9 @@ volumes:
   prometheus-data:
   grafana-data:
   certs:
-  esdata01:
-  kibanadata:
-  logstashdata01:
+  elasticsearch-data:
+  logstash-data:
+  kibana-data:
   nginx-logs:
 
 secrets:
