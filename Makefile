@@ -64,3 +64,34 @@ docker.clean:
 .PHONY: clean
 clean:
 	rm -rf dist
+
+.PHONY: secrets.template
+secrets.template:
+	@mkdir -p secrets
+	@[ -f secrets/elasticsearch_password.txt.sample ] || touch secrets/elasticsearch_password.txt.sample
+	@[ -f secrets/grafana_admin_password.txt.sample ] || touch secrets/grafana_admin_password.txt.sample
+	@[ -f secrets/kibana_password.txt.sample ] || touch secrets/kibana_password.txt.sample
+	@[ -f secrets/kbn_eso_key.txt.sample ] || openssl rand -base64 32 > secrets/kbn_eso_key.txt.sample
+	@[ -f secrets/kbn_reporting_key.txt.sample ] || openssl rand -base64 32 > secrets/kbn_reporting_key.txt.sample
+	@[ -f secrets/kbn_security_key.txt.sample ] || openssl rand -base64 32 > secrets/kbn_security_key.txt.sample
+	@echo "secrets/*.txt.sample prepared"
+
+.PHONY: secrets.generate
+secrets.generate:
+	@mkdir -p secrets
+	@[ -f secrets/elasticsearch_password.txt ] || (umask 077 && openssl rand -base64 24 | tr -d '\r\n' > secrets/elasticsearch_password.txt)
+	@[ -f secrets/kibana_password.txt ]        || (umask 077 && openssl rand -base64 24 | tr -d '\r\n' > secrets/kibana_password.txt)
+	@[ -f secrets/grafana_admin_password.txt ] || (umask 077 && openssl rand -base64 24 | tr -d '\r\n' > secrets/grafana_admin_password.txt)
+	@[ -f secrets/kbn_eso_key.txt ]       || (umask 077 && openssl rand -base64 32 | tr -d '\r\n' > secrets/kbn_eso_key.txt)
+	@[ -f secrets/kbn_reporting_key.txt ] || (umask 077 && openssl rand -base64 32 | tr -d '\r\n' > secrets/kbn_reporting_key.txt)
+	@[ -f secrets/kbn_security_key.txt ]  || (umask 077 && openssl rand -base64 32 | tr -d '\r\n' > secrets/kbn_security_key.txt)
+	@echo "local secrets generated"
+
+.PHONY: secrets.check
+secrets.check:
+	@test -s secrets/elasticsearch_password.txt
+	@test -s secrets/kibana_password.txt
+	@test -s secrets/kbn_eso_key.txt
+	@test -s secrets/kbn_reporting_key.txt
+	@test -s secrets/kbn_security_key.txt
+	@echo "secrets.check passed"
