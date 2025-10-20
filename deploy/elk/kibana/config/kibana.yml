@@ -1,5 +1,5 @@
 server.name: kibana
-server.host: 0.0.0.0
+server.host: "0.0.0.0"
 server.publicBaseUrl: https://localhost:5601
 
 # Kibana TLS
@@ -9,9 +9,9 @@ server.ssl.key: config/certs/kibana/kibana.key
 xpack.security.secureCookies: true
 
 # Elasticsearch Connection
-elasticsearch.hosts: ["https://elasticsearch:9200"]
-elasticsearch.username: kibana_system
-elasticsearch.password: ${ELASTICSEARCH_PASSWORD}
+elasticsearch.hosts: ["${ELASTIC_URL}"]
+elasticsearch.username: ${KIBANA_USER}
+elasticsearch.password: ${KIBANA_PASSWORD}
 elasticsearch.ssl.certificateAuthorities: ["config/certs/ca/ca.crt"]
 
 # Encryption
@@ -21,7 +21,6 @@ xpack.reporting.encryptionKey: ${KBN_REPORTING_KEY}
 
 # Other
 server.shutdownTimeout: "5s"
-monitoring.ui.container.elasticsearch.enabled: true
 telemetry.enabled: false
 xpack.fleet.enabled: false
 # xpack.securitySolution.telemetry.enabled: false

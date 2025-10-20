@@ -12,6 +12,7 @@ services:
       REDIS_URL: ${REDIS_URL}
       NODE_ENV: production
       ELASTIC_CA: /app/certs/ca/ca.crt
+      ELASTIC_URL: https://es-logs:9200
     secrets:
       - elasticsearch_password
     networks:
@@ -20,7 +21,7 @@ services:
     ports:
       - "9464:9464"
     depends_on:
-      setup:
+      setup-elasticsearch:
         condition: service_completed_successfully
       elasticsearch:
         condition: service_healthy
@@ -125,27 +126,6 @@ services:
     networks:
       - transcendence_net
 
-  setup: # TLS証明書を作成
-    build:
-      context: ./deploy/elk/setup
-      dockerfile: Dockerfile.setup
-      args:
-        STACK_VERSION: ${STACK_VERSION}
-    restart: "no"
-    secrets:
-      - elasticsearch_password
-      - kibana_password
-    volumes:
-      - certs:/usr/share/elasticsearch/config/certs
-    networks:
-      - transcendence_net
-    healthcheck: 
-      test: ["CMD-SHELL", "[ -f /usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.crt ]"]
-      start_period: 5s
-      interval: 1s
-      timeout: 5s
-      retries: 120
-
   elasticsearch:
     build:
       context: ./deploy/elk/elasticsearch
@@ -154,14 +134,14 @@ services:
         STACK_VERSION: ${STACK_VERSION}
     environment:
       - ELASTIC_PASSWORD_FILE=/run/secrets/elasticsearch_password
-      - CLUSTER_NAME=${CLUSTER_NAME}
     ports:
-      - ${ES_PORT}:9200
+      - 127.0.0.1:${ELASTIC_PORT}:9200
     secrets:
       - elasticsearch_password
     volumes:
       - certs:/usr/share/elasticsearch/config/certs:ro
       - elasticsearch-data:/usr/share/elasticsearch/data
+    # TODO: fix mem_limit & ulimits settings (あとで) 
     mem_limit: ${ES_MEM_LIMIT}
     ulimits:
       memlock:
@@ -170,34 +150,39 @@ services:
     networks:
       - transcendence_net
     depends_on:
-      setup:
-        condition: service_healthy
+      setup-certs:
+        condition: service_completed_successfully
     healthcheck:
-      test: ["CMD-SHELL","curl -fsS --cacert config/certs/ca/ca.crt https://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s >/dev/null"]
+      test: ["CMD-SHELL","curl -fsS --cacert config/certs/ca/ca.crt -u elastic:$(cat /run/secrets/elasticsearch_password) https://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s >/dev/null"]
       interval: 10s
       timeout: 10s
       retries: 120
-
+ 
   kibana:
     build:
       context: ./deploy/elk/kibana
       dockerfile: Dockerfile.kibana
       args:
         STACK_VERSION: ${STACK_VERSION}
+    environment:
+      ELASTIC_URL: ${ELASTIC_URL}
+      KIBANA_USER: ${KIBANA_USER}
     ports:
-      - ${KIBANA_PORT}:5601
+      - "127.0.0.1:${KIBANA_PORT}:5601"
     secrets:
       - kibana_password
       - kbn_security_key
       - kbn_eso_key
       - kbn_reporting_key
     volumes:
-      - certs:/usr/share/kibana/config/certs
+      - certs:/usr/share/kibana/config/certs:ro
       - kibana-data:/usr/share/kibana/data
     mem_limit: ${KB_MEM_LIMIT}
     networks:
       - transcendence_net
     depends_on:
+      setup-elasticsearch:
+        condition: service_completed_successfully
       elasticsearch:
         condition: service_healthy
     healthcheck:
@@ -213,30 +198,81 @@ services:
       args:
         STACK_VERSION: ${STACK_VERSION}
     environment:
-      - ELASTIC_HOSTS=https://elasticsearch:9200
-      - ELASTIC_USER=elastic
-      - xpack.monitoring.enabled=false
+      ELASTIC_URL: ${ELASTIC_URL}
+      ELASTIC_USER: ${ELASTIC_USER}
+      LS_JAVA_OPTS: "-Xms256m -Xmx256m"
     secrets:
       - elasticsearch_password
     volumes:
+      - certs:/usr/share/logstash/config/certs:ro
       - logstash-data:/usr/share/logstash/data
       - nginx-logs:/usr/share/logstash/nginx:ro
-      - certs:/usr/share/logstash/config/certs:ro
     depends_on:
+      setup-elasticsearch:
+        condition: service_completed_successfully
       elasticsearch:
         condition: service_healthy
     networks:
       - transcendence_net
-    command: >
-      sh -lc '
-        export ELASTIC_PASSWORD="$(tr -d "\r\n" </run/secrets/elasticsearch_password)";
-        exec /usr/local/bin/docker-entrypoint logstash -f /usr/share/logstash/pipeline/logstash.conf
-      '
     healthcheck:
       test: ["CMD-SHELL","curl -fsS http://localhost:9600/_node/pipelines | grep -q '\"pipelines\"'"]
       interval: 10s
       timeout: 10s
       retries: 120
+
+  setup-certs:
+    build:
+      context: ./deploy/elk/setup-certs
+      dockerfile: Dockerfile.setup-certs
+      args:
+        STACK_VERSION: ${STACK_VERSION}
+    restart: "no"
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs
+    networks:
+      - transcendence_net
+  
+  setup-elasticsearch:
+    build:
+      context: ./deploy/elk/setup-elasticsearch
+      dockerfile: Dockerfile.setup-elasticsearch
+      args:
+        STACK_VERSION: ${STACK_VERSION}
+    restart: "no"
+    environment:
+      ELASTIC_URL: ${ELASTIC_URL}
+      ELASTIC_USER: ${ELASTIC_USER}
+      KIBANA_USER: ${KIBANA_USER}
+    secrets:
+      - elasticsearch_password
+      - kibana_password
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs:ro
+    networks:
+      - transcendence_net
+    depends_on:
+      elasticsearch: 
+        condition: service_healthy
+
+  setup-kibana:
+    build:
+      context: ./deploy/elk/setup-kibana
+      dockerfile: Dockerfile.setup-kibana
+    restart: "no"
+    environment:
+      ELASTIC_USER: ${ELASTIC_USER}
+      KIBANA_URL: ${KIBANA_URL}
+    secrets:
+      - elasticsearch_password
+    volumes:
+      - certs:/certs:ro
+    networks:
+      - transcendence_net
+    depends_on:
+      elasticsearch: 
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
 
 volumes:
   redis:
@@ -265,3 +301,4 @@ secrets:
 
 networks:
   transcendence_net:
+

@@ -1,5 +1,10 @@
 ARG STACK_VERSION=9.1.5
 FROM docker.elastic.co/logstash/logstash:${STACK_VERSION}
 
+RUN rm -f /usr/share/logstash/pipeline/logstash.conf
 COPY pipeline/ /usr/share/logstash/pipeline/
-# COPY config/logstash.yml /usr/share/logstash/config/logstash.yml
+COPY config/ /usr/share/logstash/config/
+
+COPY --chmod=0755 logstash-entrypoint.sh /usr/local/bin/logstash-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/logstash-entrypoint.sh"]

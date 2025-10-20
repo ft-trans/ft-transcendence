@@ -1,0 +1,8 @@
+# deploy/elk/logstash/config/logstash.yml
+
+# http settings
+api.http.host: "0.0.0.0"
+api.http.port: 9600
+
+# monitoring for Logstash
+xpack.monitoring.enabled: false

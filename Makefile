@@ -79,9 +79,9 @@ secrets.template:
 .PHONY: secrets.generate
 secrets.generate:
 	@mkdir -p secrets
-	@[ -f secrets/elasticsearch_password.txt ] || (umask 077 && openssl rand -base64 24 | tr -d '\r\n' > secrets/elasticsearch_password.txt)
-	@[ -f secrets/kibana_password.txt ]        || (umask 077 && openssl rand -base64 24 | tr -d '\r\n' > secrets/kibana_password.txt)
-	@[ -f secrets/grafana_admin_password.txt ] || (umask 077 && openssl rand -base64 24 | tr -d '\r\n' > secrets/grafana_admin_password.txt)
+	@[ -f secrets/elasticsearch_password.txt ] || (umask 077 && openssl rand -base64 8 | tr -d '\r\n' > secrets/elasticsearch_password.txt)
+	@[ -f secrets/kibana_password.txt ]        || (umask 077 && openssl rand -base64 8 | tr -d '\r\n' > secrets/kibana_password.txt)
+	@[ -f secrets/grafana_admin_password.txt ] || (umask 077 && openssl rand -base64 8 | tr -d '\r\n' > secrets/grafana_admin_password.txt)
 	@[ -f secrets/kbn_eso_key.txt ]       || (umask 077 && openssl rand -base64 32 | tr -d '\r\n' > secrets/kbn_eso_key.txt)
 	@[ -f secrets/kbn_reporting_key.txt ] || (umask 077 && openssl rand -base64 32 | tr -d '\r\n' > secrets/kbn_reporting_key.txt)
 	@[ -f secrets/kbn_security_key.txt ]  || (umask 077 && openssl rand -base64 32 | tr -d '\r\n' > secrets/kbn_security_key.txt)
