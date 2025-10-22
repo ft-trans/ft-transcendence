@@ -99,6 +99,8 @@ if (logStdout) {
 
 if (logToEs) {
 	const elasticCaPath = process.env.ELASTIC_CA || "/app/certs/ca/ca.crt";
+	const elasticURL = process.env.ELASTIC_URL || "https://es-logs:9200";
+	const elasticUser = process.env.ELASTIC_USER || "elastic";
 	const elasticPassword = process.env.ELASTIC_PASSWORD;
 	if (!elasticPassword) {
 		console.error("[boot] missing ELASTIC_PASSWORD");
@@ -109,9 +111,9 @@ if (logToEs) {
 		level: "info",
 		options: {
 			index: "app-logs",
-			node: "https://elasticsearch:9200",
+			node: elasticURL,
 			esVersion: 9,
-			auth: { username: "elastic", password: elasticPassword },
+			auth: { username: elasticUser, password: elasticPassword },
 			tls: { ca: readFileSync(elasticCaPath), rejectUnauthorized: true },
 		},
 	});

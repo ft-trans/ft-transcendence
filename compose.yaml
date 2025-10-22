@@ -12,11 +12,13 @@ services:
       REDIS_URL: ${REDIS_URL}
       NODE_ENV: production
       ELASTIC_CA: /app/certs/ca/ca.crt
-      ELASTIC_URL: https://es-logs:9200
+      ELASTIC_URL: ${ELASTIC_URL}
+      ELASTIC_USER: ${ELASTIC_USER}
     secrets:
       - elasticsearch_password
     networks:
       - transcendence_net
+      - elk_net
     # TODO 提出前に削除, metrics確認用
     ports:
       - "9464:9464"
@@ -147,8 +149,7 @@ services:
       memlock:
         soft: -1
         hard: -1
-    networks:
-      - transcendence_net
+    networks: [elk_net]
     depends_on:
       setup-certs:
         condition: service_completed_successfully
@@ -178,8 +179,7 @@ services:
       - certs:/usr/share/kibana/config/certs:ro
       - kibana-data:/usr/share/kibana/data
     mem_limit: ${KB_MEM_LIMIT}
-    networks:
-      - transcendence_net
+    networks: [elk_net]
     depends_on:
       setup-elasticsearch:
         condition: service_completed_successfully
@@ -212,8 +212,7 @@ services:
         condition: service_completed_successfully
       elasticsearch:
         condition: service_healthy
-    networks:
-      - transcendence_net
+    networks: [elk_net]
     healthcheck:
       test: ["CMD-SHELL","curl -fsS http://localhost:9600/_node/pipelines | grep -q '\"pipelines\"'"]
       interval: 10s
@@ -229,8 +228,7 @@ services:
     restart: "no"
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
-    networks:
-      - transcendence_net
+    networks: [elk_net]
   
   setup-elasticsearch:
     build:
@@ -248,8 +246,7 @@ services:
       - kibana_password
     volumes:
       - certs:/usr/share/elasticsearch/config/certs:ro
-    networks:
-      - transcendence_net
+    networks: [elk_net]
     depends_on:
       elasticsearch: 
         condition: service_healthy
@@ -266,8 +263,7 @@ services:
       - elasticsearch_password
     volumes:
       - certs:/certs:ro
-    networks:
-      - transcendence_net
+    networks: [elk_net]
     depends_on:
       elasticsearch: 
         condition: service_healthy
@@ -300,5 +296,5 @@ secrets:
     file: ./secrets/kbn_reporting_key.txt
 
 networks:
-  transcendence_net:
-
+  transcendence_net: {}
+  elk_net: {}
