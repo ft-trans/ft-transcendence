@@ -35,6 +35,4 @@ coverage
 public/avatars/*
 !public/avatars/default.svg
 
-# secrets
-secrets/*.txt
-!secrets/*.sample
+secrets/*

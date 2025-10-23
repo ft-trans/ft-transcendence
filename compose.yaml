@@ -16,6 +16,7 @@ services:
       ELASTIC_USER: ${ELASTIC_USER}
     secrets:
       - elasticsearch_password
+      - app_cookie_secret
     networks:
       - transcendence_net
       - elk_net
@@ -46,10 +47,7 @@ services:
       dockerfile: deploy/Dockerfile.nginx
       target: production
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - nginx-logs:/var/log/nginx
+      - "4443:443"
     networks:
       - transcendence_net
     depends_on:
@@ -284,6 +282,8 @@ volumes:
 secrets:
   grafana_admin_password:
     file: ./secrets/grafana_admin_password.txt
+  app_cookie_secret:
+    file: ./secrets/app_cookie_secret.txt
   elasticsearch_password:
     file: ./secrets/elasticsearch_password.txt
   kibana_password:
