@@ -3,6 +3,7 @@ import {
 	type RegisterUserResponse,
 	registerUserFormSchema,
 } from "@shared/api/auth";
+import { AxiosError } from "axios";
 import { ApiClient } from "client/api/api_client";
 import {
 	Button,
@@ -12,6 +13,7 @@ import {
 	SectionTitle,
 } from "client/components";
 import { annotateZodErrors } from "client/components/form/error";
+import { navigateTo } from "client/router";
 
 export class Register extends Component {
 	onLoad(): void {
@@ -37,16 +39,42 @@ export class Register extends Component {
 					return;
 				}
 				// TODO: APIエラーのハンドリング
-				await new ApiClient().post<RegisterUserRequest, RegisterUserResponse>(
-					"/api/auth/register",
-					{
+				try {
+					const response = await new ApiClient().post<
+						RegisterUserRequest,
+						RegisterUserResponse
+					>("/api/auth/register", {
 						user: {
 							email: input.data.email,
 							username: input.data.username,
 							password: input.data.password,
 						},
-					},
-				);
+					});
+					if (response.user) {
+						new FloatingBanner({
+							message: "アカウントを作成しました。ようこそ",
+							type: "success",
+						}).show();
+						setTimeout(() => {
+							navigateTo("/auth/login");
+						}, 1000);
+					}
+				} catch (error) {
+					console.error("Sign-up failed:", error);
+					if (error instanceof AxiosError) {
+						new FloatingBanner({
+							message:
+								error.response?.data?.error?.message ||
+								`登録に失敗しました (${error.response?.status} ${error.response?.statusText})`,
+							type: "error",
+						}).show();
+						return;
+					}
+					new FloatingBanner({
+						message: `登録に失敗しました。入力内容をご確認ください。 ${error}`,
+						type: "error",
+					}).show();
+				}
 			});
 		}
 	}
