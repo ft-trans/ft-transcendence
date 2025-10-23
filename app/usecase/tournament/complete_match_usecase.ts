@@ -93,7 +93,7 @@ export class CompleteMatchUsecase {
 				// 勝者を収集
 				const winners = roundMatches
 					.map((m) => m.winnerId)
-					.filter((id): id is TournamentParticipantId => id !== null);
+					.filter((id): id is TournamentParticipantId => id !== undefined);
 
 				// トーナメント完了判定（勝者が1人だけ）
 				const isTournamentCompleted = winners.length === 1;

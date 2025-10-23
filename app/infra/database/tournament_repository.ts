@@ -360,6 +360,7 @@ export class TournamentRepository implements ITournamentRepository {
 				id: match.id.value,
 				tournamentId: match.tournamentId.value,
 				roundId: match.roundId.value,
+				matchId: match.matchId ?? null,
 				winnerId: match.winnerId?.value ?? null,
 				status: match.status.value,
 				participants: {
@@ -380,9 +381,10 @@ export class TournamentRepository implements ITournamentRepository {
 			createdMatch.participants.map(
 				(p) => new TournamentParticipantId(p.participantId),
 			),
+			createdMatch.matchId ?? undefined,
 			createdMatch.winnerId
 				? new TournamentParticipantId(createdMatch.winnerId)
-				: null,
+				: undefined,
 			new TournamentMatchStatusValue(
 				createdMatch.status as TournamentMatchStatus,
 			),
@@ -395,6 +397,7 @@ export class TournamentRepository implements ITournamentRepository {
 				id: match.id.value,
 			},
 			data: {
+				matchId: match.matchId ?? null,
 				winnerId: match.winnerId?.value ?? null,
 				status: match.status.value,
 			},
@@ -410,9 +413,10 @@ export class TournamentRepository implements ITournamentRepository {
 			updatedMatch.participants.map(
 				(p) => new TournamentParticipantId(p.participantId),
 			),
+			updatedMatch.matchId ?? undefined,
 			updatedMatch.winnerId
 				? new TournamentParticipantId(updatedMatch.winnerId)
-				: null,
+				: undefined,
 			new TournamentMatchStatusValue(
 				updatedMatch.status as TournamentMatchStatus,
 			),
@@ -442,7 +446,8 @@ export class TournamentRepository implements ITournamentRepository {
 			match.participants.map(
 				(p) => new TournamentParticipantId(p.participantId),
 			),
-			match.winnerId ? new TournamentParticipantId(match.winnerId) : null,
+			match.matchId ?? undefined,
+			match.winnerId ? new TournamentParticipantId(match.winnerId) : undefined,
 			new TournamentMatchStatusValue(match.status as TournamentMatchStatus),
 		);
 	}
@@ -467,7 +472,8 @@ export class TournamentRepository implements ITournamentRepository {
 				match.participants.map(
 					(p) => new TournamentParticipantId(p.participantId),
 				),
-				match.winnerId ? new TournamentParticipantId(match.winnerId) : null,
+				match.matchId ?? undefined,
+				match.winnerId ? new TournamentParticipantId(match.winnerId) : undefined,
 				new TournamentMatchStatusValue(match.status as TournamentMatchStatus),
 			),
 		);
@@ -496,7 +502,8 @@ export class TournamentRepository implements ITournamentRepository {
 				match.participants.map(
 					(p) => new TournamentParticipantId(p.participantId),
 				),
-				match.winnerId ? new TournamentParticipantId(match.winnerId) : null,
+				match.matchId ?? undefined,
+				match.winnerId ? new TournamentParticipantId(match.winnerId) : undefined,
 				new TournamentMatchStatusValue(match.status as TournamentMatchStatus),
 			),
 		);

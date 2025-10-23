@@ -38,6 +38,28 @@ export class MatchHistoryRepository implements IMatchHistoryRepository {
 			hist.playedAt,
 		);
 	}
+
+	async findByMatchId(matchId: string): Promise<MatchHistory | undefined> {
+		const hist = await this.client.matchHistory.findUnique({
+			where: {
+				matchId,
+			},
+		});
+
+		if (!hist) {
+			return undefined;
+		}
+
+		return new MatchHistory(
+			new MatchHistoryId(hist.id),
+			new MatchId(hist.matchId),
+			new UserId(hist.winnerId),
+			new UserId(hist.loserId),
+			hist.winnerScore,
+			hist.loserScore,
+			hist.playedAt,
+		);
+	}
 	async findByUserIdWithPagination(
 		userId: UserId,
 		page: number,

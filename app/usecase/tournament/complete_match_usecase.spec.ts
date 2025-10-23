@@ -52,7 +52,8 @@ describe("CompleteMatchUsecase", () => {
 			tournamentId,
 			roundId,
 			[participant1Id, participant2Id],
-			null,
+			undefined, // matchId
+			undefined, // winnerId
 			new TournamentMatchStatusValue("in_progress"),
 		);
 
@@ -82,7 +83,8 @@ describe("CompleteMatchUsecase", () => {
 				new TournamentParticipantId(ulid()),
 				new TournamentParticipantId(ulid()),
 			],
-			null,
+			undefined, // matchId
+			undefined, // winnerId
 			new TournamentMatchStatusValue("in_progress"),
 		);
 
@@ -130,7 +132,8 @@ describe("CompleteMatchUsecase", () => {
 			tournamentId,
 			roundId,
 			[participant1Id, participant2Id],
-			null,
+			undefined, // matchId
+			undefined, // winnerId
 			new TournamentMatchStatusValue("in_progress"),
 		);
 
@@ -143,7 +146,8 @@ describe("CompleteMatchUsecase", () => {
 			tournamentId,
 			roundId,
 			[participant3Id, participant4Id],
-			participant3Id,
+			undefined, // matchId
+			participant3Id, // winnerId
 			new TournamentMatchStatusValue("completed"),
 		);
 
@@ -208,7 +212,8 @@ describe("CompleteMatchUsecase", () => {
 			tournamentId,
 			roundId,
 			[participant1Id, participant2Id],
-			null,
+			undefined, // matchId
+			undefined, // winnerId
 			new TournamentMatchStatusValue("in_progress"),
 		);
 
@@ -290,7 +295,8 @@ describe("CompleteMatchUsecase", () => {
 			tournamentId,
 			roundId,
 			[participant1Id, participant2Id],
-			null,
+			undefined, // matchId
+			undefined, // winnerId
 			new TournamentMatchStatusValue("in_progress"),
 		);
 

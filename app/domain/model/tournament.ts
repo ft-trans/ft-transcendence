@@ -469,7 +469,8 @@ export class TournamentMatch {
 		readonly tournamentId: TournamentId,
 		readonly roundId: TournamentRoundId,
 		readonly participantIds: TournamentParticipantId[],
-		readonly winnerId: TournamentParticipantId | null,
+		readonly matchId: string | undefined, // 既存のMatchテーブルとの関連
+		readonly winnerId: TournamentParticipantId | undefined,
 		readonly status: TournamentMatchStatusValue,
 	) {}
 
@@ -491,7 +492,8 @@ export class TournamentMatch {
 			tournamentId,
 			roundId,
 			participantIds,
-			null,
+			undefined, // matchId
+			undefined, // winnerId
 			status,
 		);
 	}
@@ -501,7 +503,8 @@ export class TournamentMatch {
 		tournamentId: TournamentId,
 		roundId: TournamentRoundId,
 		participantIds: TournamentParticipantId[],
-		winnerId: TournamentParticipantId | null,
+		matchId: string | undefined,
+		winnerId: TournamentParticipantId | undefined,
 		status: TournamentMatchStatusValue,
 	): TournamentMatch {
 		return new TournamentMatch(
@@ -509,12 +512,13 @@ export class TournamentMatch {
 			tournamentId,
 			roundId,
 			participantIds,
+			matchId,
 			winnerId,
 			status,
 		);
 	}
 
-	start(): TournamentMatch {
+	start(matchId: string): TournamentMatch {
 		if (!this.status.isPending()) {
 			throw new ErrBadRequest({
 				userMessage: "待機中の試合のみ開始できます",
@@ -525,6 +529,7 @@ export class TournamentMatch {
 			this.tournamentId,
 			this.roundId,
 			this.participantIds,
+			matchId,
 			this.winnerId,
 			new TournamentMatchStatusValue("in_progress"),
 		);
@@ -550,6 +555,7 @@ export class TournamentMatch {
 			this.tournamentId,
 			this.roundId,
 			this.participantIds,
+			this.matchId,
 			winnerId,
 			new TournamentMatchStatusValue("completed"),
 		);
@@ -573,6 +579,7 @@ export class TournamentMatch {
 			this.tournamentId,
 			this.roundId,
 			this.participantIds,
+			this.matchId,
 			this.participantIds[0],
 			new TournamentMatchStatusValue("completed"),
 		);

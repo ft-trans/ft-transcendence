@@ -367,7 +367,7 @@ describe("TournamentMatch", () => {
 		expect(match).toBeInstanceOf(TournamentMatch);
 		expect(match.id).toBeInstanceOf(TournamentMatchId);
 		expect(match.participantIds).toHaveLength(2);
-		expect(match.winnerId).toBeNull();
+		expect(match.winnerId).toBeUndefined();
 		expect(match.status.value).toBe("pending");
 	});
 
