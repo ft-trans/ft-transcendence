@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { AvatarUploadService } from "@domain/service/avatar_upload_service";
 import { MatchmakingService } from "@domain/service/matchmaking_service";
@@ -77,6 +78,25 @@ import { otelInstrumentation } from "./observability/otel.js";
 
 const app = Fastify({ logger: true });
 
+const getCookieSecret = (): string => {
+	let secret: string;
+	if (process.env.NODE_ENV === "production") {
+		secret = readFileSync("/run/secrets/app_cookie_secret", "utf8").trim();
+	} else {
+		secret = process.env.COOKIE_SECRET;
+	}
+	if (!secret) {
+		app.log.error("COOKIE_SECRET environment variable is not set");
+		process.exit(1);
+	}
+
+	if (secret.length < 32) {
+		app.log.error("Cookie secret is too short (minimum 32 characters)");
+		process.exit(1);
+	}
+	return secret;
+};
+
 const start = async () => {
 	try {
 		app.get("/api/health", async () => ({ message: "OK" }));
@@ -90,7 +110,10 @@ const start = async () => {
 			spa: true,
 		});
 
-		await app.register(FastifyCookie);
+		await app.register(FastifyCookie, {
+			secret: getCookieSecret(),
+			parseOptions: {},
+		});
 		await app.register(FastifyMultipart);
 
 		// Serve static files from public/avatars

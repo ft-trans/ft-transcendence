@@ -10,6 +10,8 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
+    secrets:
+      - app_cookie_secret
     networks:
       - transcendence_net
     # TODO 提出前に削除, metrics確認用
@@ -122,6 +124,8 @@ volumes:
 secrets:
   grafana_admin_password:
     file: ./secrets/grafana_admin_password.txt
+  app_cookie_secret:
+    file: ./secrets/app_cookie_secret.txt
 
 networks:
   transcendence_net:
