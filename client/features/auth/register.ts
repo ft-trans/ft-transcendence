@@ -3,6 +3,7 @@ import {
 	type RegisterUserResponse,
 	registerUserFormSchema,
 } from "@shared/api/auth";
+import { AxiosError } from "axios";
 import { ApiClient } from "client/api/api_client";
 import {
 	Button,
@@ -60,8 +61,17 @@ export class Register extends Component {
 					}
 				} catch (error) {
 					console.error("Sign-up failed:", error);
+					if (error instanceof AxiosError) {
+						new FloatingBanner({
+							message:
+								error.response?.data?.error?.message ||
+								`登録に失敗しました (${error.response?.status} ${error.response?.statusText})`,
+							type: "error",
+						}).show();
+						return;
+					}
 					new FloatingBanner({
-						message: "登録に失敗しました。入力内容をご確認ください。",
+						message: `登録に失敗しました。入力内容をご確認ください。 ${error}`,
 						type: "error",
 					}).show();
 				}
