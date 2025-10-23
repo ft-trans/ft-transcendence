@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-
 import { resolve } from "node:path";
 import { AvatarUploadService } from "@domain/service/avatar_upload_service";
 import { MatchmakingService } from "@domain/service/matchmaking_service";
@@ -26,6 +25,7 @@ import { tournamentController } from "@presentation/controllers/tournament_contr
 import { userController } from "@presentation/controllers/user_controller";
 import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import { errorHandler } from "@presentation/hooks/error_handler";
 import { MESSAGE_TYPES } from "@shared/api/chat";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
 import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
@@ -79,63 +79,30 @@ import { SearchUsersUsecase } from "@usecase/user/search_users_usecase";
 import { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import { UploadAvatarUsecase } from "@usecase/user/upload_avatar_usecase";
 import Fastify from "fastify";
-import type { TransportTargetOptions } from "pino";
 import { otelInstrumentation } from "./observability/otel.js";
 
-const isProd = process.env.NODE_ENV === "production";
+const app = Fastify({ logger: true });
 
-const logToEs = process.env.LOG_TO_ES
-	? process.env.LOG_TO_ES === "true"
-	: isProd;
-const logStdout = process.env.LOG_STDOUT
-	? process.env.LOG_STDOUT === "true"
-	: !isProd;
-
-const targets: TransportTargetOptions[] = [];
-
-if (logStdout) {
-	targets.push({
-		target: "pino/file",
-		level: isProd ? "info" : "debug",
-		options: { destination: 1 }, // stdout
-	});
-}
-
-if (logToEs) {
-	const elasticCaPath = process.env.ELASTIC_CA || "/app/certs/ca/ca.crt";
-	const elasticPassword = process.env.ELASTIC_PASSWORD;
-	if (!elasticPassword) {
-		console.error("[boot] missing ELASTIC_PASSWORD");
+const getCookieSecret = (): string => {
+	let secret: string;
+	if (process.env.NODE_ENV === "production") {
+		secret = readFileSync("/run/secrets/app_cookie_secret", "utf8").trim();
+	} else {
+		secret = process.env.COOKIE_SECRET;
+	}
+	if (!secret) {
+		app.log.error("COOKIE_SECRET environment variable is not set");
 		process.exit(1);
 	}
-	targets.push({
-		target: "pino-elasticsearch",
-		level: "info",
-		options: {
-			index: "app-logs",
-			node: "https://es01:9200",
-			esVersion: 9,
-			auth: { username: "elastic", password: elasticPassword },
-			tls: { ca: readFileSync(elasticCaPath), rejectUnauthorized: true },
-		},
-	});
-}
 
-const app = Fastify({
-	logger: targets.length
-		? {
-				level: isProd ? "info" : "debug",
-				timestamp: () => `,"@timestamp":"${new Date().toISOString()}"`,
-				transport: { targets },
-			}
-		: {
-				level: isProd ? "info" : "debug",
-				timestamp: () => `,"@timestamp":"${new Date().toISOString()}"`,
-			},
-});
+	if (secret.length < 32) {
+		app.log.error("Cookie secret is too short (minimum 32 characters)");
+		process.exit(1);
+	}
+	return secret;
+};
 
 const start = async () => {
-	app.log.info("Testing logger to ES");
 	try {
 		app.get("/api/health", async () => ({ message: "OK" }));
 
@@ -148,7 +115,10 @@ const start = async () => {
 			spa: true,
 		});
 
-		await app.register(FastifyCookie);
+		await app.register(FastifyCookie, {
+			secret: getCookieSecret(),
+			parseOptions: {},
+		});
 		await app.register(FastifyMultipart);
 
 		// Serve static files from public/avatars
@@ -164,6 +134,10 @@ const start = async () => {
 		}
 
 		await app.register(FastifyRedis, { url: redisUrl });
+
+		// グローバルエラーハンドラを設定
+		app.setErrorHandler(errorHandler);
+
 		const repo = new Repository(prisma, app.redis);
 		const tx = new Transaction(prisma, app.redis);
 		const registerUserUsecase = new RegisterUserUsecase(tx);

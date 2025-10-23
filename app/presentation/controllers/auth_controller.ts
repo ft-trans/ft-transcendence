@@ -31,7 +31,16 @@ export const authController = (
 	};
 };
 
+// auth_prehandler.ts と重複
 const cookieName = "ft_trans";
+const getSecureCookieOptions = () => ({
+	httpOnly: true,
+	secure: process.env.NODE_ENV === "production",
+	sameSite: "strict" as const,
+	domain: process.env.COOKIE_DOMAIN,
+	signed: true,
+	path: "/",
+});
 
 const onRegisterUser = (usecase: RegisterUserUsecase) => {
 	return async (
@@ -97,16 +106,10 @@ const onLoginUser = (usecase: LoginUserUsecase) => {
 			password: input.data.password,
 		});
 
-		// TODO: Implement secure cookie handling
-		// - Set httpOnly flag for security
-		// - Set secure flag for HTTPS
-		// - Set sameSite attribute for CSRF protection
-		// - Consider cookie encryption/signing
+		// set secure cookie
 		reply.setCookie(cookieName, output.sessionToken, {
-			httpOnly: true,
-			// secure: true, // Enable in production with HTTPS
+			...getSecureCookieOptions(),
 			expires: output.session.expiresAt,
-			path: "/",
 		});
 
 		reply.send({
@@ -120,7 +123,7 @@ const onLoginUser = (usecase: LoginUserUsecase) => {
 
 const onLogoutUser = (usecase: LogoutUserUsecase) => {
 	return async (req: FastifyRequest, reply: FastifyReply) => {
-		const sessionToken = req.cookies[cookieName];
+		const sessionToken = req.unsignCookie(req.cookies[cookieName] || "").value;
 		if (!sessionToken) {
 			throw new ErrBadRequest({
 				userMessage: "セッションが見つかりません",
@@ -131,12 +134,8 @@ const onLogoutUser = (usecase: LogoutUserUsecase) => {
 			sessionToken,
 		});
 
-		// TODO: Implement secure cookie clearing
-		// - Clear with same domain/path settings as when set
-		// - Consider security implications of cookie clearing
-		reply.clearCookie(cookieName, {
-			path: "/",
-		});
+		// secure cookie clearing
+		reply.clearCookie(cookieName, getSecureCookieOptions());
 
 		reply.send();
 	};

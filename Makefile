@@ -28,12 +28,12 @@ db.studio:
 
 .PHONY: db.seed
 db.seed:
-	sqlite3 prisma/transcendence_dev.sqlite3 < prisma/seed_test_data_fixed.sql
+	sqlite3 transcendence_dev.sqlite3 < prisma/seed_test_data_fixed.sql
 
 .PHONY: db.reset
 db.reset:
 	pnpm prisma migrate reset --force
-	sqlite3 prisma/transcendence_dev.sqlite3 < prisma/seed_test_data_fixed.sql
+	sqlite3 transcendence_dev.sqlite3 < prisma/seed_test_data_fixed.sql
 
 .PHONY: run
 run:
