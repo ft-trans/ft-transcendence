@@ -34,8 +34,7 @@ services:
       dockerfile: deploy/Dockerfile.nginx
       target: production
     ports:
-      - "80:80"
-      - "443:443"
+      - "4443:443"
     networks:
       - transcendence_net
     depends_on:
