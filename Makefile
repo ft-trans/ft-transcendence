@@ -65,17 +65,6 @@ docker.clean:
 clean:
 	rm -rf dist
 
-.PHONY: secrets.template
-secrets.template:
-	@mkdir -p secrets
-	@[ -f secrets/elasticsearch_password.txt.sample ] || touch secrets/elasticsearch_password.txt.sample
-	@[ -f secrets/grafana_admin_password.txt.sample ] || touch secrets/grafana_admin_password.txt.sample
-	@[ -f secrets/kibana_password.txt.sample ] || touch secrets/kibana_password.txt.sample
-	@[ -f secrets/kbn_eso_key.txt.sample ] || openssl rand -base64 32 > secrets/kbn_eso_key.txt.sample
-	@[ -f secrets/kbn_reporting_key.txt.sample ] || openssl rand -base64 32 > secrets/kbn_reporting_key.txt.sample
-	@[ -f secrets/kbn_security_key.txt.sample ] || openssl rand -base64 32 > secrets/kbn_security_key.txt.sample
-	@echo "secrets/*.txt.sample prepared"
-
 .PHONY: secrets.generate
 secrets.generate:
 	@mkdir -p secrets
