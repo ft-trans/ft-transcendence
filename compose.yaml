@@ -132,6 +132,7 @@ services:
       dockerfile: Dockerfile.elasticsearch
       args:
         STACK_VERSION: ${STACK_VERSION}
+    container_name: elasticsearch
     environment:
       ELASTIC_PASSWORD_FILE: /run/secrets/elasticsearch_password
       node.store.allow_mmap: "false"
@@ -161,6 +162,7 @@ services:
       dockerfile: Dockerfile.kibana
       args:
         STACK_VERSION: ${STACK_VERSION}
+    container_name: kibana
     environment:
       ELASTIC_URL: ${ELASTIC_URL}
       KIBANA_USER: ${KIBANA_USER}
@@ -194,6 +196,7 @@ services:
       dockerfile: Dockerfile.logstash
       args:
         STACK_VERSION: ${STACK_VERSION}
+    container_name: logstash
     environment:
       ELASTIC_URL: ${ELASTIC_URL}
       ELASTIC_USER: ${ELASTIC_USER}
@@ -223,6 +226,7 @@ services:
       dockerfile: Dockerfile.setup-certs
       args:
         STACK_VERSION: ${STACK_VERSION}
+    container_name: setup-certs
     restart: "no"
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
@@ -234,6 +238,7 @@ services:
       dockerfile: Dockerfile.setup-elasticsearch
       args:
         STACK_VERSION: ${STACK_VERSION}
+    container_name: setup-elasticsearch
     restart: "no"
     environment:
       ELASTIC_URL: ${ELASTIC_URL}
@@ -253,6 +258,7 @@ services:
     build:
       context: ./deploy/elk/setup-kibana
       dockerfile: Dockerfile.setup-kibana
+    container_name: setup-kibana
     restart: "no"
     environment:
       ELASTIC_USER: ${ELASTIC_USER}
