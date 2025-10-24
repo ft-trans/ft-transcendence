@@ -134,15 +134,14 @@ services:
         STACK_VERSION: ${STACK_VERSION}
     container_name: elasticsearch
     environment:
-      ELASTIC_PASSWORD_FILE: /run/secrets/elasticsearch_password
+      ELASTIC_PASSWORD_FILE: "/run/elastic-internal/elasticsearch_password"
       node.store.allow_mmap: "false"
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
     ports:
       - 127.0.0.1:${ELASTIC_PORT}:9200
-    secrets:
-      - elasticsearch_password
     volumes:
       - certs:/usr/share/elasticsearch/config/certs:ro
+      - es-internal:/run/elastic-internal:ro
       - elasticsearch-data:/usr/share/elasticsearch/data
     mem_limit: "1g" 
     ulimits: {}
@@ -228,8 +227,12 @@ services:
         STACK_VERSION: ${STACK_VERSION}
     container_name: setup-certs
     restart: "no"
+    user: "0"
+    secrets:
+      - elasticsearch_password
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
+      - es-internal:/work/es-internal
     networks: [elk_net]
   
   setup-elasticsearch:
@@ -280,6 +283,7 @@ volumes:
   prometheus-data:
   grafana-data:
   certs:
+  es-internal:
   elasticsearch-data:
   logstash-data:
   kibana-data:

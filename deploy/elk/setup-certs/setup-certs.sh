@@ -3,6 +3,27 @@ set -Eeuo pipefail
 
 echo "[setup-certs] start"
 
+ES_PASS_SRC="/run/secrets/elasticsearch_password"
+ES_PASS_DST="/work/es-internal/elasticsearch_password"
+
+# readability check
+if [ ! -r "$ES_PASS_SRC" ]; then
+  echo "[setup-certs] ERROR: $ES_PASS_SRC is not readable"
+  exit 1
+fi
+
+# copy once with proper owner/mode
+if [ ! -f "$ES_PASS_DST" ]; then
+  echo "[setup-certs] reading Elasticsearch password"
+  if install -D -m 600 -o 1000 -g 0 "$ES_PASS_SRC" "$ES_PASS_DST" 2>/dev/null; then
+    :
+  else
+    install -D -m 600 "$ES_PASS_SRC" "$ES_PASS_DST"
+    chown 1000:0 "$ES_PASS_DST"
+  fi
+fi
+
+
 ES_HOME="/usr/share/elasticsearch"
 CERTS="$ES_HOME/config/certs"
 
