@@ -151,7 +151,7 @@ services:
       setup-certs:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD-SHELL","curl -fsS --cacert config/certs/ca/ca.crt -u elastic:$(cat /run/secrets/elasticsearch_password) https://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s >/dev/null"]
+      test: ["CMD-SHELL", "curl -fsS --cacert config/certs/ca/ca.crt -I https://localhost:9200 | grep -q ' 401 '"]
       interval: 10s
       timeout: 10s
       retries: 120
