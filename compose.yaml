@@ -63,8 +63,8 @@ services:
   redis:
     image: redis:8.0.2
     # TODO 提出前にports削除
-    ports:
-      - "6379:6379"
+    # ports:
+    #  - "6379:6379"
     volumes:
       - redis:/data
     networks:
