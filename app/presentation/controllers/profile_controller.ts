@@ -1,4 +1,5 @@
 import { ErrBadRequest } from "@domain/error";
+import { UserId } from "@domain/model";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import {
 	type UpdateProfileRequest,
@@ -6,18 +7,25 @@ import {
 	updateProfileFormSchema,
 } from "@shared/api/profile";
 import type { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
+import type { FindUserUsecase } from "@usecase/user/find_user_usecase";
 import type { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import type { UploadAvatarUsecase } from "@usecase/user/upload_avatar_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import z from "zod";
 
 export const profileController = (
+	findUserUsecase: FindUserUsecase,
 	updateUserUsecase: UpdateUserUsecase,
 	deleteUserUsecase: DeleteUserUsecase,
 	uploadAvatarUsecase: UploadAvatarUsecase,
 	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
+		fastify.get(
+			"/profile",
+			{ preHandler: authPrehandler },
+			onGetProfile(findUserUsecase),
+		);
 		fastify.put(
 			"/profile",
 			{ preHandler: authPrehandler },
@@ -33,6 +41,28 @@ export const profileController = (
 			{ preHandler: authPrehandler },
 			onDeleteProfile(deleteUserUsecase),
 		);
+	};
+};
+
+const onGetProfile = (usecase: FindUserUsecase) => {
+	return async (req: FastifyRequest, reply: FastifyReply) => {
+		const userId = req.authenticatedUser?.id;
+		if (!userId) {
+			throw new ErrBadRequest({
+				userMessage: "認証が必要です",
+			});
+		}
+
+		const output = await usecase.run(new UserId(userId));
+		reply.send({
+			user: {
+				id: output.id.value,
+				email: output.email.value,
+				username: output.username.value,
+				avatar: output.avatar.value,
+				status: output.status.value,
+			},
+		});
 	};
 };
 
