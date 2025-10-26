@@ -116,9 +116,15 @@ const start = async () => {
 		});
 		await app.register(FastifyMultipart);
 
-		// Serve static files from public/avatars
+		// Serve static files (avatars)
+		const avatarPath = [import.meta.dirname, ".."];
+		if (process.env.NODE_ENV === "production") {
+			avatarPath.push("client");
+		} else {
+			avatarPath.push("public");
+		}
 		await app.register(FastifyStatic, {
-			root: resolve(import.meta.dirname, "..", "public", "avatars"),
+			root: resolve(...avatarPath, "avatars"),
 			prefix: "/avatars/",
 		});
 

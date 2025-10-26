@@ -22,6 +22,7 @@ services:
         condition: service_healthy
     volumes:
       - prisma:/app/dist/prisma
+      - avatars:/app/dist/client/avatars
     # TODO 提出前にコメントアウトを外す
     # restart: always
     healthcheck:
@@ -118,6 +119,7 @@ services:
 volumes:
   redis:
   prisma:
+  avatars:
   prometheus-data:
   grafana-data:
 
