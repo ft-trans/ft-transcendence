@@ -75,6 +75,8 @@ const onUpdateProfile = (usecase: UpdateUserUsecase) => {
 			email: req.body.user.email,
 			username: req.body.user.username,
 			avatar: req.body.user.avatar,
+			password: req.body.user.password,
+			passwordConfirm: req.body.user.passwordConfirm,
 		});
 		if (!input.success) {
 			const flattened = z.flattenError(input.error);
@@ -84,6 +86,8 @@ const onUpdateProfile = (usecase: UpdateUserUsecase) => {
 					email: flattened.fieldErrors.email?.join(", "),
 					username: flattened.fieldErrors.username?.join(", "),
 					avatar: flattened.fieldErrors.avatar?.join(", "),
+					password: flattened.fieldErrors.password?.join(", "),
+					passwordConfirm: flattened.fieldErrors.passwordConfirm?.join(", "),
 				},
 			});
 		}
@@ -99,6 +103,7 @@ const onUpdateProfile = (usecase: UpdateUserUsecase) => {
 			email: input.data.email,
 			username: input.data.username,
 			avatar: input.data.avatar,
+			password: input.data.password,
 		});
 		reply.send({
 			user: {

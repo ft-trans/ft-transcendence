@@ -1,5 +1,6 @@
 import { ErrBadRequest, ErrNotFound } from "@domain/error";
 import {
+	Password,
 	type User,
 	UserAvatar,
 	UserEmail,
@@ -13,6 +14,7 @@ export type UpdateUserUsecaseInput = {
 	email?: string;
 	username?: string;
 	avatar?: string;
+	password?: string;
 };
 
 export class UpdateUserUsecase {
@@ -37,8 +39,17 @@ export class UpdateUserUsecase {
 				input.avatar !== undefined
 					? new UserAvatar(input.avatar)
 					: currentUser.avatar;
+			const passwordDigest =
+				input.password !== undefined
+					? new Password(input.password).hash()
+					: currentUser.passwordDigest;
 
-			const updatedUser = currentUser.updateProfile(email, username, avatar);
+			const updatedUser = currentUser.updateProfile(
+				email,
+				username,
+				avatar,
+				passwordDigest,
+			);
 
 			if (!currentUser.isModified(updatedUser)) {
 				return currentUser;
