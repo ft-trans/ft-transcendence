@@ -14,6 +14,31 @@ export const updateProfileFormSchema = z
 		avatar: z.string().max(500).optional(),
 		password: z
 			.string()
+			// 必須になってしまうためコメントアウト。
+			// .min(8, "パスワードは8文字以上である必要があります")
+			.optional(),
+		passwordConfirm: z.string().optional(),
+	})
+	.refine((data) => data.password === data.passwordConfirm, {
+		message: "パスワードが一致しません",
+		path: ["passwordConfirm"],
+	});
+
+// パスワード変更する場合のスキーマ
+export const updateProfileFormSchemaWithPassword = z
+	.object({
+		email: z.email("有効なメールアドレスを入力してください"),
+		username: z
+			.string()
+			.min(3, "ユーザー名は3文字以上にして下さい")
+			.max(30, "ユーザー名は30文字以下にしてください")
+			.regex(
+				/^[a-zA-Z0-9_-]+$/,
+				"ユーザー名は英数字、アンダースコア、ハイフンのみ使用可能です",
+			),
+		avatar: z.string().max(500).optional(),
+		password: z
+			.string()
 			.min(8, "パスワードは8文字以上である必要があります")
 			.optional(),
 		passwordConfirm: z.string().optional(),

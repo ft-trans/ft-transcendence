@@ -40,7 +40,7 @@ export class UpdateUserUsecase {
 					? new UserAvatar(input.avatar)
 					: currentUser.avatar;
 			const passwordDigest =
-				input.password !== undefined
+				input.password !== undefined && input.password.length > 0
 					? new Password(input.password).hash()
 					: currentUser.passwordDigest;
 

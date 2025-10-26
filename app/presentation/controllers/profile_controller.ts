@@ -5,6 +5,7 @@ import {
 	type UpdateProfileRequest,
 	type UploadAvatarResponse,
 	updateProfileFormSchema,
+	updateProfileFormSchemaWithPassword,
 } from "@shared/api/profile";
 import type { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import type { FindUserUsecase } from "@usecase/user/find_user_usecase";
@@ -71,13 +72,23 @@ const onUpdateProfile = (usecase: UpdateUserUsecase) => {
 		req: FastifyRequest<{ Body: UpdateProfileRequest }>,
 		reply: FastifyReply,
 	) => {
-		const input = updateProfileFormSchema.safeParse({
-			email: req.body.user.email,
-			username: req.body.user.username,
-			avatar: req.body.user.avatar,
-			password: req.body.user.password,
-			passwordConfirm: req.body.user.passwordConfirm,
-		});
+		const input =
+			req.body.user.password && req.body.user.password.length > 0
+				? updateProfileFormSchemaWithPassword.safeParse({
+						email: req.body.user.email,
+						username: req.body.user.username,
+						avatar: req.body.user.avatar,
+						password: req.body.user.password,
+						passwordConfirm: req.body.user.passwordConfirm,
+					})
+				: updateProfileFormSchema.safeParse({
+						email: req.body.user.email,
+						username: req.body.user.username,
+						avatar: req.body.user.avatar,
+						password: req.body.user.password,
+						passwordConfirm: req.body.user.passwordConfirm,
+					});
+
 		if (!input.success) {
 			const flattened = z.flattenError(input.error);
 			throw new ErrBadRequest({
