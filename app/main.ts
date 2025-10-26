@@ -157,6 +157,7 @@ const start = async () => {
 			),
 			{ prefix: "/api" },
 		);
+		const findUserUsecase = new FindUserUsecase(repo);
 		const updateUserUsecase = new UpdateUserUsecase(tx);
 		const deleteUserUsecase = new DeleteUserUsecase(tx);
 		const avatarUploadService = new AvatarUploadService();
@@ -193,6 +194,7 @@ const start = async () => {
 
 		await app.register(
 			profileController(
+				findUserUsecase,
 				updateUserUsecase,
 				deleteUserUsecase,
 				uploadAvatarUsecase,
@@ -319,7 +321,6 @@ const start = async () => {
 		const unblockUserUsecase = new UnblockUserUsecase(tx);
 		const getBlockedUsersUsecase = new GetBlockedUsersUsecase(tx);
 		const searchUsersUsecase = new SearchUsersUsecase(tx);
-		const findUserUsecase = new FindUserUsecase(repo);
 		const findUserByUsernameUsecase = new FindUserByUsernameUsecase(repo);
 		const getMatchStatsUseCase = new GetMatchStatsUseCase(repo);
 		const getMatchHistoriesUseCase = new GetMatchHistoriesUseCase(repo);
