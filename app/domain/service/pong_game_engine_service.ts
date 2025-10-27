@@ -7,6 +7,9 @@ import {
 	PongGame,
 	type PongMatchState,
 	RoundNumber,
+	type Tournament,
+	type TournamentMatch,
+	type TournamentParticipant,
 	type TournamentParticipantId,
 	TournamentRound,
 } from "../model";
@@ -124,7 +127,7 @@ export class PongGameEngineService {
 
 	private async processTournamentMatchCompletion(
 		state: PongMatchState,
-		tournamentMatch: any,
+		tournamentMatch: TournamentMatch,
 	) {
 		if (!this.tournamentRepo) {
 			return;
@@ -139,7 +142,7 @@ export class PongGameEngineService {
 		// UserIdからTournamentParticipantIdを取得
 		const participants = await Promise.all(
 			tournamentMatch.participantIds.map((id) =>
-				this.tournamentRepo!.findParticipantById(id),
+				this.tournamentRepo?.findParticipantById(id),
 			),
 		);
 
@@ -277,7 +280,7 @@ export class PongGameEngineService {
 
 				// 試合を作成
 				await Promise.all(
-					newMatches.map((m) => this.tournamentRepo!.createMatch(m)),
+					newMatches.map((m) => this.tournamentRepo?.createMatch(m)),
 				);
 				console.log(
 					`[PongGameEngineService] Created matches for round ${nextRoundNumber.value}`,
@@ -289,7 +292,7 @@ export class PongGameEngineService {
 		}
 	}
 
-	private notifyMatchCompleted(match: any): void {
+	private notifyMatchCompleted(match: TournamentMatch): void {
 		if (!this.tournamentClientRepo) return;
 
 		const clients = this.tournamentClientRepo.findByTournamentId(
@@ -325,7 +328,10 @@ export class PongGameEngineService {
 		}
 	}
 
-	private notifyRoundCompleted(completedRound: any, nextRound: any): void {
+	private notifyRoundCompleted(
+		completedRound: TournamentRound,
+		nextRound: TournamentRound,
+	): void {
 		if (!this.tournamentClientRepo) return;
 
 		const clients = this.tournamentClientRepo.findByTournamentId(
@@ -365,7 +371,10 @@ export class PongGameEngineService {
 		}
 	}
 
-	private notifyTournamentCompleted(tournament: any, winner: any): void {
+	private notifyTournamentCompleted(
+		tournament: Tournament,
+		winner: TournamentParticipant,
+	): void {
 		if (!this.tournamentClientRepo) return;
 
 		const clients = this.tournamentClientRepo.findByTournamentId(tournament.id);
