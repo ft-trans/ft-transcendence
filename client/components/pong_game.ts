@@ -11,12 +11,18 @@ import { FloatingBanner } from "./floating_banner";
 export class PongGame {
 	private readonly canvas: HTMLCanvasElement;
 	private readonly context: CanvasRenderingContext2D;
+	private readonly tournamentId?: string;
 
-	constructor({ width, height } = { width: 600, height: 400 }) {
+	constructor({
+		width,
+		height,
+		tournamentId,
+	}: { width?: number; height?: number; tournamentId?: string } = {}) {
 		this.canvas = document.createElement("canvas");
-		this.canvas.width = width;
-		this.canvas.height = height;
+		this.canvas.width = width ?? 600;
+		this.canvas.height = height ?? 400;
 		this.canvas.classList.add("rounded-xl");
+		this.tournamentId = tournamentId;
 		const ctx = this.canvas.getContext("2d");
 		if (!ctx) {
 			new FloatingBanner({
@@ -73,18 +79,35 @@ export class PongGame {
 			this.canvas.height / 2 + 20,
 		);
 
-		this.context.font = "20px 'sans-serif'";
-		this.context.textAlign = "center";
-		this.context.fillStyle = "#fff";
-		this.context.fillText(
-			"クリックして対戦履歴を表示する",
-			this.canvas.width / 2,
-			this.canvas.height / 2 + 60,
-		);
-		this.canvas.style.cursor = "pointer";
-		this.canvas.addEventListener("click", () => {
-			navigateTo("/matchmaking");
-		});
+		// トーナメントマッチの場合は自動でトーナメント詳細画面に遷移
+		if (this.tournamentId) {
+			this.context.font = "20px 'sans-serif'";
+			this.context.textAlign = "center";
+			this.context.fillStyle = "#fff";
+			this.context.fillText(
+				"まもなくトーナメント画面に戻ります...",
+				this.canvas.width / 2,
+				this.canvas.height / 2 + 60,
+			);
+			// 3秒後に自動遷移
+			setTimeout(() => {
+				navigateTo(`/tournaments/${this.tournamentId}`);
+			}, 3000);
+		} else {
+			// 通常のマッチの場合はクリックでマッチメイキング画面に遷移
+			this.context.font = "20px 'sans-serif'";
+			this.context.textAlign = "center";
+			this.context.fillStyle = "#fff";
+			this.context.fillText(
+				"クリックして対戦履歴を表示する",
+				this.canvas.width / 2,
+				this.canvas.height / 2 + 60,
+			);
+			this.canvas.style.cursor = "pointer";
+			this.canvas.addEventListener("click", () => {
+				navigateTo("/matchmaking");
+			});
+		}
 
 		return true;
 	}

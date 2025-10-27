@@ -89,6 +89,7 @@ describe("StartTournamentMatchUsecase", () => {
 		const usecase = new StartTournamentMatchUsecase(mockTx);
 		const input = {
 			tournamentMatchId: tournamentMatch.id.value,
+			userId: organizerId.value,
 		};
 		const result = await usecase.execute(input);
 
@@ -116,6 +117,7 @@ describe("StartTournamentMatchUsecase", () => {
 		const usecase = new StartTournamentMatchUsecase(mockTx);
 		const input = {
 			tournamentMatchId: "01JAJCJCK5XPWQ9A7DRTBHVXF0",
+			userId: "01JAJCJCK5XPWQ9A7DRTBHVXF1",
 		};
 
 		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
@@ -153,6 +155,7 @@ describe("StartTournamentMatchUsecase", () => {
 		const usecase = new StartTournamentMatchUsecase(mockTx);
 		const input = {
 			tournamentMatchId: tournamentMatch.id.value,
+			userId: "01JAJCJCK5XPWQ9A7DRTBHVXF1",
 		};
 
 		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
@@ -186,6 +189,7 @@ describe("StartTournamentMatchUsecase", () => {
 		const usecase = new StartTournamentMatchUsecase(mockTx);
 		const input = {
 			tournamentMatchId: tournamentMatch.id.value,
+			userId: "01JAJCJCK5XPWQ9A7DRTBHVXF1",
 		};
 
 		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
@@ -229,6 +233,7 @@ describe("StartTournamentMatchUsecase", () => {
 		const usecase = new StartTournamentMatchUsecase(mockTx);
 		const input = {
 			tournamentMatchId: tournamentMatch.id.value,
+			userId: organizerId.value,
 		};
 
 		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
@@ -273,6 +278,7 @@ describe("StartTournamentMatchUsecase", () => {
 		const usecase = new StartTournamentMatchUsecase(mockTx);
 		const input = {
 			tournamentMatchId: tournamentMatch.id.value,
+			userId: organizerId.value,
 		};
 
 		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);

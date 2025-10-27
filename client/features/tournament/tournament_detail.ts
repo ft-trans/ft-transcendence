@@ -96,7 +96,10 @@ export class TournamentDetail extends Component {
 				if (message.type === "tournament.match_started") {
 					const currentUserId = authStore.getState().user?.id;
 					console.log("Current user ID:", currentUserId);
-					console.log("Match participants:", message.payload.match.participants);
+					console.log(
+						"Match participants:",
+						message.payload.match.participants,
+					);
 
 					const isParticipant = message.payload.match.participants.some(
 						(p: { userId: string }) => p.userId === currentUserId,
@@ -105,9 +108,11 @@ export class TournamentDetail extends Component {
 					console.log("Is participant?", isParticipant);
 
 					if (isParticipant) {
-						// 参加者の場合、試合画面に遷移
+						// 参加者の場合、試合画面に遷移（トーナメントIDをクエリパラメータで渡す）
 						console.log("Navigating to match:", message.payload.matchId);
-						navigateTo(`/pong/matches/${message.payload.matchId}`);
+						navigateTo(
+							`/pong/matches/${message.payload.matchId}?tournamentId=${this.tournamentId}`,
+						);
 						return;
 					}
 				}
@@ -241,7 +246,9 @@ export class TournamentDetail extends Component {
 		try {
 			console.log("Starting tournament match:", matchId);
 			await startTournamentMatch(this.tournamentId, matchId);
-			console.log("Tournament match started successfully, waiting for WebSocket event...");
+			console.log(
+				"Tournament match started successfully, waiting for WebSocket event...",
+			);
 			// WebSocketイベントで画面遷移するため、ここでは遷移しない
 			new FloatingBanner({
 				message: "試合を開始しました。まもなく試合画面に移動します...",
