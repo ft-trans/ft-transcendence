@@ -72,6 +72,7 @@ import { CreateTournamentUsecase } from "@usecase/tournament/create_tournament_u
 import { GetTournamentUsecase } from "@usecase/tournament/get_tournament_usecase";
 import { GetTournamentsUsecase } from "@usecase/tournament/get_tournaments_usecase";
 import { RegisterTournamentUsecase } from "@usecase/tournament/register_tournament_usecase";
+import { StartTournamentUsecase } from "@usecase/tournament/start_tournament_usecase";
 import { UnregisterTournamentUsecase } from "@usecase/tournament/unregister_tournament_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { FindUserByUsernameUsecase } from "@usecase/user/find_user_by_username_usecase";
@@ -402,6 +403,7 @@ const start = async () => {
 		const getTournamentsUsecase = new GetTournamentsUsecase(tx);
 		const registerTournamentUsecase = new RegisterTournamentUsecase(tx);
 		const unregisterTournamentUsecase = new UnregisterTournamentUsecase(tx);
+		const startTournamentUsecase = new StartTournamentUsecase(tx);
 		await app.register(
 			tournamentController(
 				createTournamentUsecase,
@@ -409,6 +411,7 @@ const start = async () => {
 				getTournamentsUsecase,
 				registerTournamentUsecase,
 				unregisterTournamentUsecase,
+				startTournamentUsecase,
 				authPrehandler,
 			),
 			{

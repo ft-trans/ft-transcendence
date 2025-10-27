@@ -55,11 +55,6 @@ export type GetTournamentsResponse = {
 	}[];
 };
 
-export type RegisterTournamentRequest = {
-	tournamentId: string;
-	userId: string;
-};
-
 export type RegisterTournamentResponse = {
 	participant: {
 		id: string;
@@ -67,4 +62,28 @@ export type RegisterTournamentResponse = {
 		tournamentId: string;
 		status: string;
 	};
+};
+
+export type StartTournamentResponse = {
+	tournament: {
+		id: string;
+		organizerId: string;
+		status: string;
+		maxParticipants: number;
+	};
+	firstRound: {
+		id: string;
+		tournamentId: string;
+		roundNumber: number;
+		status: string;
+	};
+	matches: {
+		id: string;
+		tournamentId: string;
+		roundId: string;
+		participantIds: string[];
+		matchId?: string;
+		winnerId?: string;
+		status: string;
+	}[];
 };

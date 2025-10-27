@@ -1,8 +1,10 @@
+import { ErrBadRequest } from "@domain/error";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { CreateTournamentUsecase } from "@usecase/tournament/create_tournament_usecase";
 import type { GetTournamentUsecase } from "@usecase/tournament/get_tournament_usecase";
 import type { GetTournamentsUsecase } from "@usecase/tournament/get_tournaments_usecase";
 import type { RegisterTournamentUsecase } from "@usecase/tournament/register_tournament_usecase";
+import type { StartTournamentUsecase } from "@usecase/tournament/start_tournament_usecase";
 import type { UnregisterTournamentUsecase } from "@usecase/tournament/unregister_tournament_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
@@ -16,6 +18,7 @@ export const tournamentController = (
 	getTournamentsUsecase: GetTournamentsUsecase,
 	registerTournamentUsecase: RegisterTournamentUsecase,
 	unregisterTournamentUsecase: UnregisterTournamentUsecase,
+	startTournamentUsecase: StartTournamentUsecase,
 	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
@@ -44,6 +47,11 @@ export const tournamentController = (
 			{ preHandler: authPrehandler },
 			onUnregister(unregisterTournamentUsecase),
 		);
+		fastify.post(
+			"/tournaments/:tournamentId/start",
+			{ preHandler: authPrehandler },
+			onStart(startTournamentUsecase),
+		);
 	};
 };
 
@@ -54,13 +62,17 @@ const onCreate = (usecase: CreateTournamentUsecase) => {
 	) => {
 		const userId = req.authenticatedUser?.id;
 		if (!userId) {
-			return reply.status(401).send({ message: "Unauthorized" });
+			throw new ErrBadRequest({
+				userMessage: "認証が必要です",
+			});
 		}
 		const input = createTournamentFormSchema.safeParse({
 			maxParticipants: req.body.tournament.maxParticipants,
 		});
 		if (!input.success) {
-			return reply.status(400).send({ message: "Invalid input" });
+			throw new ErrBadRequest({
+				userMessage: "無効な入力です",
+			});
 		}
 		const tournament = await usecase.execute({
 			organizerId: userId,
@@ -102,7 +114,9 @@ const onRegister = (usecase: RegisterTournamentUsecase) => {
 	) => {
 		const userId = req.authenticatedUser?.id;
 		if (!userId) {
-			return reply.status(401).send({ message: "Unauthorized" });
+			throw new ErrBadRequest({
+				userMessage: "認証が必要です",
+			});
 		}
 		const result = await usecase.execute({
 			tournamentId: req.params.tournamentId,
@@ -126,7 +140,9 @@ const onUnregister = (usecase: UnregisterTournamentUsecase) => {
 	) => {
 		const userId = req.authenticatedUser?.id;
 		if (!userId) {
-			return reply.status(401).send({ message: "Unauthorized" });
+			throw new ErrBadRequest({
+				userMessage: "認証が必要です",
+			});
 		}
 		const result = await usecase.execute({
 			tournamentId: req.params.tournamentId,
@@ -139,6 +155,48 @@ const onUnregister = (usecase: UnregisterTournamentUsecase) => {
 				tournamentId: result.tournamentId.value,
 				status: result.status.value,
 			},
+		});
+	};
+};
+
+const onStart = (usecase: StartTournamentUsecase) => {
+	return async (
+		req: FastifyRequest<{ Params: { tournamentId: string } }>,
+		reply: FastifyReply,
+	) => {
+		const userId = req.authenticatedUser?.id;
+		if (!userId) {
+			throw new ErrBadRequest({
+				userMessage: "認証が必要です",
+			});
+		}
+		const result = await usecase.execute({
+			tournamentId: req.params.tournamentId,
+			organizerId: userId,
+		});
+
+		return reply.send({
+			tournament: {
+				id: result.tournament.id.value,
+				organizerId: result.tournament.organizerId.value,
+				status: result.tournament.status.value,
+				maxParticipants: result.tournament.maxParticipants.value,
+			},
+			firstRound: {
+				id: result.firstRound.id.value,
+				tournamentId: result.firstRound.tournamentId.value,
+				roundNumber: result.firstRound.roundNumber.value,
+				status: result.firstRound.status.value,
+			},
+			matches: result.matches.map((m) => ({
+				id: m.id.value,
+				tournamentId: m.tournamentId.value,
+				roundId: m.roundId.value,
+				participantIds: m.participantIds.map((pid) => pid.value),
+				matchId: m.matchId || undefined,
+				winnerId: m.winnerId?.value || undefined,
+				status: m.status.value,
+			})),
 		});
 	};
 };

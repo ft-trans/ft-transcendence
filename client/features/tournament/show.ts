@@ -10,8 +10,8 @@ import { navigateTo } from "client/router";
 import { authStore } from "client/store/auth_store";
 import type {
 	GetTournamentResponse,
-	RegisterTournamentRequest,
 	RegisterTournamentResponse,
+	StartTournamentResponse,
 } from "shared/api/tournament";
 
 export class ShowTournament extends Component {
@@ -40,12 +40,16 @@ export class ShowTournament extends Component {
 
 			this.addEventRegisterButton(tournamentId);
 			this.addEventUnregisterButton(tournamentId);
+			this.addEventStartTournamentButton(tournamentId);
 
 			// participantsが存在するかチェック
 			const participants = tournament.tournament?.participants || [];
 			// 自分が参加者に含まれているかチェック
 			const isRegistered = participants.some((p) => p.userId === this.userId);
 			this.toggleRegisterButtons(isRegistered);
+
+			this.displayRegisterButtonsArea(tournament);
+			this.displayStartButton(tournament);
 
 			this.renderDebugDiv(tournamentId);
 		} catch (_error) {
@@ -63,19 +67,30 @@ export class ShowTournament extends Component {
         ${new SectionTitle({ text: "トーナメント" }).render()}
         <div class="max-w-md mx-auto">
 			<p id="debug-id">トーナメント詳細ページ (実装中)</p>
-			<div id="register-button-div" class="hidden">
-				${new Button({
-					id: "register-button",
-					text: "参加する",
-					color: "blue",
-				}).render()}
+			<div id="register-buttons-area" class="mt-4">
+				<div id="register-button-div" class="hidden">
+					${new Button({
+						id: "register-button",
+						text: "参加する",
+						color: "blue",
+					}).render()}
+				</div>
+				<div id="unregister-button-div" class="hidden">
+					${new Button({
+						id: "unregister-button",
+						text: "離脱する",
+						color: "gray",
+					}).render()}
+				</div>
 			</div>
-			<div id="unregister-button-div" class="hidden">
-				${new Button({
-					id: "unregister-button",
-					text: "離脱する",
-					color: "gray",
-				}).render()}
+			<div class="mt-4">
+				<div id="start-button-div" class="hidden">
+					${new Button({
+						id: "start-button",
+						text: "トーナメントを開始する",
+						color: "blue",
+					}).render()}
+				</div>
 			</div>
         </div>
         `;
@@ -96,11 +111,10 @@ export class ShowTournament extends Component {
 					return;
 				}
 				const response = await new ApiClient().post<
-					RegisterTournamentRequest,
+					{ tournamentId: string },
 					RegisterTournamentResponse
 				>(`/api/tournaments/${tournamentId}/register`, {
 					tournamentId,
-					userId: this.userId,
 				});
 				if (!response.participant) {
 					throw new Error("Failed to register participant");
@@ -134,9 +148,13 @@ export class ShowTournament extends Component {
 					}).show();
 					return;
 				}
-				await new ApiClient().delete(
-					`/api/tournaments/${tournamentId}/register`,
-				);
+				const response =
+					await new ApiClient().delete<RegisterTournamentResponse>(
+						`/api/tournaments/${tournamentId}/register`,
+					);
+				if (!response.participant) {
+					throw new Error("Failed to unregister participant");
+				}
 				new FloatingBanner({
 					message: "トーナメントから離脱しました",
 					type: "info",
@@ -146,6 +164,45 @@ export class ShowTournament extends Component {
 			} catch (_error) {
 				new FloatingBanner({
 					message: "トーナメント離脱に失敗しました",
+					type: "error",
+				}).show();
+			}
+		});
+	}
+
+	private addEventStartTournamentButton(tournamentId: string): void {
+		const button = document.getElementById("start-button");
+		if (!button) {
+			return;
+		}
+		button.addEventListener("click", async () => {
+			try {
+				if (!this.userId) {
+					new FloatingBanner({
+						message: "ログインしてください",
+						type: "info",
+					}).show();
+					return;
+				}
+				const response = await new ApiClient().post<
+					{ tournamentId: string },
+					StartTournamentResponse
+				>(`/api/tournaments/${tournamentId}/start`, {
+					tournamentId,
+				});
+				if (!response.tournament) {
+					throw new Error("Failed to start tournament");
+				}
+				console.log("Tournament started:", response);
+				new FloatingBanner({
+					message: "トーナメントを開始しました",
+					type: "info",
+				}).show();
+
+				this.renderDebugDiv(tournamentId);
+			} catch (_error) {
+				new FloatingBanner({
+					message: "トーナメントの開始に失敗しました",
 					type: "error",
 				}).show();
 			}
@@ -164,6 +221,40 @@ export class ShowTournament extends Component {
 		}
 	}
 
+	private displayRegisterButtonsArea(tournament: GetTournamentResponse): void {
+		const registerDiv = document.getElementById("register-buttons-area");
+		if (!registerDiv) {
+			return;
+		}
+		if (tournament.tournament.status === "registration") {
+			registerDiv.classList.remove("hidden");
+		} else {
+			registerDiv.classList.add("hidden");
+		}
+	}
+
+	private displayStartButton(tournament: GetTournamentResponse): void {
+		const startDiv = document.getElementById("start-button-div");
+		if (!startDiv) {
+			return;
+		}
+		if (tournament.tournament.organizerId !== this.userId) {
+			startDiv.innerHTML = `
+			<div class="text-sm text-gray-600">
+				参加者が揃いました。主催者がトーナメントを開始するまでお待ちください。
+			</div>`;
+		}
+		if (
+			tournament.tournament.participants.length ===
+				tournament.tournament.maxParticipants &&
+			tournament.tournament.status === "registration"
+		) {
+			startDiv.classList.remove("hidden");
+		} else {
+			startDiv.classList.add("hidden");
+		}
+	}
+
 	private async renderDebugDiv(tournamentId: string): Promise<void> {
 		const tournament = await this.apiClient.get<GetTournamentResponse>(
 			`/api/tournaments/${tournamentId}`,
@@ -174,6 +265,8 @@ export class ShowTournament extends Component {
 		// 自分が参加者に含まれているか
 		const isRegistered = participants.some((p) => p.userId === this.userId);
 		this.toggleRegisterButtons(isRegistered);
+		this.displayRegisterButtonsArea(tournament);
+		this.displayStartButton(tournament);
 
 		const e = document.getElementById("debug-id");
 		if (!e) {
@@ -184,12 +277,15 @@ export class ShowTournament extends Component {
 				? participants.map((p) => p.username).join(", ")
 				: "参加者なし";
 
-		e.innerHTML = `<div>トーナメント詳細ページ (実装中) - ${tournamentId}</div>
-			<div>
-				最大参加者数: ${tournament.tournament?.maxParticipants || "不明"}
-				参加者数: ${participants.length}
-				参加者: ${participantNames}
-			</div>
-			`;
+		e.innerHTML = `
+		<div class="mt-4 p-4 border rounded-lg bg-gray-50">
+			<div>トーナメントデバッグ情報 (実装中)</div>
+			<div>トーナメントID: ${tournamentId}</div>
+			<div>最大参加者数: ${tournament.tournament?.maxParticipants || "不明"}</div>
+			<div>参加者数: ${participants.length}</div>
+			<div>参加者: ${participantNames}</div>
+			<div>ステータス: ${tournament.tournament?.status || "不明"}</div>
+		</div>
+		`;
 	}
 }
