@@ -121,9 +121,15 @@ const start = async () => {
 		});
 		await app.register(FastifyMultipart);
 
-		// Serve static files from public/avatars
+		// Serve static files (avatars)
+		const avatarPath = [import.meta.dirname, ".."];
+		if (process.env.NODE_ENV === "production") {
+			avatarPath.push("client");
+		} else {
+			avatarPath.push("public");
+		}
 		await app.register(FastifyStatic, {
-			root: resolve(import.meta.dirname, "..", "public", "avatars"),
+			root: resolve(...avatarPath, "avatars"),
 			prefix: "/avatars/",
 		});
 
@@ -156,6 +162,7 @@ const start = async () => {
 			),
 			{ prefix: "/api" },
 		);
+		const findUserUsecase = new FindUserUsecase(repo);
 		const updateUserUsecase = new UpdateUserUsecase(tx);
 		const deleteUserUsecase = new DeleteUserUsecase(tx);
 		const avatarUploadService = new AvatarUploadService();
@@ -192,6 +199,7 @@ const start = async () => {
 
 		await app.register(
 			profileController(
+				findUserUsecase,
 				updateUserUsecase,
 				deleteUserUsecase,
 				uploadAvatarUsecase,
@@ -318,7 +326,6 @@ const start = async () => {
 		const unblockUserUsecase = new UnblockUserUsecase(tx);
 		const getBlockedUsersUsecase = new GetBlockedUsersUsecase(tx);
 		const searchUsersUsecase = new SearchUsersUsecase(tx);
-		const findUserUsecase = new FindUserUsecase(repo);
 		const findUserByUsernameUsecase = new FindUserByUsernameUsecase(repo);
 		const getMatchStatsUseCase = new GetMatchStatsUseCase(repo);
 		const getMatchHistoriesUseCase = new GetMatchHistoriesUseCase(repo);

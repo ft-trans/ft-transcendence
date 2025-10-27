@@ -36,3 +36,4 @@ public/avatars/*
 !public/avatars/default.svg
 
 secrets/*
+!secrets/.keep
