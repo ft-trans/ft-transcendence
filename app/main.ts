@@ -20,6 +20,7 @@ import { matchmakingWsController } from "@presentation/controllers/matchmaking_w
 import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
 import { relationshipController } from "@presentation/controllers/relationship_controller";
+import { tournamentController } from "@presentation/controllers/tournament_controller";
 import { userController } from "@presentation/controllers/user_controller";
 import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
@@ -65,6 +66,14 @@ import { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase
 import { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_friend_request_usecase";
 import { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
 import { UnblockUserUsecase } from "@usecase/relationship/unblock_user_usecase";
+import { CompleteMatchUsecase } from "@usecase/tournament/complete_match_usecase";
+import { CreateTournamentUsecase } from "@usecase/tournament/create_tournament_usecase";
+import { GetTournamentDetailUsecase } from "@usecase/tournament/get_tournament_detail_usecase";
+import { GetTournamentsUsecase } from "@usecase/tournament/get_tournaments_usecase";
+import { RegisterTournamentUsecase } from "@usecase/tournament/register_tournament_usecase";
+import { StartTournamentMatchUsecase } from "@usecase/tournament/start_tournament_match_usecase";
+import { StartTournamentUsecase } from "@usecase/tournament/start_tournament_usecase";
+import { UnregisterTournamentUsecase } from "@usecase/tournament/unregister_tournament_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { FindUserByUsernameUsecase } from "@usecase/user/find_user_by_username_usecase";
 import { FindUserUsecase } from "@usecase/user/find_user_usecase";
@@ -329,6 +338,31 @@ const start = async () => {
 				getOnlineUsersUsecase,
 				getUsersOnlineStatusUsecase,
 				isUserOnlineUsecase,
+				authPrehandler,
+			),
+			{ prefix: "/api" },
+		);
+
+		// トーナメント機能
+		const getTournamentsUsecase = new GetTournamentsUsecase(tx);
+		const getTournamentDetailUsecase = new GetTournamentDetailUsecase(tx);
+		const createTournamentUsecase = new CreateTournamentUsecase(tx);
+		const registerTournamentUsecase = new RegisterTournamentUsecase(tx);
+		const unregisterTournamentUsecase = new UnregisterTournamentUsecase(tx);
+		const startTournamentUsecase = new StartTournamentUsecase(tx);
+		const startTournamentMatchUsecase = new StartTournamentMatchUsecase(tx);
+		const completeMatchUsecase = new CompleteMatchUsecase(tx);
+
+		await app.register(
+			tournamentController(
+				getTournamentsUsecase,
+				getTournamentDetailUsecase,
+				createTournamentUsecase,
+				registerTournamentUsecase,
+				unregisterTournamentUsecase,
+				startTournamentUsecase,
+				startTournamentMatchUsecase,
+				completeMatchUsecase,
 				authPrehandler,
 			),
 			{ prefix: "/api" },

@@ -418,9 +418,11 @@ describe("TournamentMatch", () => {
 			participant1Id,
 			participant2Id,
 		]);
-		const startedMatch = match.start();
+		const matchId = ulid();
+		const startedMatch = match.start(matchId);
 
 		expect(startedMatch.status.value).toBe("in_progress");
+		expect(startedMatch.matchId).toBe(matchId);
 	});
 
 	it("should complete a match with winner", () => {
@@ -428,10 +430,11 @@ describe("TournamentMatch", () => {
 		const roundId = new TournamentRoundId(ulid());
 		const participant1Id = new TournamentParticipantId(ulid());
 		const participant2Id = new TournamentParticipantId(ulid());
+		const matchId = ulid();
 		const match = TournamentMatch.create(tournamentId, roundId, [
 			participant1Id,
 			participant2Id,
-		]).start();
+		]).start(matchId);
 		const completedMatch = match.complete(participant1Id);
 
 		expect(completedMatch.status.value).toBe("completed");
@@ -444,10 +447,11 @@ describe("TournamentMatch", () => {
 		const participant1Id = new TournamentParticipantId(ulid());
 		const participant2Id = new TournamentParticipantId(ulid());
 		const nonParticipantId = new TournamentParticipantId(ulid());
+		const matchId = ulid();
 		const match = TournamentMatch.create(tournamentId, roundId, [
 			participant1Id,
 			participant2Id,
-		]).start();
+		]).start(matchId);
 
 		expect(() => match.complete(nonParticipantId)).toThrowError(
 			new ErrBadRequest({

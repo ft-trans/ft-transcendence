@@ -86,7 +86,7 @@ export class StartTournamentMatchUsecase {
 
 			// 6. 通常のMatchを作成（gameType: "Pong"）
 			const match = Match.create([user1, user2], "Pong");
-			await matchRepo.create(match);
+			await matchRepo.save(match);
 
 			// 7. TournamentMatch.matchIdに紐づけて"in_progress"に更新
 			const startedTournamentMatch = tournamentMatch.start(match.id);

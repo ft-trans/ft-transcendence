@@ -473,7 +473,9 @@ export class TournamentRepository implements ITournamentRepository {
 					(p) => new TournamentParticipantId(p.participantId),
 				),
 				match.matchId ?? undefined,
-				match.winnerId ? new TournamentParticipantId(match.winnerId) : undefined,
+				match.winnerId
+					? new TournamentParticipantId(match.winnerId)
+					: undefined,
 				new TournamentMatchStatusValue(match.status as TournamentMatchStatus),
 			),
 		);
@@ -503,7 +505,9 @@ export class TournamentRepository implements ITournamentRepository {
 					(p) => new TournamentParticipantId(p.participantId),
 				),
 				match.matchId ?? undefined,
-				match.winnerId ? new TournamentParticipantId(match.winnerId) : undefined,
+				match.winnerId
+					? new TournamentParticipantId(match.winnerId)
+					: undefined,
 				new TournamentMatchStatusValue(match.status as TournamentMatchStatus),
 			),
 		);
