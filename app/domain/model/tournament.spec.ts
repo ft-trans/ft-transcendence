@@ -1,7 +1,6 @@
 import { ErrBadRequest } from "@domain/error";
 import { ulid } from "ulid";
 import { describe, expect, it } from "vitest";
-import { MatchId } from "./pong";
 import {
 	MaxParticipants,
 	RoundNumber,
@@ -9,6 +8,8 @@ import {
 	TournamentId,
 	TournamentMatch,
 	TournamentMatchId,
+	type TournamentMatchStatus,
+	TournamentMatchStatusValue,
 	TournamentParticipant,
 	TournamentParticipantId,
 	type TournamentParticipantStatus,
@@ -356,28 +357,25 @@ describe("TournamentMatch", () => {
 	it("should create a tournament match with two participants", () => {
 		const tournamentId = new TournamentId(ulid());
 		const roundId = new TournamentRoundId(ulid());
-		const matchId = new MatchId(ulid());
 		const participant1Id = new TournamentParticipantId(ulid());
 		const participant2Id = new TournamentParticipantId(ulid());
-		const match = TournamentMatch.create(tournamentId, roundId, matchId, [
+		const match = TournamentMatch.create(tournamentId, roundId, [
 			participant1Id,
 			participant2Id,
 		]);
 
 		expect(match).toBeInstanceOf(TournamentMatch);
 		expect(match.id).toBeInstanceOf(TournamentMatchId);
-		expect(match.tournamentId).toBe(tournamentId);
-		expect(match.roundId).toBe(roundId);
-		expect(match.matchId).toBe(matchId);
 		expect(match.participantIds).toHaveLength(2);
+		expect(match.winnerId).toBeUndefined();
+		expect(match.status.value).toBe("pending");
 	});
 
 	it("should create a tournament match with one participant (BYE)", () => {
 		const tournamentId = new TournamentId(ulid());
 		const roundId = new TournamentRoundId(ulid());
-		const matchId = new MatchId(ulid());
 		const participantId = new TournamentParticipantId(ulid());
-		const match = TournamentMatch.create(tournamentId, roundId, matchId, [
+		const match = TournamentMatch.create(tournamentId, roundId, [
 			participantId,
 		]);
 
@@ -388,10 +386,9 @@ describe("TournamentMatch", () => {
 	it("should throw error when creating match with invalid participant count", () => {
 		const tournamentId = new TournamentId(ulid());
 		const roundId = new TournamentRoundId(ulid());
-		const matchId = new MatchId(ulid());
 
 		expect(() =>
-			TournamentMatch.create(tournamentId, roundId, matchId, []),
+			TournamentMatch.create(tournamentId, roundId, []),
 		).toThrowError(
 			new ErrBadRequest({
 				userMessage: "試合には1人または2人の参加者が必要です",
@@ -404,12 +401,110 @@ describe("TournamentMatch", () => {
 			new TournamentParticipantId(ulid()),
 		];
 		expect(() =>
-			TournamentMatch.create(tournamentId, roundId, matchId, participants),
+			TournamentMatch.create(tournamentId, roundId, participants),
 		).toThrowError(
 			new ErrBadRequest({
 				userMessage: "試合には1人または2人の参加者が必要です",
 			}),
 		);
+	});
+
+	it("should start a match", () => {
+		const tournamentId = new TournamentId(ulid());
+		const roundId = new TournamentRoundId(ulid());
+		const participant1Id = new TournamentParticipantId(ulid());
+		const participant2Id = new TournamentParticipantId(ulid());
+		const match = TournamentMatch.create(tournamentId, roundId, [
+			participant1Id,
+			participant2Id,
+		]);
+		const startedMatch = match.start();
+
+		expect(startedMatch.status.value).toBe("in_progress");
+	});
+
+	it("should complete a match with winner", () => {
+		const tournamentId = new TournamentId(ulid());
+		const roundId = new TournamentRoundId(ulid());
+		const participant1Id = new TournamentParticipantId(ulid());
+		const participant2Id = new TournamentParticipantId(ulid());
+		const match = TournamentMatch.create(tournamentId, roundId, [
+			participant1Id,
+			participant2Id,
+		]).start();
+		const completedMatch = match.complete(participant1Id);
+
+		expect(completedMatch.status.value).toBe("completed");
+		expect(completedMatch.winnerId).toBe(participant1Id);
+	});
+
+	it("should throw error when completing match with non-participant winner", () => {
+		const tournamentId = new TournamentId(ulid());
+		const roundId = new TournamentRoundId(ulid());
+		const participant1Id = new TournamentParticipantId(ulid());
+		const participant2Id = new TournamentParticipantId(ulid());
+		const nonParticipantId = new TournamentParticipantId(ulid());
+		const match = TournamentMatch.create(tournamentId, roundId, [
+			participant1Id,
+			participant2Id,
+		]).start();
+
+		expect(() => match.complete(nonParticipantId)).toThrowError(
+			new ErrBadRequest({
+				userMessage: "勝者は試合の参加者である必要があります",
+			}),
+		);
+	});
+
+	it("should complete a BYE match automatically", () => {
+		const tournamentId = new TournamentId(ulid());
+		const roundId = new TournamentRoundId(ulid());
+		const participantId = new TournamentParticipantId(ulid());
+		const match = TournamentMatch.create(tournamentId, roundId, [
+			participantId,
+		]);
+		const completedMatch = match.completeAsBye();
+
+		expect(completedMatch.status.value).toBe("completed");
+		expect(completedMatch.winnerId).toBe(participantId);
+	});
+
+	it("should throw error when completing non-BYE match as BYE", () => {
+		const tournamentId = new TournamentId(ulid());
+		const roundId = new TournamentRoundId(ulid());
+		const participant1Id = new TournamentParticipantId(ulid());
+		const participant2Id = new TournamentParticipantId(ulid());
+		const match = TournamentMatch.create(tournamentId, roundId, [
+			participant1Id,
+			participant2Id,
+		]);
+
+		expect(() => match.completeAsBye()).toThrowError(
+			new ErrBadRequest({
+				userMessage: "BYEは参加者が1人の試合のみ適用できます",
+			}),
+		);
+	});
+});
+
+describe("TournamentMatchStatusValue", () => {
+	it("should create a TournamentMatchStatusValue instance with valid status", () => {
+		const pendingStatus = new TournamentMatchStatusValue("pending");
+		const inProgressStatus = new TournamentMatchStatusValue("in_progress");
+		const completedStatus = new TournamentMatchStatusValue("completed");
+
+		expect(pendingStatus.value).toBe("pending");
+		expect(inProgressStatus.value).toBe("in_progress");
+		expect(completedStatus.value).toBe("completed");
+	});
+
+	it("should throw a BadRequestError for invalid status", () => {
+		expect(
+			() =>
+				new TournamentMatchStatusValue(
+					"invalid" as unknown as TournamentMatchStatus,
+				),
+		).toThrowError(ErrBadRequest);
 	});
 });
 

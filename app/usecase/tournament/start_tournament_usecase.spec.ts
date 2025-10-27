@@ -5,16 +5,9 @@ import {
 	TournamentId,
 	TournamentParticipant,
 	TournamentRound,
-	User,
-	UserEmail,
 	UserId,
-	Username,
 } from "@domain/model";
-import type {
-	IMatchRepository,
-	ITournamentRepository,
-	IUserRepository,
-} from "@domain/repository";
+import type { ITournamentRepository } from "@domain/repository";
 import { createMockRepository } from "@usecase/test_helper";
 import type { ITransaction } from "@usecase/transaction";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -34,63 +27,40 @@ describe("StartTournamentUsecase", () => {
 			organizerId,
 		});
 
-		const user2 = User.create(
-			new UserEmail("user2@example.com"),
-			new Username("User2"),
-		);
-		const user3 = User.create(
-			new UserEmail("user3@example.com"),
-			new Username("User3"),
-		);
-		const user4 = User.create(
-			new UserEmail("user4@example.com"),
-			new Username("User4"),
-		);
-		const user5 = User.create(
-			new UserEmail("user5@example.com"),
-			new Username("User5"),
-		);
-
 		const participants = [
-			TournamentParticipant.create(tournamentId, user2.id),
-			TournamentParticipant.create(tournamentId, user3.id),
-			TournamentParticipant.create(tournamentId, user4.id),
-			TournamentParticipant.create(tournamentId, user5.id),
+			TournamentParticipant.create(
+				tournamentId,
+				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF2"),
+			),
+			TournamentParticipant.create(
+				tournamentId,
+				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF3"),
+			),
+			TournamentParticipant.create(
+				tournamentId,
+				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF4"),
+			),
+			TournamentParticipant.create(
+				tournamentId,
+				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF5"),
+			),
 		];
 
 		const firstRound = TournamentRound.create(tournamentId, new RoundNumber(1));
 
 		const mockTournamentRepo = mock<ITournamentRepository>();
-		const mockMatchRepo = mock<IMatchRepository>();
-		const mockUserRepo = mock<IUserRepository>();
-
 		mockTournamentRepo.findById.mockResolvedValue(tournament);
 		mockTournamentRepo.findParticipantsByTournamentId.mockResolvedValue(
 			participants,
 		);
-		mockTournamentRepo.findParticipantById.mockImplementation(async (pid) => {
-			return participants.find((p) => p.id.equals(pid));
-		});
 		mockTournamentRepo.update.mockImplementation(async (t) => t);
 		mockTournamentRepo.createRound.mockResolvedValue(firstRound);
 		mockTournamentRepo.createMatch.mockImplementation(async (match) => match);
-
-		mockUserRepo.findById.mockImplementation(async (userId) => {
-			if (userId.equals(user2.id)) return user2;
-			if (userId.equals(user3.id)) return user3;
-			if (userId.equals(user4.id)) return user4;
-			if (userId.equals(user5.id)) return user5;
-			return undefined;
-		});
-
-		mockMatchRepo.save.mockImplementation(async (match) => match);
 
 		const mockTx = mock<ITransaction>();
 		mockTx.exec.mockImplementation(async (callback) => {
 			const repo = createMockRepository({
 				newTournamentRepository: () => mockTournamentRepo,
-				newMatchRepository: () => mockMatchRepo,
-				newUserRepository: () => mockUserRepo,
 			});
 			return callback(repo);
 		});
@@ -118,57 +88,36 @@ describe("StartTournamentUsecase", () => {
 			organizerId,
 		});
 
-		const user2 = User.create(
-			new UserEmail("user2@example.com"),
-			new Username("User2"),
-		);
-		const user3 = User.create(
-			new UserEmail("user3@example.com"),
-			new Username("User3"),
-		);
-		const user4 = User.create(
-			new UserEmail("user4@example.com"),
-			new Username("User4"),
-		);
-
 		const participants = [
-			TournamentParticipant.create(tournamentId, user2.id),
-			TournamentParticipant.create(tournamentId, user3.id),
-			TournamentParticipant.create(tournamentId, user4.id),
+			TournamentParticipant.create(
+				tournamentId,
+				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF2"),
+			),
+			TournamentParticipant.create(
+				tournamentId,
+				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF3"),
+			),
+			TournamentParticipant.create(
+				tournamentId,
+				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF4"),
+			),
 		];
 
 		const firstRound = TournamentRound.create(tournamentId, new RoundNumber(1));
 
 		const mockTournamentRepo = mock<ITournamentRepository>();
-		const mockMatchRepo = mock<IMatchRepository>();
-		const mockUserRepo = mock<IUserRepository>();
-
 		mockTournamentRepo.findById.mockResolvedValue(tournament);
 		mockTournamentRepo.findParticipantsByTournamentId.mockResolvedValue(
 			participants,
 		);
-		mockTournamentRepo.findParticipantById.mockImplementation(async (pid) => {
-			return participants.find((p) => p.id.equals(pid));
-		});
 		mockTournamentRepo.update.mockImplementation(async (t) => t);
 		mockTournamentRepo.createRound.mockResolvedValue(firstRound);
 		mockTournamentRepo.createMatch.mockImplementation(async (match) => match);
-
-		mockUserRepo.findById.mockImplementation(async (userId) => {
-			if (userId.equals(user2.id)) return user2;
-			if (userId.equals(user3.id)) return user3;
-			if (userId.equals(user4.id)) return user4;
-			return undefined;
-		});
-
-		mockMatchRepo.save.mockImplementation(async (match) => match);
 
 		const mockTx = mock<ITransaction>();
 		mockTx.exec.mockImplementation(async (callback) => {
 			const repo = createMockRepository({
 				newTournamentRepository: () => mockTournamentRepo,
-				newMatchRepository: () => mockMatchRepo,
-				newUserRepository: () => mockUserRepo,
 			});
 			return callback(repo);
 		});

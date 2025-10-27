@@ -22,9 +22,9 @@ export class Match {
 	}
 
 	static create(participants: User[], gameType: GameType = "Pong"): Match {
-		if (participants.length < 1) {
+		if (participants.length < 2) {
 			throw new ErrBadRequest({
-				userMessage: "試合には少なくとも1人の参加者が必要です。",
+				userMessage: "試合には少なくとも2人の参加者が必要です。",
 			});
 		}
 		const id = ulid();

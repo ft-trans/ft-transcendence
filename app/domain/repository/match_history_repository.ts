@@ -1,8 +1,8 @@
-import type { MatchHistory, MatchId, UserId } from "../model";
+import type { MatchHistory, UserId } from "../model";
 
 export interface IMatchHistoryRepository {
 	create(matchHistory: MatchHistory): Promise<MatchHistory>;
-	findByMatchId(matchId: MatchId): Promise<MatchHistory | undefined>;
+	findByMatchId(matchId: string): Promise<MatchHistory | undefined>;
 	findByUserIdWithPagination(
 		userId: UserId,
 		page: number,
