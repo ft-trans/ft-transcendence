@@ -1,6 +1,7 @@
 import type { TournamentId, UserId } from "@domain/model";
 import type { ITournamentClientRepository } from "@domain/repository/tournament_client_repository";
 import type { ITournamentClient } from "@domain/service/tournament_client";
+import type { TournamentServerMessage } from "@shared/api/tournament";
 
 /**
  * In-Memoryトーナメントクライアントリポジトリ実装
@@ -40,5 +41,25 @@ export class InMemoryTournamentClientRepository
 
 	findAll(): ITournamentClient[] {
 		return Array.from(this.clients.values());
+	}
+
+	broadcastToTournament(
+		tournamentId: TournamentId,
+		message: TournamentServerMessage,
+	): void {
+		const clients = this.findByTournamentId(tournamentId);
+		console.log(
+			`[TournamentClientRepository] Broadcasting ${message.type} to ${clients.length} clients for tournament ${tournamentId.value}`,
+		);
+		for (const client of clients) {
+			try {
+				client.send(message);
+			} catch (error) {
+				console.error(
+					`[TournamentClientRepository] Failed to send message to client:`,
+					error,
+				);
+			}
+		}
 	}
 }

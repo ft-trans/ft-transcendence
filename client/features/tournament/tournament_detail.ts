@@ -95,12 +95,18 @@ export class TournamentDetail extends Component {
 				// 試合開始イベントの場合、参加者なら自動遷移
 				if (message.type === "tournament.match_started") {
 					const currentUserId = authStore.getState().user?.id;
+					console.log("Current user ID:", currentUserId);
+					console.log("Match participants:", message.payload.match.participants);
+
 					const isParticipant = message.payload.match.participants.some(
 						(p: { userId: string }) => p.userId === currentUserId,
 					);
 
+					console.log("Is participant?", isParticipant);
+
 					if (isParticipant) {
 						// 参加者の場合、試合画面に遷移
+						console.log("Navigating to match:", message.payload.matchId);
 						navigateTo(`/pong/matches/${message.payload.matchId}`);
 						return;
 					}
@@ -233,9 +239,14 @@ export class TournamentDetail extends Component {
 		if (!this.tournamentId) return;
 
 		try {
-			const response = await startTournamentMatch(this.tournamentId, matchId);
-			// 作成されたMatchIDでPongゲーム画面に遷移
-			navigateTo(`/pong/matches/${response.matchId}`);
+			console.log("Starting tournament match:", matchId);
+			await startTournamentMatch(this.tournamentId, matchId);
+			console.log("Tournament match started successfully, waiting for WebSocket event...");
+			// WebSocketイベントで画面遷移するため、ここでは遷移しない
+			new FloatingBanner({
+				message: "試合を開始しました。まもなく試合画面に移動します...",
+				type: "success",
+			});
 		} catch (error) {
 			console.error("Failed to start match:", error);
 			new FloatingBanner({
@@ -467,9 +478,11 @@ export class TournamentDetail extends Component {
 		const isInProgress = tournament.status === "in_progress";
 
 		return `
-      <div class="border border-gray-300 rounded-lg p-4 bg-white">
+      <div class="border-2 ${isMatchParticipant ? "border-blue-400 bg-blue-50" : "border-gray-300 bg-white"} rounded-lg p-4">
         ${this.renderMatchPlayer(player1, match.winnerId)}
-        <div class="h-px bg-gray-300 my-2"></div>
+        <div class="flex items-center justify-center my-2">
+          <span class="text-gray-500 font-bold text-sm">VS</span>
+        </div>
         ${this.renderMatchPlayer(player2, match.winnerId)}
 
         ${
@@ -493,12 +506,12 @@ export class TournamentDetail extends Component {
 
         ${
 					match.status === "in_progress"
-						? '<p class="mt-3 text-center text-sm text-blue-600">試合中</p>'
+						? '<p class="mt-3 text-center text-sm text-blue-600 font-semibold">⚔️ 試合中</p>'
 						: ""
 				}
         ${
 					match.status === "completed"
-						? '<p class="mt-3 text-center text-sm text-green-600">完了</p>'
+						? '<p class="mt-3 text-center text-sm text-green-600 font-semibold">✓ 完了</p>'
 						: ""
 				}
       </div>
@@ -510,20 +523,20 @@ export class TournamentDetail extends Component {
 		winnerId: string | undefined,
 	): string {
 		if (!participant) {
-			return '<div class="text-gray-400 text-sm">BYE</div>';
+			return '<div class="text-gray-400 text-sm text-center py-2">BYE</div>';
 		}
 
 		const isWinner = winnerId === participant.id;
 
 		return `
-      <div class="flex items-center gap-2 ${isWinner ? "font-bold" : ""}">
+      <div class="flex items-center gap-3 p-2 rounded ${isWinner ? "bg-yellow-100" : ""}">
         <img
           src="${participant.user.avatar}"
           alt="${participant.user.username}"
-          class="w-6 h-6 rounded-full"
+          class="w-10 h-10 rounded-full"
         />
-        <span class="flex-1">${participant.user.username}</span>
-        ${isWinner ? '<span class="text-yellow-500">★</span>' : ""}
+        <span class="flex-1 text-base font-medium ${isWinner ? "text-yellow-700" : ""}">${participant.user.username}</span>
+        ${isWinner ? '<span class="text-yellow-500 text-xl">★</span>' : ""}
       </div>
     `;
 	}

@@ -1,5 +1,6 @@
 import type { TournamentId, UserId } from "@domain/model";
 import type { ITournamentClient } from "@domain/service/tournament_client";
+import type { TournamentServerMessage } from "@shared/api/tournament";
 
 /**
  * トーナメント用WebSocketクライアントリポジトリ
@@ -29,4 +30,12 @@ export interface ITournamentClientRepository {
 	 * 全クライアントを取得
 	 */
 	findAll(): ITournamentClient[];
+
+	/**
+	 * トーナメントに参加している全クライアントにメッセージをブロードキャスト
+	 */
+	broadcastToTournament(
+		tournamentId: TournamentId,
+		message: TournamentServerMessage,
+	): void;
 }
