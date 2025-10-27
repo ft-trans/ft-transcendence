@@ -8,8 +8,9 @@ export class Home extends Component {
         <div class="text-center mb-12">
           <h2 class="text-4xl font-bold text-gray-900 mb-4">Welcome to Simple SPA</h2>
           <p class="text-xl text-gray-600 mb-8">A TypeScript-based single page application framework</p>
-          <div class="mt-8 flex justify-center">
+          <div class="mt-8 flex justify-center gap-4">
             ${new Link({ href: "/matchmaking", text: "マッチを探す" }).render()}
+            ${new Link({ href: "/tournaments", text: "トーナメント" }).render()}
           </div>
         </div>
       </div>
