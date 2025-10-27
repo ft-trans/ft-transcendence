@@ -8,6 +8,11 @@ import { Matchmaking } from "./features/matchmaking";
 import { MessagesPage } from "./features/messages";
 import { MatchesPong } from "./features/pong/matches";
 import { EditProfile } from "./features/profile";
+import {
+	TournamentDetail,
+	TournamentForm,
+	TournamentList,
+} from "./features/tournament";
 import { UserProfile } from "./features/users/show";
 
 export const router = async () => {
@@ -60,6 +65,18 @@ export const router = async () => {
 		{
 			path: "/users/:username",
 			component: new Navigation({ child: new UserProfile() }),
+		},
+		{
+			path: "/tournaments",
+			component: new Navigation({ child: new TournamentList() }),
+		},
+		{
+			path: "/tournaments/new",
+			component: new Navigation({ child: new TournamentForm() }),
+		},
+		{
+			path: "/tournaments/:id",
+			component: new Navigation({ child: new TournamentDetail() }),
 		},
 	];
 
