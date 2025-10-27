@@ -10,6 +10,7 @@ import type {
 	IPongPaddleRepository,
 	IRepository,
 	ISessionRepository,
+	ITournamentClientRepository,
 	ITournamentRepository,
 	IUserPresenceRepository,
 	IUserRepository,
@@ -39,6 +40,7 @@ export function createMockRepository(
 		newMatchRepository: () => mock<IMatchRepository>(),
 		newMatchHistoryRepository: () => mock<IMatchHistoryRepository>(),
 		newTournamentRepository: () => mock<ITournamentRepository>(),
+		newTournamentClientRepository: () => mock<ITournamentClientRepository>(),
 		...overrides,
 	};
 }

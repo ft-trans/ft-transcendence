@@ -10,6 +10,7 @@ import type {
 	IPongPaddleRepository,
 	IRepository,
 	ISessionRepository,
+	ITournamentClientRepository,
 	ITournamentRepository,
 	IUserPresenceRepository,
 	IUserRepository,
@@ -25,6 +26,7 @@ import { UserRepository } from "./database/user_repository";
 import { PongClientRepository } from "./in_memory/pong_client_repository";
 import { PongLoopRepository } from "./in_memory/pong_loop_repository";
 import { PongMatchStateRepository } from "./in_memory/pong_match_state_repository";
+import { InMemoryTournamentClientRepository } from "./in_memory/tournament_client_repository";
 import type { KvsClient } from "./kvs/client";
 import { PongBallRepository } from "./kvs/pong_ball_repository";
 import { PongPaddleRepository } from "./kvs/pong_paddle_repository";
@@ -85,5 +87,8 @@ export class Repository implements IRepository {
 	}
 	newPongMatchStateRepository(): IPongMatchStateRepository {
 		return new PongMatchStateRepository();
+	}
+	newTournamentClientRepository(): ITournamentClientRepository {
+		return new InMemoryTournamentClientRepository();
 	}
 }

@@ -61,6 +61,10 @@ export class GetTournamentDetailUsecase {
 				participants.map(async (participant) => {
 					const user = await userRepo.findById(participant.userId);
 					if (!user) {
+						// ログに詳細情報を出力
+						console.error(
+							`[GetTournamentDetailUsecase] User not found for participant: ${participant.userId.value}`,
+						);
 						throw new ErrBadRequest({
 							userMessage: `参加者のユーザー情報が見つかりません: ${participant.userId.value}`,
 						});

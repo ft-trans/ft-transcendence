@@ -538,4 +538,33 @@ export class TournamentRepository implements ITournamentRepository {
 			),
 		);
 	}
+
+	async findMatchByMatchId(
+		matchId: string,
+	): Promise<TournamentMatch | undefined> {
+		const match = await this.client.tournamentMatch.findFirst({
+			where: {
+				matchId: matchId,
+			},
+			include: {
+				participants: true,
+			},
+		});
+
+		if (!match) {
+			return undefined;
+		}
+
+		return TournamentMatch.reconstruct(
+			new TournamentMatchId(match.id),
+			new TournamentId(match.tournamentId),
+			new TournamentRoundId(match.roundId),
+			match.participants.map(
+				(p) => new TournamentParticipantId(p.participantId),
+			),
+			match.matchId ?? undefined,
+			match.winnerId ? new TournamentParticipantId(match.winnerId) : undefined,
+			new TournamentMatchStatusValue(match.status as TournamentMatchStatus),
+		);
+	}
 }

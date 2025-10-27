@@ -58,4 +58,5 @@ export interface ITournamentRepository {
 	findMatchesByTournamentId(
 		tournamentId: TournamentId,
 	): Promise<TournamentMatch[]>;
+	findMatchByMatchId(matchId: string): Promise<TournamentMatch | undefined>;
 }

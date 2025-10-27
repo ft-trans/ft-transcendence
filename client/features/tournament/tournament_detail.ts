@@ -338,6 +338,9 @@ export class TournamentDetail extends Component {
           </div>
         </div>
 
+        <!-- トーナメント完了時の勝者表示 -->
+        ${tournament.status === "completed" ? this.renderWinner(tournament) : ""}
+
         <!-- 参加者リスト -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
           <h3 class="text-lg font-bold mb-4">参加者 (${tournament.participants.length}人)</h3>
@@ -346,6 +349,41 @@ export class TournamentDetail extends Component {
 
         <!-- トーナメントブラケット -->
         ${tournament.rounds.length > 0 ? this.renderBracket(tournament) : ""}
+      </div>
+    `;
+	}
+
+	private renderWinner(tournament: TournamentDetailDTO): string {
+		// 最終ラウンドの完了した試合から勝者を取得
+		if (tournament.rounds.length === 0) return "";
+
+		const finalRound = tournament.rounds.reduce((prev, current) =>
+			prev.roundNumber > current.roundNumber ? prev : current,
+		);
+
+		const finalMatch = finalRound.matches.find((m) => m.status === "completed");
+		if (!finalMatch || !finalMatch.winnerId) return "";
+
+		const winner = finalMatch.participants.find(
+			(p) => p.id === finalMatch.winnerId,
+		);
+		if (!winner) return "";
+
+		return `
+      <div class="bg-gradient-to-r from-yellow-100 to-yellow-50 rounded-lg shadow-lg p-8 mb-6 text-center">
+        <div class="mb-4">
+          <span class="text-6xl">🏆</span>
+        </div>
+        <h2 class="text-3xl font-bold text-yellow-800 mb-4">トーナメント優勝</h2>
+        <div class="flex items-center justify-center gap-4 mb-2">
+          <img
+            src="${winner.user.avatar}"
+            alt="${winner.user.username}"
+            class="w-20 h-20 rounded-full border-4 border-yellow-400"
+          />
+          <span class="text-2xl font-bold text-yellow-900">${winner.user.username}</span>
+        </div>
+        <p class="text-yellow-700 mt-4">おめでとうございます！</p>
       </div>
     `;
 	}
@@ -475,6 +513,16 @@ export class TournamentDetail extends Component {
 		tournament: TournamentDetailDTO,
 		isOrganizer: boolean,
 	): string {
+		// 参加者が不足している場合のエラーハンドリング
+		if (!match.participants || match.participants.length < 2) {
+			console.warn("Match participants not found:", match.id);
+			return `
+        <div class="border-2 border-gray-300 bg-gray-50 rounded-lg p-4">
+          <p class="text-center text-sm text-gray-500">試合情報を読み込み中...</p>
+        </div>
+      `;
+		}
+
 		const player1 = match.participants[0];
 		const player2 = match.participants[1];
 		const currentUserId = authStore.getState().user?.id;
