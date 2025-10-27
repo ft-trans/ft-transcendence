@@ -20,6 +20,65 @@ describe("StartTournamentUsecase", () => {
 		vi.clearAllMocks();
 	});
 
+	it("should start a tournament with 4 participants", async () => {
+		const tournamentId = new TournamentId("01JAJCJCK5XPWQ9A7DRTBHVXF0");
+		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF1");
+
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		});
+
+		const participants = [
+			TournamentParticipant.create(tournamentId, organizerId),
+			TournamentParticipant.create(
+				tournamentId,
+				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF2"),
+			),
+			TournamentParticipant.create(
+				tournamentId,
+				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF3"),
+			),
+			TournamentParticipant.create(
+				tournamentId,
+				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF4"),
+			),
+		];
+
+		const firstRound = TournamentRound.create(tournamentId, new RoundNumber(1));
+
+		const mockTournamentRepo = mock<ITournamentRepository>();
+		mockTournamentRepo.findById.mockResolvedValue(tournament);
+		mockTournamentRepo.findParticipantsByTournamentId.mockResolvedValue(
+			participants,
+		);
+		mockTournamentRepo.update.mockImplementation(async (t) => t);
+		mockTournamentRepo.createRound.mockResolvedValue(firstRound);
+		mockTournamentRepo.createMatch.mockImplementation(async (match) => match);
+
+		const mockTx = mock<ITransaction>();
+		mockTx.exec.mockImplementation(async (callback) => {
+			const repo = createMockRepository({
+				newTournamentRepository: () => mockTournamentRepo,
+			});
+			return callback(repo);
+		});
+
+		const usecase = new StartTournamentUsecase(mockTx);
+		const input = {
+			tournamentId: tournamentId.value,
+			organizerId: organizerId.value,
+		};
+		const result = await usecase.execute(input);
+
+		expect(result.tournament.status.value).toBe("in_progress");
+		expect(result.firstRound.roundNumber.value).toBe(1);
+		expect(result.matches.length).toBe(2);
+		expect(mockTournamentRepo.update).toHaveBeenCalledTimes(1);
+		expect(mockTournamentRepo.createRound).toHaveBeenCalledTimes(1);
+		expect(mockTournamentRepo.createMatch).toHaveBeenCalledTimes(2);
+	});
+
 	it("should start a tournament with 5 participants", async () => {
 		const tournamentId = new TournamentId("01JAJCJCK5XPWQ9A7DRTBHVXF0");
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF1");
@@ -140,7 +199,7 @@ describe("StartTournamentUsecase", () => {
 		);
 	});
 
-	it("should throw BadRequestError if tournament does not have exactly 5 participants", async () => {
+	it("should throw BadRequestError if tournament has less than 4 participants", async () => {
 		const tournamentId = new TournamentId("01JAJCJCK5XPWQ9A7DRTBHVXF0");
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF1");
 
@@ -179,7 +238,7 @@ describe("StartTournamentUsecase", () => {
 
 		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
 		await expect(usecase.execute(input)).rejects.toThrow(
-			"トーナメントを開始するには5人(主催者を含む)が必要です",
+			"トーナメントを開始するには4人以上(主催者を含む)が必要です",
 		);
 	});
 

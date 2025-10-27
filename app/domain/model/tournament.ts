@@ -234,7 +234,7 @@ export class Tournament {
 	}
 
 	canStartWithParticipants(participantCount: number): boolean {
-		return this.canStart() && participantCount === 5;
+		return this.canStart() && participantCount >= 4;
 	}
 
 	isFull(currentParticipantCount: number): boolean {

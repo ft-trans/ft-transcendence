@@ -64,9 +64,10 @@ export class StartTournamentUsecase {
 				await tournamentRepo.findParticipantsByTournamentId(tournamentId);
 
 			// 参加者数チェック
-			if (participants.length !== 5) {
+			if (participants.length < 4) {
 				throw new ErrBadRequest({
-					userMessage: "トーナメントを開始するには5人(主催者を含む)が必要です",
+					userMessage:
+						"トーナメントを開始するには4人以上(主催者を含む)が必要です",
 				});
 			}
 

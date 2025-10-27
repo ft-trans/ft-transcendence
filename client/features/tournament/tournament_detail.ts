@@ -365,7 +365,7 @@ export class TournamentDetail extends Component {
 
 		if (tournament.status === "registration") {
 			if (isOrganizer) {
-				const canStart = tournament.participants.length === 5;
+				const canStart = tournament.participants.length >= 4;
 				return `
           <button
             id="start-tournament-btn"
@@ -374,7 +374,7 @@ export class TournamentDetail extends Component {
           >
             トーナメントを開始
           </button>
-          ${!canStart ? '<span class="text-sm text-gray-600">※5人(主催者を含む)必要です</span>' : ""}
+          ${!canStart ? '<span class="text-sm text-gray-600">※4人以上(主催者を含む)必要です</span>' : ""}
         `;
 			}
 

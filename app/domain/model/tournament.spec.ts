@@ -230,6 +230,36 @@ describe("Tournament", () => {
 		expect(tournament.canRegister()).toBe(true);
 		expect(tournament.start().canRegister()).toBe(false);
 	});
+
+	it("should correctly identify if tournament can start with given participant count", () => {
+		const organizerId = new UserId(ulid());
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		});
+
+		// 4人以上で開始可能
+		expect(tournament.canStartWithParticipants(3)).toBe(false);
+		expect(tournament.canStartWithParticipants(4)).toBe(true);
+		expect(tournament.canStartWithParticipants(5)).toBe(true);
+
+		// 開始済みのトーナメントは参加者数に関わらず開始不可
+		const startedTournament = tournament.start();
+		expect(startedTournament.canStartWithParticipants(5)).toBe(false);
+	});
+
+	it("should correctly identify if tournament is full", () => {
+		const organizerId = new UserId(ulid());
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		});
+
+		expect(tournament.isFull(3)).toBe(false);
+		expect(tournament.isFull(4)).toBe(false);
+		expect(tournament.isFull(5)).toBe(true);
+		expect(tournament.isFull(6)).toBe(true);
+	});
 });
 
 describe("TournamentParticipant", () => {

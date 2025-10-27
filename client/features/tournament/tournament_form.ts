@@ -132,10 +132,10 @@ export class TournamentForm extends Component {
 
           <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p class="text-sm text-blue-800">
-              <strong>参加人数:</strong> 4人固定のトーナメントです
+              <strong>参加人数:</strong> 最大5人(主催者含む)のトーナメントです
             </p>
             <p class="mt-1 text-xs text-blue-600">
-              参加者が4人に満たない場合でも、トーナメントを開始できます
+              トーナメント開始には4人以上(主催者を含む)の参加者が必要です
             </p>
           </div>
 
