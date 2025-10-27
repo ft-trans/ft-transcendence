@@ -418,7 +418,7 @@ describe("TournamentMatch", () => {
 			participant1Id,
 			participant2Id,
 		]);
-		const startedMatch = match.start();
+		const startedMatch = match.start(ulid());
 
 		expect(startedMatch.status.value).toBe("in_progress");
 	});
@@ -431,7 +431,7 @@ describe("TournamentMatch", () => {
 		const match = TournamentMatch.create(tournamentId, roundId, [
 			participant1Id,
 			participant2Id,
-		]).start();
+		]).start(ulid());
 		const completedMatch = match.complete(participant1Id);
 
 		expect(completedMatch.status.value).toBe("completed");
@@ -447,7 +447,7 @@ describe("TournamentMatch", () => {
 		const match = TournamentMatch.create(tournamentId, roundId, [
 			participant1Id,
 			participant2Id,
-		]).start();
+		]).start(ulid());
 
 		expect(() => match.complete(nonParticipantId)).toThrowError(
 			new ErrBadRequest({

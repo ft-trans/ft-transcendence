@@ -1,20 +1,20 @@
 import { ErrBadRequest } from "@domain/error";
 import {
+	// RoundNumber,
 	Tournament,
 	TournamentId,
 	TournamentMatch,
-	TournamentMatchId,
+	// TournamentMatchId,
 	TournamentParticipant,
 	TournamentParticipantId,
-	TournamentRound,
+	// TournamentRound,
 	TournamentRoundId,
-	RoundNumber,
 	User,
-	UserId,
+	// UserAvatar,
 	UserEmail,
+	UserId,
 	Username,
-	UserAvatar,
-	UserStatusValue,
+	// UserStatusValue,
 } from "@domain/model";
 import type {
 	IMatchRepository,
@@ -50,14 +50,8 @@ describe("StartTournamentMatchUsecase", () => {
 			participant1Id,
 			participant2Id,
 		]);
-		const participant1 = TournamentParticipant.create(
-			tournamentId,
-			user1Id,
-		);
-		const participant2 = TournamentParticipant.create(
-			tournamentId,
-			user2Id,
-		);
+		const participant1 = TournamentParticipant.create(tournamentId, user1Id);
+		const participant2 = TournamentParticipant.create(tournamentId, user2Id);
 		const user1 = User.create(
 			new UserEmail("user1@example.com"),
 			new Username("user1"),
@@ -81,7 +75,7 @@ describe("StartTournamentMatchUsecase", () => {
 			.mockResolvedValueOnce(user2);
 
 		const mockMatchRepo = mock<IMatchRepository>();
-		mockMatchRepo.create.mockImplementation(async (match) => match);
+		mockMatchRepo.save.mockImplementation(async (match) => match);
 
 		const mockTx = mock<ITransaction>();
 		mockTx.exec.mockImplementation(async (callback) => {
@@ -104,7 +98,7 @@ describe("StartTournamentMatchUsecase", () => {
 		expect(mockTournamentRepo.findById).toHaveBeenCalledTimes(1);
 		expect(mockTournamentRepo.findParticipantById).toHaveBeenCalledTimes(2);
 		expect(mockUserRepo.findById).toHaveBeenCalledTimes(2);
-		expect(mockMatchRepo.create).toHaveBeenCalledTimes(1);
+		expect(mockMatchRepo.save).toHaveBeenCalledTimes(1);
 		expect(mockTournamentRepo.updateMatch).toHaveBeenCalledTimes(1);
 	});
 
