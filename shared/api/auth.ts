@@ -5,7 +5,7 @@ export const registerUserFormSchema = z
 		email: z.email("有効なメールアドレスを入力してください"),
 		username: z
 			.string()
-			.min(1, "ユーザー名を入力してください")
+			.min(3, "ユーザー名は3文字以上にして下さい")
 			.max(30, "ユーザー名は30文字以下にしてください")
 			.regex(
 				/^[a-zA-Z0-9_-]+$/,

@@ -1,23 +1,32 @@
 import { ErrBadRequest } from "@domain/error";
+import { UserId } from "@domain/model";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import {
 	type UpdateProfileRequest,
 	type UploadAvatarResponse,
 	updateProfileFormSchema,
+	updateProfileFormSchemaWithPassword,
 } from "@shared/api/profile";
 import type { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
+import type { FindUserUsecase } from "@usecase/user/find_user_usecase";
 import type { UpdateUserUsecase } from "@usecase/user/update_user_usecase";
 import type { UploadAvatarUsecase } from "@usecase/user/upload_avatar_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import z from "zod";
 
 export const profileController = (
+	findUserUsecase: FindUserUsecase,
 	updateUserUsecase: UpdateUserUsecase,
 	deleteUserUsecase: DeleteUserUsecase,
 	uploadAvatarUsecase: UploadAvatarUsecase,
 	authPrehandler: AuthPrehandler,
 ) => {
 	return async (fastify: FastifyInstance) => {
+		fastify.get(
+			"/profile",
+			{ preHandler: authPrehandler },
+			onGetProfile(findUserUsecase),
+		);
 		fastify.put(
 			"/profile",
 			{ preHandler: authPrehandler },
@@ -36,16 +45,50 @@ export const profileController = (
 	};
 };
 
+const onGetProfile = (usecase: FindUserUsecase) => {
+	return async (req: FastifyRequest, reply: FastifyReply) => {
+		const userId = req.authenticatedUser?.id;
+		if (!userId) {
+			throw new ErrBadRequest({
+				userMessage: "認証が必要です",
+			});
+		}
+
+		const output = await usecase.run(new UserId(userId));
+		reply.send({
+			user: {
+				id: output.id.value,
+				email: output.email.value,
+				username: output.username.value,
+				avatar: output.avatar.value,
+				status: output.status.value,
+			},
+		});
+	};
+};
+
 const onUpdateProfile = (usecase: UpdateUserUsecase) => {
 	return async (
 		req: FastifyRequest<{ Body: UpdateProfileRequest }>,
 		reply: FastifyReply,
 	) => {
-		const input = updateProfileFormSchema.safeParse({
-			email: req.body.user.email,
-			username: req.body.user.username,
-			avatar: req.body.user.avatar,
-		});
+		const input =
+			req.body.user.password && req.body.user.password.length > 0
+				? updateProfileFormSchemaWithPassword.safeParse({
+						email: req.body.user.email,
+						username: req.body.user.username,
+						avatar: req.body.user.avatar,
+						password: req.body.user.password,
+						passwordConfirm: req.body.user.passwordConfirm,
+					})
+				: updateProfileFormSchema.safeParse({
+						email: req.body.user.email,
+						username: req.body.user.username,
+						avatar: req.body.user.avatar,
+						password: req.body.user.password,
+						passwordConfirm: req.body.user.passwordConfirm,
+					});
+
 		if (!input.success) {
 			const flattened = z.flattenError(input.error);
 			throw new ErrBadRequest({
@@ -54,6 +97,8 @@ const onUpdateProfile = (usecase: UpdateUserUsecase) => {
 					email: flattened.fieldErrors.email?.join(", "),
 					username: flattened.fieldErrors.username?.join(", "),
 					avatar: flattened.fieldErrors.avatar?.join(", "),
+					password: flattened.fieldErrors.password?.join(", "),
+					passwordConfirm: flattened.fieldErrors.passwordConfirm?.join(", "),
 				},
 			});
 		}
@@ -69,6 +114,7 @@ const onUpdateProfile = (usecase: UpdateUserUsecase) => {
 			email: input.data.email,
 			username: input.data.username,
 			avatar: input.data.avatar,
+			password: input.data.password,
 		});
 		reply.send({
 			user: {

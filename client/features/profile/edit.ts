@@ -3,6 +3,7 @@ import {
 	type UpdateProfileRequest,
 	type UpdateProfileResponse,
 	updateProfileFormSchema,
+	updateProfileFormSchemaWithPassword,
 } from "@shared/api/profile";
 import { ApiClient } from "client/api/api_client";
 import {
@@ -41,9 +42,15 @@ export class EditProfile extends Component {
 				const rawData = {
 					email: formData.get("email"),
 					username: formData.get("username"),
+					password: formData.get("password"),
+					passwordConfirm: formData.get("passwordConfirm"),
 				};
 
-				const input = updateProfileFormSchema.safeParse(rawData);
+				const input =
+					rawData.password?.toString() &&
+					rawData.password?.toString().length > 0
+						? updateProfileFormSchemaWithPassword.safeParse(rawData)
+						: updateProfileFormSchema.safeParse(rawData);
 				if (!input.success) {
 					annotateZodErrors(input.error);
 					new FloatingBanner({
@@ -62,6 +69,8 @@ export class EditProfile extends Component {
 						user: {
 							email: input.data.email,
 							username: input.data.username,
+							password: input.data.password,
+							passwordConfirm: input.data.passwordConfirm,
 						},
 					});
 
@@ -115,6 +124,12 @@ export class EditProfile extends Component {
 							previewImage.src = e.target?.result as string;
 							previewDiv.classList.remove("hidden");
 							previewDiv.classList.add("flex");
+						}
+						const currentPreviewDiv = document.getElementById(
+							"current-avatar-preview",
+						);
+						if (currentPreviewDiv) {
+							currentPreviewDiv.classList.add("hidden");
 						}
 					};
 					reader.readAsDataURL(file);
@@ -185,6 +200,18 @@ export class EditProfile extends Component {
 							autocomplete: "username",
 							labelText: "ユーザー名",
 						}).render()}
+            ${new FormInput({
+							id: "password",
+							name: "password",
+							type: "password",
+							labelText: "パスワード",
+						}).render()}
+            ${new FormInput({
+							id: "passwordConfirm",
+							name: "passwordConfirm",
+							type: "password",
+							labelText: "パスワード確認",
+						}).render()}
             <div class="space-y-2">
                 <label for="avatar-file" class="block text-sm font-medium text-gray-700">アバター画像</label>
                 <div id="current-avatar-preview" class="flex justify-center mb-4">
@@ -196,16 +223,16 @@ export class EditProfile extends Component {
                            </div>`
 										}
                 </div>
-                <input 
-                    id="avatar-file" 
-                    name="avatar-file" 
-                    type="file" 
+                <div id="new-avatar-preview" class="hidden justify-center mb-4">
+                    <img id="preview-image" src="" alt="Preview" class="w-20 h-20 rounded-full object-cover">
+                </div>
+                <input
+                    id="avatar-file"
+                    name="avatar-file"
+                    type="file"
                     accept="image/jpeg,image/png,image/gif,image/webp"
                     class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
-                <div id="new-avatar-preview" class="hidden justify-center mt-2">
-                    <img id="preview-image" src="" alt="Preview" class="w-20 h-20 rounded-full object-cover">
-                </div>
                 <p class="text-xs text-gray-500">JPEG、PNG、GIF、WebP形式、5MB以下</p>
             </div>
             <div class="flex justify-center">

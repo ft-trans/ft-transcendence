@@ -31,6 +31,7 @@ services:
         condition: service_healthy
     volumes:
       - prisma:/app/dist/prisma
+      - avatars:/app/dist/client/avatars
       - certs:/app/certs:ro
       - app-secrets:/run/app-secrets:ro
     # TODO 提出前にコメントアウトを外す
@@ -283,6 +284,7 @@ services:
 volumes:
   redis:
   prisma:
+  avatars:
   prometheus-data:
   grafana-data:
   certs:
