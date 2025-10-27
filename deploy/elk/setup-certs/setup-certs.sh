@@ -3,31 +3,56 @@ set -Eeuo pipefail
 
 echo "[setup-certs] start"
 
-ES_PASS_SRC="/run/secrets/elasticsearch_password"
-ES_PASS_DST="/work/es-internal/elasticsearch_password"
+# secrets
+# srcs
+SECRETS_DIR="/run/secrets"
+ES_PASS_SRC="${SECRETS_DIR}/elasticsearch_password"
+KB_PASS_SRC="${SECRETS_DIR}/kibana_password"
+KBN_SECURITY_KEY_SRC="${SECRETS_DIR}/kbn_security_key"
+KBN_ESO_KEY_SRC="${SECRETS_DIR}/kbn_eso_key"
+KBN_REPORTING_KEY_SRC="${SECRETS_DIR}/kbn_reporting_key"
 
-# readability check
-if [ ! -r "$ES_PASS_SRC" ]; then
-  echo "[setup-certs] ERROR: $ES_PASS_SRC is not readable"
-  exit 1
-fi
+# dest dirs
+APP_SECRETS_DIR="/work/app-secrets"
+ES_SECRETS_DIR="/work/es-secrets"
+KB_SECRETS_DIR="/work/kb-secrets"
 
-# copy once with proper owner/mode
-if [ ! -f "$ES_PASS_DST" ]; then
-  echo "[setup-certs] reading Elasticsearch password"
-  if install -D -m 600 -o 1000 -g 0 "$ES_PASS_SRC" "$ES_PASS_DST" 2>/dev/null; then
-    :
-  else
-    install -D -m 600 "$ES_PASS_SRC" "$ES_PASS_DST"
-    chown 1000:0 "$ES_PASS_DST"
+copy_secret() {
+  local src="$1" dst="$2" mode="$3" owner="${4:-}"
+
+  [[ -r "$src" ]] || { echo "[setup-certs] ERROR: ${src} is not readable" >&2; exit 1; }
+
+  mkdir -p -- "$(dirname "$dst")"
+
+  if [[ ! -f "$dst" ]]; then
+    if command -v install >/dev/null 2>&1 && \
+       install -D -m "$mode" ${owner:+-o "${owner%:*}" -g "${owner#*:}"} "$src" "$dst" 2>/dev/null; then
+      :
+    else
+      cp -- "$src" "$dst"
+      chmod "$mode" "$dst"
+      [[ -n "$owner" ]] && chown "$owner" "$dst"
+    fi
   fi
-fi
+}
 
+# ---------- copy secrets ----------
+# ES for app
+copy_secret "$ES_PASS_SRC" "${APP_SECRETS_DIR}/elasticsearch_password" 444 "0:0"
+# Elasticsearch
+copy_secret "$ES_PASS_SRC" "${ES_SECRETS_DIR}/elasticsearch_password" 600 "1000:0"
+# Kibana
+copy_secret "$KB_PASS_SRC" "${KB_SECRETS_DIR}/kibana_password" 600 "1000:1000"
+copy_secret "$KBN_SECURITY_KEY_SRC"   "${KB_SECRETS_DIR}/kbn_security_key"   600 "1000:1000"
+copy_secret "$KBN_ESO_KEY_SRC"        "${KB_SECRETS_DIR}/kbn_eso_key"        600 "1000:1000"
+copy_secret "$KBN_REPORTING_KEY_SRC"  "${KB_SECRETS_DIR}/kbn_reporting_key"  600 "1000:1000"
 
+echo "[setup-certs] secrets staged"
+
+# CA
 ES_HOME="/usr/share/elasticsearch"
 CERTS="$ES_HOME/config/certs"
 
-# CA
 if [ ! -f "$CERTS/ca/ca.crt" ]; then
   echo "[setup-certs] creating CA"
   "$ES_HOME/bin/elasticsearch-certutil" ca --silent --pem -out "$CERTS/ca.zip"

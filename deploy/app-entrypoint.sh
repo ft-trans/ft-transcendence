@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-: "${ELASTIC_PASSWORD_FILE:=/run/secrets/elasticsearch_password}"
+: "${ELASTIC_PASSWORD_FILE:=/run/app-secrets/elasticsearch_password}"
 
 if [[ -z "${ELASTIC_PASSWORD:-}" ]] && [[ -f "${ELASTIC_PASSWORD_FILE}" ]]; then
   export ELASTIC_PASSWORD="$(tr -d '\r\n' < "${ELASTIC_PASSWORD_FILE}")"

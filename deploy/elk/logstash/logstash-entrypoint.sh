@@ -2,7 +2,7 @@
 set -eu
 
 # secrets -> env
-ELASTIC_PASSWORD="$(tr -d '\r\n' </run/secrets/elasticsearch_password || true)"
+ELASTIC_PASSWORD="$(tr -d '\r\n' </run/es-secrets/elasticsearch_password || true)"
 [ -n "${ELASTIC_PASSWORD:-}" ] || { echo "[logstash] missing elasticsearch_password"; exit 1; }
 export ELASTIC_PASSWORD
 
