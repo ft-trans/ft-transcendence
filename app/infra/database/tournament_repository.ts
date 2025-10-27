@@ -2,11 +2,13 @@ import {
 	MaxParticipants,
 	RoundNumber,
 	Tournament,
+	TournamentDescription,
 	TournamentId,
 	TournamentMatch,
 	TournamentMatchId,
 	type TournamentMatchStatus,
 	TournamentMatchStatusValue,
+	TournamentName,
 	TournamentParticipant,
 	TournamentParticipantId,
 	type TournamentParticipantStatus,
@@ -30,6 +32,8 @@ export class TournamentRepository implements ITournamentRepository {
 		const createdTournament = await this.client.tournament.create({
 			data: {
 				id: tournament.id.value,
+				name: tournament.name.value,
+				description: tournament.description.value ?? null,
 				organizerId: tournament.organizerId.value,
 				status: tournament.status.value,
 				maxParticipants: tournament.maxParticipants.value,
@@ -38,6 +42,10 @@ export class TournamentRepository implements ITournamentRepository {
 
 		return Tournament.reconstruct({
 			id: new TournamentId(createdTournament.id),
+			name: new TournamentName(createdTournament.name),
+			description: new TournamentDescription(
+				createdTournament.description ?? undefined,
+			),
 			organizerId: new UserId(createdTournament.organizerId),
 			status: new TournamentStatusValue(
 				createdTournament.status as TournamentStatus,
@@ -52,6 +60,8 @@ export class TournamentRepository implements ITournamentRepository {
 				id: tournament.id.value,
 			},
 			data: {
+				name: tournament.name.value,
+				description: tournament.description.value ?? null,
 				status: tournament.status.value,
 				maxParticipants: tournament.maxParticipants.value,
 			},
@@ -59,6 +69,10 @@ export class TournamentRepository implements ITournamentRepository {
 
 		return Tournament.reconstruct({
 			id: new TournamentId(updatedTournament.id),
+			name: new TournamentName(updatedTournament.name),
+			description: new TournamentDescription(
+				updatedTournament.description ?? undefined,
+			),
 			organizerId: new UserId(updatedTournament.organizerId),
 			status: new TournamentStatusValue(
 				updatedTournament.status as TournamentStatus,
@@ -76,6 +90,10 @@ export class TournamentRepository implements ITournamentRepository {
 
 		return Tournament.reconstruct({
 			id: new TournamentId(deletedTournament.id),
+			name: new TournamentName(deletedTournament.name),
+			description: new TournamentDescription(
+				deletedTournament.description ?? undefined,
+			),
 			organizerId: new UserId(deletedTournament.organizerId),
 			status: new TournamentStatusValue(
 				deletedTournament.status as TournamentStatus,
@@ -97,6 +115,10 @@ export class TournamentRepository implements ITournamentRepository {
 
 		return Tournament.reconstruct({
 			id: new TournamentId(tournament.id),
+			name: new TournamentName(tournament.name),
+			description: new TournamentDescription(
+				tournament.description ?? undefined,
+			),
 			organizerId: new UserId(tournament.organizerId),
 			status: new TournamentStatusValue(tournament.status as TournamentStatus),
 			maxParticipants: new MaxParticipants(tournament.maxParticipants),
@@ -124,6 +146,10 @@ export class TournamentRepository implements ITournamentRepository {
 		return tournaments.map((tournament) =>
 			Tournament.reconstruct({
 				id: new TournamentId(tournament.id),
+				name: new TournamentName(tournament.name),
+				description: new TournamentDescription(
+					tournament.description ?? undefined,
+				),
 				organizerId: new UserId(tournament.organizerId),
 				status: new TournamentStatusValue(
 					tournament.status as TournamentStatus,

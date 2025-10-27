@@ -1,4 +1,9 @@
-import { MaxParticipants, Tournament, UserId } from "@domain/model";
+import {
+	MaxParticipants,
+	Tournament,
+	TournamentName,
+	UserId,
+} from "@domain/model";
 import type { ITournamentRepository } from "@domain/repository";
 import { createMockRepository } from "@usecase/test_helper";
 import type { ITransaction } from "@usecase/transaction";
@@ -13,7 +18,9 @@ describe("CreateTournamentUsecase", () => {
 
 	it("should create a new tournament with default max participants", async () => {
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF0");
+		const name = new TournamentName("Test Tournament");
 		const expectedTournament = Tournament.create({
+			name,
 			organizerId,
 		});
 
@@ -30,10 +37,12 @@ describe("CreateTournamentUsecase", () => {
 
 		const usecase = new CreateTournamentUsecase(mockTx);
 		const input = {
+			name: "Test Tournament",
 			organizerId: organizerId.value,
 		};
 		const tournament = await usecase.execute(input);
 
+		expect(tournament.name.value).toBe("Test Tournament");
 		expect(tournament.organizerId.equals(organizerId)).toBe(true);
 		expect(tournament.status.value).toBe("registration");
 		expect(tournament.maxParticipants.value).toBe(
@@ -44,8 +53,10 @@ describe("CreateTournamentUsecase", () => {
 
 	it("should create a new tournament with custom max participants", async () => {
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF0");
+		const name = new TournamentName("Custom Tournament");
 		const maxParticipants = new MaxParticipants(8);
 		const expectedTournament = Tournament.create({
+			name,
 			organizerId,
 			maxParticipants,
 		});
@@ -63,11 +74,13 @@ describe("CreateTournamentUsecase", () => {
 
 		const usecase = new CreateTournamentUsecase(mockTx);
 		const input = {
+			name: "Custom Tournament",
 			organizerId: organizerId.value,
 			maxParticipants: 8,
 		};
 		const tournament = await usecase.execute(input);
 
+		expect(tournament.name.value).toBe("Custom Tournament");
 		expect(tournament.organizerId.equals(organizerId)).toBe(true);
 		expect(tournament.status.value).toBe("registration");
 		expect(tournament.maxParticipants.value).toBe(8);
@@ -85,6 +98,7 @@ describe("CreateTournamentUsecase", () => {
 
 		const usecase = new CreateTournamentUsecase(mockTx);
 		const input = {
+			name: "Invalid Tournament",
 			organizerId: "01JAJCJCK5XPWQ9A7DRTBHVXF0",
 			maxParticipants: 16, // Over max limit
 		};

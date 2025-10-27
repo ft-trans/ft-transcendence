@@ -3,6 +3,7 @@ import {
 	Tournament,
 	TournamentId,
 	TournamentMatch,
+	TournamentName,
 	TournamentParticipant,
 	TournamentParticipantId,
 	TournamentRoundId,
@@ -40,7 +41,10 @@ describe("StartTournamentMatchUsecase", () => {
 		const user1Id = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF5");
 		const user2Id = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF6");
 
-		const tournament = Tournament.create({ organizerId }).start();
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		}).start();
 		const tournamentMatch = TournamentMatch.create(tournamentId, roundId, [
 			participant1Id,
 			participant2Id,
@@ -201,7 +205,10 @@ describe("StartTournamentMatchUsecase", () => {
 			"01JAJCJCK5XPWQ9A7DRTBHVXF4",
 		);
 
-		const tournament = Tournament.create({ organizerId }); // registration status
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		}); // registration status
 		const tournamentMatch = TournamentMatch.create(tournamentId, roundId, [
 			participant1Id,
 			participant2Id,
@@ -241,7 +248,10 @@ describe("StartTournamentMatchUsecase", () => {
 			"01JAJCJCK5XPWQ9A7DRTBHVXF4",
 		);
 
-		const tournament = Tournament.create({ organizerId }).start();
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		}).start();
 		const tournamentMatch = TournamentMatch.create(tournamentId, roundId, [
 			participant1Id,
 			participant2Id,

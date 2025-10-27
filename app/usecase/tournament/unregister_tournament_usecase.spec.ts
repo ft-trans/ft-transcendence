@@ -2,6 +2,7 @@ import { ErrBadRequest } from "@domain/error";
 import {
 	Tournament,
 	TournamentId,
+	TournamentName,
 	TournamentParticipant,
 	UserId,
 } from "@domain/model";
@@ -23,6 +24,7 @@ describe("UnregisterTournamentUsecase", () => {
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF2");
 
 		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
 			organizerId,
 		});
 
@@ -84,6 +86,7 @@ describe("UnregisterTournamentUsecase", () => {
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF2");
 
 		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
 			organizerId,
 		});
 		const startedTournament = tournament.start();
@@ -117,6 +120,7 @@ describe("UnregisterTournamentUsecase", () => {
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF2");
 
 		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
 			organizerId,
 		});
 

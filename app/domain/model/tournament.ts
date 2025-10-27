@@ -15,6 +15,48 @@ export class TournamentId extends ValueObject<string, "TournamentId"> {
 	}
 }
 
+export class TournamentName extends ValueObject<string, "TournamentName"> {
+	static readonly MIN_LENGTH = 1;
+	static readonly MAX_LENGTH = 100;
+
+	protected validate(value: string): void {
+		if (value.length < TournamentName.MIN_LENGTH) {
+			throw new ErrBadRequest({
+				details: {
+					tournamentName: "トーナメント名は1文字以上である必要があります",
+				},
+			});
+		}
+		if (value.length > TournamentName.MAX_LENGTH) {
+			throw new ErrBadRequest({
+				details: {
+					tournamentName: `トーナメント名は${TournamentName.MAX_LENGTH}文字以内である必要があります`,
+				},
+			});
+		}
+	}
+}
+
+export class TournamentDescription extends ValueObject<
+	string | undefined,
+	"TournamentDescription"
+> {
+	static readonly MAX_LENGTH = 500;
+
+	protected validate(value: string | undefined): void {
+		if (
+			value !== undefined &&
+			value.length > TournamentDescription.MAX_LENGTH
+		) {
+			throw new ErrBadRequest({
+				details: {
+					tournamentDescription: `トーナメント説明は${TournamentDescription.MAX_LENGTH}文字以内である必要があります`,
+				},
+			});
+		}
+	}
+}
+
 export type TournamentStatus =
 	| "registration"
 	| "in_progress"
@@ -84,12 +126,16 @@ export class MaxParticipants extends ValueObject<number, "MaxParticipants"> {
 export class Tournament {
 	constructor(
 		readonly id: TournamentId,
+		readonly name: TournamentName,
+		readonly description: TournamentDescription,
 		readonly organizerId: UserId,
 		readonly status: TournamentStatusValue,
 		readonly maxParticipants: MaxParticipants,
 	) {}
 
 	static create(params: {
+		name: TournamentName;
+		description?: TournamentDescription;
 		organizerId: UserId;
 		maxParticipants?: MaxParticipants;
 	}): Tournament {
@@ -98,9 +144,13 @@ export class Tournament {
 			params.maxParticipants ||
 			new MaxParticipants(MaxParticipants.DEFAULT_PARTICIPANTS);
 		const status = new TournamentStatusValue("registration");
+		const description =
+			params.description || new TournamentDescription(undefined);
 
 		return new Tournament(
 			id,
+			params.name,
+			description,
 			params.organizerId,
 			status,
 			defaultMaxParticipants,
@@ -109,12 +159,16 @@ export class Tournament {
 
 	static reconstruct(params: {
 		id: TournamentId;
+		name: TournamentName;
+		description: TournamentDescription;
 		organizerId: UserId;
 		status: TournamentStatusValue;
 		maxParticipants: MaxParticipants;
 	}): Tournament {
 		return new Tournament(
 			params.id,
+			params.name,
+			params.description,
 			params.organizerId,
 			params.status,
 			params.maxParticipants,
@@ -130,6 +184,8 @@ export class Tournament {
 
 		return new Tournament(
 			this.id,
+			this.name,
+			this.description,
 			this.organizerId,
 			new TournamentStatusValue("in_progress"),
 			this.maxParticipants,
@@ -145,6 +201,8 @@ export class Tournament {
 
 		return new Tournament(
 			this.id,
+			this.name,
+			this.description,
 			this.organizerId,
 			new TournamentStatusValue("completed"),
 			this.maxParticipants,
@@ -165,6 +223,8 @@ export class Tournament {
 
 		return new Tournament(
 			this.id,
+			this.name,
+			this.description,
 			this.organizerId,
 			new TournamentStatusValue("cancelled"),
 			this.maxParticipants,

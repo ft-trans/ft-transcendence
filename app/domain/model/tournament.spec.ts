@@ -5,11 +5,13 @@ import {
 	MaxParticipants,
 	RoundNumber,
 	Tournament,
+	TournamentDescription,
 	TournamentId,
 	TournamentMatch,
 	TournamentMatchId,
 	type TournamentMatchStatus,
 	TournamentMatchStatusValue,
+	TournamentName,
 	TournamentParticipant,
 	TournamentParticipantId,
 	type TournamentParticipantStatus,
@@ -94,7 +96,10 @@ describe("MaxParticipants", () => {
 describe("Tournament", () => {
 	it("should create a tournament with valid parameters", () => {
 		const organizerId = new UserId(ulid());
-		const tournament = Tournament.create({ organizerId });
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		});
 
 		expect(tournament).toBeInstanceOf(Tournament);
 		expect(tournament.id).toBeInstanceOf(TournamentId);
@@ -108,7 +113,11 @@ describe("Tournament", () => {
 	it("should create a tournament with custom max participants", () => {
 		const organizerId = new UserId(ulid());
 		const maxParticipants = new MaxParticipants(8);
-		const tournament = Tournament.create({ organizerId, maxParticipants });
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+			maxParticipants,
+		});
 
 		expect(tournament.maxParticipants).toBe(maxParticipants);
 	});
@@ -121,6 +130,8 @@ describe("Tournament", () => {
 
 		const tournament = Tournament.reconstruct({
 			id,
+			name: new TournamentName("Test Tournament"),
+			description: new TournamentDescription(undefined),
 			organizerId,
 			status,
 			maxParticipants,
@@ -134,7 +145,10 @@ describe("Tournament", () => {
 
 	it("should start a tournament", () => {
 		const organizerId = new UserId(ulid());
-		const tournament = Tournament.create({ organizerId });
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		});
 		const startedTournament = tournament.start();
 
 		expect(startedTournament.status.value).toBe("in_progress");
@@ -142,7 +156,10 @@ describe("Tournament", () => {
 
 	it("should throw error when starting non-registration tournament", () => {
 		const organizerId = new UserId(ulid());
-		const tournament = Tournament.create({ organizerId }).start();
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		}).start();
 
 		expect(() => tournament.start()).toThrowError(
 			new ErrBadRequest({
@@ -153,7 +170,10 @@ describe("Tournament", () => {
 
 	it("should complete a tournament", () => {
 		const organizerId = new UserId(ulid());
-		const tournament = Tournament.create({ organizerId }).start();
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		}).start();
 		const completedTournament = tournament.complete();
 
 		expect(completedTournament.status.value).toBe("completed");
@@ -161,7 +181,10 @@ describe("Tournament", () => {
 
 	it("should throw error when completing non-in-progress tournament", () => {
 		const organizerId = new UserId(ulid());
-		const tournament = Tournament.create({ organizerId });
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		});
 
 		expect(() => tournament.complete()).toThrowError(
 			new ErrBadRequest({
@@ -172,7 +195,10 @@ describe("Tournament", () => {
 
 	it("should cancel a tournament", () => {
 		const organizerId = new UserId(ulid());
-		const tournament = Tournament.create({ organizerId });
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		});
 		const cancelledTournament = tournament.cancel();
 
 		expect(cancelledTournament.status.value).toBe("cancelled");
@@ -180,7 +206,12 @@ describe("Tournament", () => {
 
 	it("should throw error when cancelling completed tournament", () => {
 		const organizerId = new UserId(ulid());
-		const tournament = Tournament.create({ organizerId }).start().complete();
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		})
+			.start()
+			.complete();
 
 		expect(() => tournament.cancel()).toThrowError(
 			new ErrBadRequest({
@@ -192,7 +223,10 @@ describe("Tournament", () => {
 	it("should identify organizer correctly", () => {
 		const organizerId = new UserId(ulid());
 		const otherId = new UserId(ulid());
-		const tournament = Tournament.create({ organizerId });
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		});
 
 		expect(tournament.isOrganizer(organizerId)).toBe(true);
 		expect(tournament.isOrganizer(otherId)).toBe(false);
@@ -200,7 +234,10 @@ describe("Tournament", () => {
 
 	it("should correctly identify if registration is allowed", () => {
 		const organizerId = new UserId(ulid());
-		const tournament = Tournament.create({ organizerId });
+		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
+			organizerId,
+		});
 
 		expect(tournament.canRegister()).toBe(true);
 		expect(tournament.start().canRegister()).toBe(false);

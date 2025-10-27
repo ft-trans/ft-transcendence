@@ -3,6 +3,7 @@ import {
 	MaxParticipants,
 	Tournament,
 	TournamentId,
+	TournamentName,
 	TournamentParticipant,
 	User,
 	UserAvatar,
@@ -32,6 +33,7 @@ describe("RegisterTournamentUsecase", () => {
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF2");
 
 		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
 			organizerId,
 			maxParticipants: new MaxParticipants(4),
 		});
@@ -112,6 +114,7 @@ describe("RegisterTournamentUsecase", () => {
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF2");
 
 		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
 			organizerId,
 		});
 		const startedTournament = tournament.start();
@@ -145,6 +148,7 @@ describe("RegisterTournamentUsecase", () => {
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF2");
 
 		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
 			organizerId,
 		});
 
@@ -185,6 +189,7 @@ describe("RegisterTournamentUsecase", () => {
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF2");
 
 		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
 			organizerId,
 			maxParticipants: new MaxParticipants(2), // 最大2人
 		});

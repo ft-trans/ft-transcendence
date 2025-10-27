@@ -3,6 +3,7 @@ import {
 	RoundNumber,
 	Tournament,
 	TournamentId,
+	TournamentName,
 	TournamentParticipant,
 	TournamentRound,
 	UserId,
@@ -24,6 +25,7 @@ describe("StartTournamentUsecase", () => {
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF1");
 
 		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
 			organizerId,
 		});
 
@@ -85,6 +87,7 @@ describe("StartTournamentUsecase", () => {
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF1");
 
 		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
 			organizerId,
 		});
 
@@ -165,6 +168,7 @@ describe("StartTournamentUsecase", () => {
 		const otherUserId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF2");
 
 		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
 			organizerId,
 		});
 
@@ -196,6 +200,7 @@ describe("StartTournamentUsecase", () => {
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF1");
 
 		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
 			organizerId,
 		});
 
@@ -234,6 +239,7 @@ describe("StartTournamentUsecase", () => {
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF1");
 
 		const tournament = Tournament.create({
+			name: new TournamentName("Test Tournament"),
 			organizerId,
 		});
 		const startedTournament = tournament.start();

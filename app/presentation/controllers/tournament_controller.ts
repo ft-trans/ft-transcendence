@@ -178,8 +178,8 @@ const _toTournamentDTO = (
 ): TournamentDTO => {
 	return {
 		id: tournament.id.value,
-		name: tournament.id.value, // TODO: name フィールドを追加する
-		description: undefined, // TODO: description フィールドを追加する
+		name: tournament.name.value,
+		description: tournament.description.value,
 		organizerId: tournament.organizerId.value,
 		organizer: toUserInfo(organizer),
 		status: tournament.status.value,
@@ -212,8 +212,8 @@ const onGetTournaments = (usecase: GetTournamentsUsecase) => {
 			const responseBody: GetTournamentsResponse = {
 				tournaments: result.tournaments.map((item) => ({
 					id: item.tournament.id.value,
-					name: item.tournament.id.value, // TODO: name フィールドを追加する
-					description: undefined, // TODO: description フィールドを追加する
+					name: item.tournament.name.value,
+					description: item.tournament.description.value,
 					organizerId: item.tournament.organizerId.value,
 					organizer: toUserInfo(item.organizer),
 					status: item.tournament.status.value,
@@ -249,9 +249,11 @@ const onCreateTournament = (usecase: CreateTournamentUsecase) => {
 				return reply.status(401).send({ error: "Unauthorized" });
 			}
 
-			const { maxParticipants } = req.body;
+			const { name, description, maxParticipants } = req.body;
 
 			const tournament = await usecase.execute({
+				name,
+				description,
 				organizerId: userId,
 				maxParticipants,
 			});
@@ -259,7 +261,8 @@ const onCreateTournament = (usecase: CreateTournamentUsecase) => {
 			// TODO: organizerとparticipantCountを取得する
 			const responseBody: CreateTournamentResponse = {
 				id: tournament.id.value,
-				name: tournament.id.value,
+				name: tournament.name.value,
+				description: tournament.description.value,
 				organizerId: tournament.organizerId.value,
 				organizer: {
 					id: userId,
@@ -318,8 +321,8 @@ const onGetTournamentDetail = (usecase: GetTournamentDetailUsecase) => {
 
 			const responseBody: TournamentDetailDTO = {
 				id: result.tournament.id.value,
-				name: result.tournament.id.value, // TODO: name フィールドを追加する
-				description: undefined, // TODO: description フィールドを追加する
+				name: result.tournament.name.value,
+				description: result.tournament.description.value,
 				organizerId: result.tournament.organizerId.value,
 				organizer: toUserInfo(result.organizer),
 				status: result.tournament.status.value,

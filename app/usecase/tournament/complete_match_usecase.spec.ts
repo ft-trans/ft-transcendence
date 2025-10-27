@@ -3,10 +3,12 @@ import {
 	MaxParticipants,
 	RoundNumber,
 	Tournament,
+	TournamentDescription,
 	TournamentId,
 	TournamentMatch,
 	TournamentMatchId,
 	TournamentMatchStatusValue,
+	TournamentName,
 	TournamentParticipant,
 	TournamentParticipantId,
 	TournamentParticipantStatusValue,
@@ -53,6 +55,8 @@ describe("CompleteMatchUsecase", () => {
 
 		const tournament = Tournament.reconstruct({
 			id: tournamentId,
+			name: new TournamentName("Test Tournament"),
+			description: new TournamentDescription(undefined),
 			organizerId,
 			status: new TournamentStatusValue("in_progress"),
 			maxParticipants: new MaxParticipants(4),
@@ -147,6 +151,8 @@ describe("CompleteMatchUsecase", () => {
 
 		const tournament = Tournament.reconstruct({
 			id: tournamentId,
+			name: new TournamentName("Test Tournament"),
+			description: new TournamentDescription(undefined),
 			organizerId,
 			status: new TournamentStatusValue("in_progress"),
 			maxParticipants: new MaxParticipants(4),
@@ -253,6 +259,8 @@ describe("CompleteMatchUsecase", () => {
 
 		const tournament = Tournament.reconstruct({
 			id: tournamentId,
+			name: new TournamentName("Test Tournament"),
+			description: new TournamentDescription(undefined),
 			organizerId: new UserId(ulid()),
 			status: new TournamentStatusValue("in_progress"),
 			maxParticipants: new MaxParticipants(4),
@@ -322,6 +330,8 @@ describe("CompleteMatchUsecase", () => {
 
 		const tournament = Tournament.reconstruct({
 			id: tournamentId,
+			name: new TournamentName("Test Tournament"),
+			description: new TournamentDescription(undefined),
 			organizerId,
 			status: new TournamentStatusValue("in_progress"),
 			maxParticipants: new MaxParticipants(4),
