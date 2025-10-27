@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { AvatarUploadService } from "@domain/service/avatar_upload_service";
 import { MatchmakingService } from "@domain/service/matchmaking_service";
@@ -26,6 +27,7 @@ import { userController } from "@presentation/controllers/user_controller";
 import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
 import { tournamentWsController } from "@presentation/controllers/ws/tournament_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import { errorHandler } from "@presentation/hooks/error_handler";
 import { MESSAGE_TYPES } from "@shared/api/chat";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
 import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
@@ -87,6 +89,25 @@ import { otelInstrumentation } from "./observability/otel.js";
 
 const app = Fastify({ logger: true });
 
+const getCookieSecret = (): string => {
+	let secret: string;
+	if (process.env.NODE_ENV === "production") {
+		secret = readFileSync("/run/secrets/app_cookie_secret", "utf8").trim();
+	} else {
+		secret = process.env.COOKIE_SECRET;
+	}
+	if (!secret) {
+		app.log.error("COOKIE_SECRET environment variable is not set");
+		process.exit(1);
+	}
+
+	if (secret.length < 32) {
+		app.log.error("Cookie secret is too short (minimum 32 characters)");
+		process.exit(1);
+	}
+	return secret;
+};
+
 const start = async () => {
 	try {
 		app.get("/api/health", async () => ({ message: "OK" }));
@@ -100,12 +121,21 @@ const start = async () => {
 			spa: true,
 		});
 
-		await app.register(FastifyCookie);
+		await app.register(FastifyCookie, {
+			secret: getCookieSecret(),
+			parseOptions: {},
+		});
 		await app.register(FastifyMultipart);
 
-		// Serve static files from public/avatars
+		// Serve static files (avatars)
+		const avatarPath = [import.meta.dirname, ".."];
+		if (process.env.NODE_ENV === "production") {
+			avatarPath.push("client");
+		} else {
+			avatarPath.push("public");
+		}
 		await app.register(FastifyStatic, {
-			root: resolve(import.meta.dirname, "..", "public", "avatars"),
+			root: resolve(...avatarPath, "avatars"),
 			prefix: "/avatars/",
 		});
 
@@ -116,6 +146,10 @@ const start = async () => {
 		}
 
 		await app.register(FastifyRedis, { url: redisUrl });
+
+		// グローバルエラーハンドラを設定
+		app.setErrorHandler(errorHandler);
+
 		const repo = new Repository(prisma, app.redis);
 		const tx = new Transaction(prisma, app.redis);
 		const registerUserUsecase = new RegisterUserUsecase(tx);
@@ -134,6 +168,7 @@ const start = async () => {
 			),
 			{ prefix: "/api" },
 		);
+		const findUserUsecase = new FindUserUsecase(repo);
 		const updateUserUsecase = new UpdateUserUsecase(tx);
 		const deleteUserUsecase = new DeleteUserUsecase(tx);
 		const avatarUploadService = new AvatarUploadService();
@@ -171,6 +206,7 @@ const start = async () => {
 
 		await app.register(
 			profileController(
+				findUserUsecase,
 				updateUserUsecase,
 				deleteUserUsecase,
 				uploadAvatarUsecase,
@@ -303,7 +339,6 @@ const start = async () => {
 		const unblockUserUsecase = new UnblockUserUsecase(tx);
 		const getBlockedUsersUsecase = new GetBlockedUsersUsecase(tx);
 		const searchUsersUsecase = new SearchUsersUsecase(tx);
-		const findUserUsecase = new FindUserUsecase(repo);
 		const findUserByUsernameUsecase = new FindUserByUsernameUsecase(repo);
 		const getMatchStatsUseCase = new GetMatchStatsUseCase(repo);
 		const getMatchHistoriesUseCase = new GetMatchHistoriesUseCase(repo);

@@ -10,6 +10,8 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
+    secrets:
+      - app_cookie_secret
     networks:
       - transcendence_net
     # TODO 提出前に削除, metrics確認用
@@ -20,6 +22,7 @@ services:
         condition: service_healthy
     volumes:
       - prisma:/app/dist/prisma
+      - avatars:/app/dist/client/avatars
     # TODO 提出前にコメントアウトを外す
     # restart: always
     healthcheck:
@@ -34,8 +37,7 @@ services:
       dockerfile: deploy/Dockerfile.nginx
       target: production
     ports:
-      - "80:80"
-      - "443:443"
+      - "4443:443"
     networks:
       - transcendence_net
     depends_on:
@@ -117,12 +119,15 @@ services:
 volumes:
   redis:
   prisma:
+  avatars:
   prometheus-data:
   grafana-data:
 
 secrets:
   grafana_admin_password:
     file: ./secrets/grafana_admin_password.txt
+  app_cookie_secret:
+    file: ./secrets/app_cookie_secret.txt
 
 networks:
   transcendence_net:

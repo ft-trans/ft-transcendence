@@ -13,7 +13,16 @@ declare module "fastify" {
 	}
 }
 
+// auth_controller.ts と重複
 const cookieName = "ft_trans";
+const getSecureCookieOptions = () => ({
+	httpOnly: true,
+	secure: process.env.NODE_ENV === "production",
+	sameSite: "strict" as const,
+	domain: process.env.COOKIE_DOMAIN,
+	signed: true,
+	path: "/",
+});
 
 export type AuthPrehandler = (
 	request: FastifyRequest,
@@ -27,9 +36,9 @@ export const createAuthPrehandler = (
 	return async (request: FastifyRequest, reply: FastifyReply) => {
 		// 認証処理開始
 
-		const token = request.cookies[cookieName];
+		const token = request.unsignCookie(request.cookies[cookieName] || "").value;
 		if (!token) {
-			reply.clearCookie(cookieName, { path: "/" });
+			reply.clearCookie(cookieName, getSecureCookieOptions());
 			throw new ErrUnauthorized();
 		}
 
@@ -37,13 +46,13 @@ export const createAuthPrehandler = (
 		const session = await sessionRepository.findByToken(sessionToken);
 
 		if (!session || !session.isValid(sessionToken)) {
-			reply.clearCookie(cookieName, { path: "/" });
+			reply.clearCookie(cookieName, getSecureCookieOptions());
 			throw new ErrUnauthorized();
 		}
 
 		const user = await userRepository.findById(session.userId);
 		if (!user) {
-			reply.clearCookie(cookieName, { path: "/" });
+			reply.clearCookie(cookieName, getSecureCookieOptions());
 			throw new ErrUnauthorized();
 		}
 

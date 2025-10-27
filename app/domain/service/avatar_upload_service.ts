@@ -16,7 +16,9 @@ export class AvatarUploadService implements IAvatarUploadService {
 	private readonly allowedMimeTypes: string[];
 
 	constructor(
-		uploadDir = "public/avatars",
+		uploadDir = process.env.NODE_ENV === "production"
+			? "dist/client/avatars"
+			: "public/avatars",
 		maxFileSize = 5 * 1024 * 1024, // 5MB
 		allowedMimeTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"],
 	) {

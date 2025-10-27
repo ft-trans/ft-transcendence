@@ -187,6 +187,7 @@ export class User {
 		email?: UserEmail,
 		username?: Username,
 		avatar?: UserAvatar,
+		passwordDigest?: string,
 	): User {
 		return User.reconstruct(
 			this.id,
@@ -194,7 +195,7 @@ export class User {
 			username || this.username,
 			avatar || this.avatar,
 			this.status,
-			this.passwordDigest,
+			passwordDigest || this.passwordDigest,
 		);
 	}
 
