@@ -151,3 +151,103 @@ export type CompleteTournamentMatchResponse = {
 	nextRound?: TournamentRoundDTO;
 	tournament?: TournamentDTO;
 };
+
+// =============================================================================
+// WebSocketイベント定義
+// =============================================================================
+
+/**
+ * WebSocketイベントタイプ定数
+ */
+export const TOURNAMENT_WS_EVENTS = {
+	// サーバー -> クライアント
+	PARTICIPANT_JOINED: "tournament.participant_joined",
+	TOURNAMENT_STARTED: "tournament.started",
+	MATCH_COMPLETED: "tournament.match_completed",
+	ROUND_COMPLETED: "tournament.round_completed",
+	TOURNAMENT_COMPLETED: "tournament.completed",
+	ERROR: "tournament.error",
+} as const;
+
+/**
+ * 参加者追加イベント
+ */
+export type ParticipantJoinedEvent = {
+	type: typeof TOURNAMENT_WS_EVENTS.PARTICIPANT_JOINED;
+	payload: {
+		tournamentId: string;
+		participant: TournamentParticipantDTO;
+	};
+};
+
+/**
+ * トーナメント開始イベント
+ */
+export type TournamentStartedEvent = {
+	type: typeof TOURNAMENT_WS_EVENTS.TOURNAMENT_STARTED;
+	payload: {
+		tournamentId: string;
+		tournament: TournamentDTO;
+		firstRound: TournamentRoundDTO;
+	};
+};
+
+/**
+ * 試合完了イベント
+ */
+export type MatchCompletedEvent = {
+	type: typeof TOURNAMENT_WS_EVENTS.MATCH_COMPLETED;
+	payload: {
+		tournamentId: string;
+		matchId: string; // TournamentMatchId
+		winnerId: string; // TournamentParticipantId
+		match: TournamentMatchDTO;
+	};
+};
+
+/**
+ * ラウンド完了イベント
+ */
+export type RoundCompletedEvent = {
+	type: typeof TOURNAMENT_WS_EVENTS.ROUND_COMPLETED;
+	payload: {
+		tournamentId: string;
+		roundNumber: number;
+		completedRound: TournamentRoundDTO;
+		nextRound?: TournamentRoundDTO;
+	};
+};
+
+/**
+ * トーナメント完了イベント
+ */
+export type TournamentCompletedEvent = {
+	type: typeof TOURNAMENT_WS_EVENTS.TOURNAMENT_COMPLETED;
+	payload: {
+		tournamentId: string;
+		tournament: TournamentDTO;
+		winnerId: string; // TournamentParticipantId
+		winner: TournamentParticipantDTO;
+	};
+};
+
+/**
+ * エラーイベント
+ */
+export type TournamentErrorEvent = {
+	type: typeof TOURNAMENT_WS_EVENTS.ERROR;
+	payload: {
+		message: string;
+	};
+};
+
+/**
+ * サーバーから送信されるWebSocketメッセージ
+ */
+export type TournamentServerMessage =
+	| ParticipantJoinedEvent
+	| TournamentStartedEvent
+	| MatchCompletedEvent
+	| RoundCompletedEvent
+	| TournamentCompletedEvent
+	| TournamentErrorEvent;

@@ -12,6 +12,7 @@ import { prisma } from "@infra/database/prisma";
 import { Transaction } from "@infra/database/transaction";
 import { InMemoryChatClientRepository } from "@infra/in_memory/chat_client_repository";
 import { InMemoryMatchmakingClientRepository } from "@infra/in_memory/matchmaking_client_repository";
+import { InMemoryTournamentClientRepository } from "@infra/in_memory/tournament_client_repository";
 import { Repository } from "@infra/repository";
 import { presenceController } from "@presentation/controllers/api/presence_controller";
 import { authController } from "@presentation/controllers/auth_controller";
@@ -23,6 +24,7 @@ import { relationshipController } from "@presentation/controllers/relationship_c
 import { tournamentController } from "@presentation/controllers/tournament_controller";
 import { userController } from "@presentation/controllers/user_controller";
 import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
+import { tournamentWsController } from "@presentation/controllers/ws/tournament_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import { MESSAGE_TYPES } from "@shared/api/chat";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
@@ -144,6 +146,7 @@ const start = async () => {
 		});
 		const matchmakingClientRepository =
 			new InMemoryMatchmakingClientRepository();
+		const tournamentClientRepository = new InMemoryTournamentClientRepository();
 
 		const matchmakingService = new MatchmakingService(
 			tx,
@@ -283,6 +286,12 @@ const start = async () => {
 			{ prefix: "/ws" },
 		);
 
+		// WebSocketトーナメントコントローラーを登録（WebSocketプラグイン登録後）
+		app.register(
+			tournamentWsController(tournamentClientRepository, authPrehandler),
+			{ prefix: "/ws" },
+		);
+
 		const getFriendsUsecase = new GetFriendsUsecase(tx);
 		const getFriendRequestsUsecase = new GetFriendRequestsUsecase(tx);
 		const getSentFriendRequestsUsecase = new GetSentFriendRequestsUsecase(tx);
@@ -347,11 +356,20 @@ const start = async () => {
 		const getTournamentsUsecase = new GetTournamentsUsecase(tx);
 		const getTournamentDetailUsecase = new GetTournamentDetailUsecase(tx);
 		const createTournamentUsecase = new CreateTournamentUsecase(tx);
-		const registerTournamentUsecase = new RegisterTournamentUsecase(tx);
+		const registerTournamentUsecase = new RegisterTournamentUsecase(
+			tx,
+			tournamentClientRepository,
+		);
 		const unregisterTournamentUsecase = new UnregisterTournamentUsecase(tx);
-		const startTournamentUsecase = new StartTournamentUsecase(tx);
+		const startTournamentUsecase = new StartTournamentUsecase(
+			tx,
+			tournamentClientRepository,
+		);
 		const startTournamentMatchUsecase = new StartTournamentMatchUsecase(tx);
-		const completeMatchUsecase = new CompleteMatchUsecase(tx);
+		const completeMatchUsecase = new CompleteMatchUsecase(
+			tx,
+			tournamentClientRepository,
+		);
 
 		await app.register(
 			tournamentController(

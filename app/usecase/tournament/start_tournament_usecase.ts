@@ -6,7 +6,9 @@ import {
 	TournamentRound,
 	UserId,
 } from "@domain/model";
+import type { ITournamentClientRepository } from "@domain/repository/tournament_client_repository";
 import { TournamentBracketService } from "@domain/service";
+import { TOURNAMENT_WS_EVENTS } from "@shared/api/tournament";
 import type { ITransaction } from "@usecase/transaction";
 
 export type StartTournamentUsecaseInput = {
@@ -21,7 +23,10 @@ export type StartTournamentUsecaseOutput = {
 };
 
 export class StartTournamentUsecase {
-	constructor(private readonly tx: ITransaction) {}
+	constructor(
+		private readonly tx: ITransaction,
+		private readonly tournamentClientRepository?: ITournamentClientRepository,
+	) {}
 
 	async execute(
 		input: StartTournamentUsecaseInput,
@@ -88,6 +93,51 @@ export class StartTournamentUsecase {
 				matches: createdMatches,
 			};
 		});
+
+		// WebSocket通知: トーナメント開始
+		if (this.tournamentClientRepository) {
+			const clients =
+				this.tournamentClientRepository.findByTournamentId(tournamentId);
+			for (const client of clients) {
+				try {
+					// TODO: DTOに変換するヘルパー関数を作成する
+					client.send({
+						type: TOURNAMENT_WS_EVENTS.TOURNAMENT_STARTED,
+						payload: {
+							tournamentId: tournamentId.value,
+							tournament: {
+								id: result.tournament.id.value,
+								name: result.tournament.id.value, // TODO: name フィールドを追加
+								organizerId: result.tournament.organizerId.value,
+								organizer: {
+									id: result.tournament.organizerId.value,
+									username: "", // TODO: ユーザー情報から取得
+									avatar: "", // TODO: ユーザー情報から取得
+								},
+								status: result.tournament.status.value,
+								maxParticipants: result.tournament.maxParticipants.value,
+								participantCount: 0, // TODO: 参加者数を取得
+								createdAt: new Date().toISOString(),
+								updatedAt: new Date().toISOString(),
+							},
+							firstRound: {
+								id: result.firstRound.id.value,
+								tournamentId: result.firstRound.tournamentId.value,
+								roundNumber: result.firstRound.roundNumber.value,
+								status: result.firstRound.status.value,
+								matches: [], // TODO: matchesを変換
+								createdAt: new Date().toISOString(),
+							},
+						},
+					});
+				} catch (error) {
+					console.error(
+						"[StartTournamentUsecase] Failed to send tournament_started event:",
+						error,
+					);
+				}
+			}
+		}
 
 		return result;
 	}

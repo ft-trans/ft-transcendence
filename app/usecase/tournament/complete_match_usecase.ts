@@ -10,7 +10,9 @@ import {
 	TournamentParticipantId,
 	TournamentRound as TournamentRoundEntity,
 } from "@domain/model";
+import type { ITournamentClientRepository } from "@domain/repository/tournament_client_repository";
 import { TournamentBracketService } from "@domain/service";
+import { TOURNAMENT_WS_EVENTS } from "@shared/api/tournament";
 import type { ITransaction } from "@usecase/transaction";
 
 export type CompleteMatchUsecaseInput = {
@@ -28,7 +30,10 @@ export type CompleteMatchUsecaseOutput = {
 };
 
 export class CompleteMatchUsecase {
-	constructor(private readonly tx: ITransaction) {}
+	constructor(
+		private readonly tx: ITransaction,
+		private readonly tournamentClientRepository?: ITournamentClientRepository,
+	) {}
 
 	async execute(
 		input: CompleteMatchUsecaseInput,
@@ -148,6 +153,128 @@ export class CompleteMatchUsecase {
 				isTournamentCompleted: false,
 			};
 		});
+
+		// WebSocket通知
+		if (this.tournamentClientRepository) {
+			const tournamentId = result.match.tournamentId;
+			const clients =
+				this.tournamentClientRepository.findByTournamentId(tournamentId);
+
+			// 1. 試合完了通知
+			for (const client of clients) {
+				try {
+					client.send({
+						type: TOURNAMENT_WS_EVENTS.MATCH_COMPLETED,
+						payload: {
+							tournamentId: tournamentId.value,
+							matchId: result.match.id.value,
+							winnerId: result.match.winnerId?.value ?? "",
+							match: {
+								id: result.match.id.value,
+								tournamentId: result.match.tournamentId.value,
+								roundId: result.match.roundId.value,
+								matchId: result.match.matchId,
+								participants: [], // TODO: 参加者情報を変換
+								winnerId: result.match.winnerId?.value,
+								status: result.match.status.value,
+								completedAt: undefined, // TODO: Matchから取得
+								createdAt: new Date().toISOString(),
+							},
+						},
+					});
+				} catch (error) {
+					console.error(
+						"[CompleteMatchUsecase] Failed to send match_completed event:",
+						error,
+					);
+				}
+			}
+
+			// 2. ラウンド完了通知
+			if (result.isRoundCompleted && result.nextRound) {
+				for (const client of clients) {
+					try {
+						client.send({
+							type: TOURNAMENT_WS_EVENTS.ROUND_COMPLETED,
+							payload: {
+								tournamentId: tournamentId.value,
+								roundNumber: result.nextRound.roundNumber.value - 1,
+								completedRound: {
+									id: "", // TODO: completedRoundの情報を取得
+									tournamentId: tournamentId.value,
+									roundNumber: result.nextRound.roundNumber.value - 1,
+									status: "completed",
+									matches: [],
+									createdAt: new Date().toISOString(),
+								},
+								nextRound: {
+									id: result.nextRound.id.value,
+									tournamentId: result.nextRound.tournamentId.value,
+									roundNumber: result.nextRound.roundNumber.value,
+									status: result.nextRound.status.value,
+									matches: [], // TODO: matchesを変換
+									createdAt: new Date().toISOString(),
+								},
+							},
+						});
+					} catch (error) {
+						console.error(
+							"[CompleteMatchUsecase] Failed to send round_completed event:",
+							error,
+						);
+					}
+				}
+			}
+
+			// 3. トーナメント完了通知
+			if (result.isTournamentCompleted && result.tournament) {
+				const winnerId = result.match.winnerId;
+				if (winnerId) {
+					for (const client of clients) {
+						try {
+							client.send({
+								type: TOURNAMENT_WS_EVENTS.TOURNAMENT_COMPLETED,
+								payload: {
+									tournamentId: tournamentId.value,
+									tournament: {
+										id: result.tournament.id.value,
+										name: result.tournament.id.value, // TODO: name フィールドを追加
+										organizerId: result.tournament.organizerId.value,
+										organizer: {
+											id: result.tournament.organizerId.value,
+											username: "", // TODO: ユーザー情報から取得
+											avatar: "",
+										},
+										status: result.tournament.status.value,
+										maxParticipants: result.tournament.maxParticipants.value,
+										participantCount: 0, // TODO: 参加者数を取得
+										createdAt: new Date().toISOString(),
+										updatedAt: new Date().toISOString(),
+									},
+									winnerId: winnerId.value,
+									winner: {
+										id: winnerId.value,
+										tournamentId: tournamentId.value,
+										userId: "", // TODO: TournamentParticipantからuserIdを取得
+										user: {
+											id: "",
+											username: "",
+											avatar: "",
+										},
+										status: "active",
+									},
+								},
+							});
+						} catch (error) {
+							console.error(
+								"[CompleteMatchUsecase] Failed to send tournament_completed event:",
+								error,
+							);
+						}
+					}
+				}
+			}
+		}
 
 		return result;
 	}
