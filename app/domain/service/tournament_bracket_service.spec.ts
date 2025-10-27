@@ -12,7 +12,7 @@ describe("TournamentBracketService", () => {
 	});
 
 	describe("generateFirstRoundMatches", () => {
-		it("should generate matches for even number of participants", () => {
+		it("should generate matches for 5 participants", () => {
 			const tournamentId = new TournamentId("01JAJCJCK5XPWQ9A7DRTBHVXF0");
 			const roundId = new TournamentRoundId("01JAJCJCK5XPWQ9A7DRTBHVXF1");
 
@@ -21,6 +21,7 @@ describe("TournamentBracketService", () => {
 				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF3"),
 				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF4"),
 				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF5"),
+				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF6"),
 			];
 
 			const noShuffle = <T>(array: T[]): T[] => array;
@@ -35,57 +36,6 @@ describe("TournamentBracketService", () => {
 			expect(matches.length).toBe(2);
 			expect(matches[0].participantIds.length).toBe(2);
 			expect(matches[1].participantIds.length).toBe(2);
-			expect(matches[0].isBye()).toBe(false);
-			expect(matches[1].isBye()).toBe(false);
-		});
-
-		it("should generate matches for odd number of participants with BYE", () => {
-			const tournamentId = new TournamentId("01JAJCJCK5XPWQ9A7DRTBHVXF0");
-			const roundId = new TournamentRoundId("01JAJCJCK5XPWQ9A7DRTBHVXF1");
-
-			const participantIds = [
-				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF2"),
-				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF3"),
-				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF4"),
-			];
-
-			const noShuffle = <T>(array: T[]): T[] => array;
-			const service = new TournamentBracketService(noShuffle);
-
-			const matches = service.generateFirstRoundMatches(
-				tournamentId,
-				roundId,
-				participantIds,
-			);
-
-			expect(matches.length).toBe(2);
-			expect(matches[0].participantIds.length).toBe(2);
-			expect(matches[1].participantIds.length).toBe(1);
-			expect(matches[0].isBye()).toBe(false);
-			expect(matches[1].isBye()).toBe(true);
-		});
-
-		it("should generate matches for 2 participants", () => {
-			const tournamentId = new TournamentId("01JAJCJCK5XPWQ9A7DRTBHVXF0");
-			const roundId = new TournamentRoundId("01JAJCJCK5XPWQ9A7DRTBHVXF1");
-
-			const participantIds = [
-				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF2"),
-				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF3"),
-			];
-
-			const noShuffle = <T>(array: T[]): T[] => array;
-			const service = new TournamentBracketService(noShuffle);
-
-			const matches = service.generateFirstRoundMatches(
-				tournamentId,
-				roundId,
-				participantIds,
-			);
-
-			expect(matches.length).toBe(1);
-			expect(matches[0].participantIds.length).toBe(2);
-			expect(matches[0].isBye()).toBe(false);
 		});
 
 		it("should shuffle participants by default", () => {
@@ -97,6 +47,7 @@ describe("TournamentBracketService", () => {
 				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF3"),
 				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF4"),
 				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF5"),
+				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF6"),
 			];
 
 			const service = new TournamentBracketService();
@@ -125,7 +76,7 @@ describe("TournamentBracketService", () => {
 	});
 
 	describe("generateNextRoundMatches", () => {
-		it("should generate next round matches from winners", () => {
+		it("should generate next round matches from 2 winners", () => {
 			const tournamentId = new TournamentId("01JAJCJCK5XPWQ9A7DRTBHVXF0");
 			const roundId = new TournamentRoundId("01JAJCJCK5XPWQ9A7DRTBHVXF1");
 
@@ -144,34 +95,9 @@ describe("TournamentBracketService", () => {
 
 			expect(matches.length).toBe(1);
 			expect(matches[0].participantIds.length).toBe(2);
-			expect(matches[0].isBye()).toBe(false);
 		});
 
-		it("should handle odd number of winners with BYE", () => {
-			const tournamentId = new TournamentId("01JAJCJCK5XPWQ9A7DRTBHVXF0");
-			const roundId = new TournamentRoundId("01JAJCJCK5XPWQ9A7DRTBHVXF1");
-
-			const winnerIds = [
-				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF2"),
-				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF3"),
-				new TournamentParticipantId("01JAJCJCK5XPWQ9A7DRTBHVXF4"),
-			];
-
-			const service = new TournamentBracketService();
-
-			const matches = service.generateNextRoundMatches(
-				tournamentId,
-				roundId,
-				winnerIds,
-			);
-
-			expect(matches.length).toBe(2);
-			expect(matches[0].participantIds.length).toBe(2);
-			expect(matches[1].participantIds.length).toBe(1);
-			expect(matches[1].isBye()).toBe(true);
-		});
-
-		it("should handle 4 winners", () => {
+		it("should generate next round matches from 4 winners", () => {
 			const tournamentId = new TournamentId("01JAJCJCK5XPWQ9A7DRTBHVXF0");
 			const roundId = new TournamentRoundId("01JAJCJCK5XPWQ9A7DRTBHVXF1");
 

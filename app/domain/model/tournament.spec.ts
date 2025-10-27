@@ -77,19 +77,21 @@ describe("TournamentStatusValue", () => {
 });
 
 describe("MaxParticipants", () => {
-	it("should create a MaxParticipants instance with valid number", () => {
-		const maxParticipants = new MaxParticipants(4);
-		expect(maxParticipants.value).toBe(4);
+	it("should create a MaxParticipants instance with fixed value of 5", () => {
+		const maxParticipants = new MaxParticipants(5);
+		expect(maxParticipants.value).toBe(5);
 	});
 
-	it("should throw a BadRequestError for invalid number", () => {
-		expect(() => new MaxParticipants(1)).toThrowError(ErrBadRequest);
-		expect(() => new MaxParticipants(65)).toThrowError(ErrBadRequest);
+	it("should throw a BadRequestError for non-5 values", () => {
+		expect(() => new MaxParticipants(2)).toThrowError(ErrBadRequest);
+		expect(() => new MaxParticipants(3)).toThrowError(ErrBadRequest);
+		expect(() => new MaxParticipants(4)).toThrowError(ErrBadRequest);
+		expect(() => new MaxParticipants(8)).toThrowError(ErrBadRequest);
 	});
 
-	it("should accept boundary values", () => {
-		expect(() => new MaxParticipants(2)).not.toThrow();
-		expect(() => new MaxParticipants(8)).not.toThrow();
+	it("should only accept 5 as valid value", () => {
+		expect(() => new MaxParticipants(5)).not.toThrow();
+		expect(MaxParticipants.FIXED_PARTICIPANTS).toBe(5);
 	});
 });
 
@@ -105,28 +107,14 @@ describe("Tournament", () => {
 		expect(tournament.id).toBeInstanceOf(TournamentId);
 		expect(tournament.organizerId).toBe(organizerId);
 		expect(tournament.status.value).toBe("registration");
-		expect(tournament.maxParticipants.value).toBe(
-			MaxParticipants.DEFAULT_PARTICIPANTS,
-		);
-	});
-
-	it("should create a tournament with custom max participants", () => {
-		const organizerId = new UserId(ulid());
-		const maxParticipants = new MaxParticipants(8);
-		const tournament = Tournament.create({
-			name: new TournamentName("Test Tournament"),
-			organizerId,
-			maxParticipants,
-		});
-
-		expect(tournament.maxParticipants).toBe(maxParticipants);
+		expect(tournament.maxParticipants.value).toBe(5);
 	});
 
 	it("should reconstruct a tournament", () => {
 		const id = new TournamentId(ulid());
 		const organizerId = new UserId(ulid());
 		const status = new TournamentStatusValue("in_progress");
-		const maxParticipants = new MaxParticipants(4);
+		const maxParticipants = new MaxParticipants(5);
 
 		const tournament = Tournament.reconstruct({
 			id,
@@ -408,18 +396,6 @@ describe("TournamentMatch", () => {
 		expect(match.status.value).toBe("pending");
 	});
 
-	it("should create a tournament match with one participant (BYE)", () => {
-		const tournamentId = new TournamentId(ulid());
-		const roundId = new TournamentRoundId(ulid());
-		const participantId = new TournamentParticipantId(ulid());
-		const match = TournamentMatch.create(tournamentId, roundId, [
-			participantId,
-		]);
-
-		expect(match.participantIds).toHaveLength(1);
-		expect(match.isBye()).toBe(true);
-	});
-
 	it("should throw error when creating match with invalid participant count", () => {
 		const tournamentId = new TournamentId(ulid());
 		const roundId = new TournamentRoundId(ulid());
@@ -428,7 +404,17 @@ describe("TournamentMatch", () => {
 			TournamentMatch.create(tournamentId, roundId, []),
 		).toThrowError(
 			new ErrBadRequest({
-				userMessage: "試合には1人または2人の参加者が必要です",
+				userMessage: "試合には2人の参加者が必要です",
+			}),
+		);
+
+		expect(() =>
+			TournamentMatch.create(tournamentId, roundId, [
+				new TournamentParticipantId(ulid()),
+			]),
+		).toThrowError(
+			new ErrBadRequest({
+				userMessage: "試合には2人の参加者が必要です",
 			}),
 		);
 
@@ -441,7 +427,7 @@ describe("TournamentMatch", () => {
 			TournamentMatch.create(tournamentId, roundId, participants),
 		).toThrowError(
 			new ErrBadRequest({
-				userMessage: "試合には1人または2人の参加者が必要です",
+				userMessage: "試合には2人の参加者が必要です",
 			}),
 		);
 	});
@@ -493,36 +479,6 @@ describe("TournamentMatch", () => {
 		expect(() => match.complete(nonParticipantId)).toThrowError(
 			new ErrBadRequest({
 				userMessage: "勝者は試合の参加者である必要があります",
-			}),
-		);
-	});
-
-	it("should complete a BYE match automatically", () => {
-		const tournamentId = new TournamentId(ulid());
-		const roundId = new TournamentRoundId(ulid());
-		const participantId = new TournamentParticipantId(ulid());
-		const match = TournamentMatch.create(tournamentId, roundId, [
-			participantId,
-		]);
-		const completedMatch = match.completeAsBye();
-
-		expect(completedMatch.status.value).toBe("completed");
-		expect(completedMatch.winnerId).toBe(participantId);
-	});
-
-	it("should throw error when completing non-BYE match as BYE", () => {
-		const tournamentId = new TournamentId(ulid());
-		const roundId = new TournamentRoundId(ulid());
-		const participant1Id = new TournamentParticipantId(ulid());
-		const participant2Id = new TournamentParticipantId(ulid());
-		const match = TournamentMatch.create(tournamentId, roundId, [
-			participant1Id,
-			participant2Id,
-		]);
-
-		expect(() => match.completeAsBye()).toThrowError(
-			new ErrBadRequest({
-				userMessage: "BYEは参加者が1人の試合のみ適用できます",
 			}),
 		);
 	});

@@ -59,7 +59,7 @@ describe("CompleteMatchUsecase", () => {
 			description: new TournamentDescription(undefined),
 			organizerId,
 			status: new TournamentStatusValue("in_progress"),
-			maxParticipants: new MaxParticipants(4),
+			maxParticipants: new MaxParticipants(5),
 		});
 
 		const match = TournamentMatch.reconstruct(
@@ -155,7 +155,7 @@ describe("CompleteMatchUsecase", () => {
 			description: new TournamentDescription(undefined),
 			organizerId,
 			status: new TournamentStatusValue("in_progress"),
-			maxParticipants: new MaxParticipants(4),
+			maxParticipants: new MaxParticipants(5),
 		});
 
 		const match = TournamentMatch.reconstruct(
@@ -263,7 +263,7 @@ describe("CompleteMatchUsecase", () => {
 			description: new TournamentDescription(undefined),
 			organizerId: new UserId(ulid()),
 			status: new TournamentStatusValue("in_progress"),
-			maxParticipants: new MaxParticipants(4),
+			maxParticipants: new MaxParticipants(5),
 		});
 
 		mockTournamentRepo.findMatchById = vi.fn().mockResolvedValue(match);
@@ -334,7 +334,7 @@ describe("CompleteMatchUsecase", () => {
 			description: new TournamentDescription(undefined),
 			organizerId,
 			status: new TournamentStatusValue("in_progress"),
-			maxParticipants: new MaxParticipants(4),
+			maxParticipants: new MaxParticipants(5),
 		});
 
 		const match = TournamentMatch.reconstruct(

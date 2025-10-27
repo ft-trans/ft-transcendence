@@ -1,6 +1,5 @@
 import { ErrInternalServer } from "@domain/error";
 import {
-	MaxParticipants,
 	Tournament,
 	TournamentDescription,
 	TournamentName,
@@ -12,7 +11,6 @@ export type CreateTournamentUsecaseInput = {
 	name: string;
 	description?: string;
 	organizerId: string;
-	maxParticipants?: number;
 };
 
 export class CreateTournamentUsecase {
@@ -24,9 +22,6 @@ export class CreateTournamentUsecase {
 			? new TournamentDescription(input.description)
 			: undefined;
 		const organizerId = new UserId(input.organizerId);
-		const maxParticipants = input.maxParticipants
-			? new MaxParticipants(input.maxParticipants)
-			: undefined;
 
 		const tournament = await this.tx.exec(async (repo) => {
 			const tournamentRepo = repo.newTournamentRepository();
@@ -35,7 +30,6 @@ export class CreateTournamentUsecase {
 				name,
 				description,
 				organizerId,
-				maxParticipants,
 			});
 
 			const createdTournament = await tournamentRepo.create(newTournament);

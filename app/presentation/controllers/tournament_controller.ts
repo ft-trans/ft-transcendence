@@ -249,13 +249,12 @@ const onCreateTournament = (usecase: CreateTournamentUsecase) => {
 				return reply.status(401).send({ error: "Unauthorized" });
 			}
 
-			const { name, description, maxParticipants } = req.body;
+			const { name, description } = req.body;
 
 			const tournament = await usecase.execute({
 				name,
 				description,
 				organizerId: userId,
-				maxParticipants,
 			});
 
 			// TODO: organizerとparticipantCountを取得する

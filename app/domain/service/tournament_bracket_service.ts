@@ -18,19 +18,15 @@ export class TournamentBracketService {
 		const matches: TournamentMatch[] = [];
 		const shuffledParticipants = this.shuffleFn([...participantIds]);
 
-		for (let i = 0; i < shuffledParticipants.length; i += 2) {
-			if (i + 1 < shuffledParticipants.length) {
-				const match = TournamentMatch.create(tournamentId, roundId, [
-					shuffledParticipants[i],
-					shuffledParticipants[i + 1],
-				]);
-				matches.push(match);
-			} else {
-				const match = TournamentMatch.create(tournamentId, roundId, [
-					shuffledParticipants[i],
-				]);
-				matches.push(match);
-			}
+		// 5人の場合、最初の4人でマッチを作成（1人は自動的に次のラウンドに進む）
+		const matchParticipants = shuffledParticipants.slice(0, 4);
+
+		for (let i = 0; i < matchParticipants.length; i += 2) {
+			const match = TournamentMatch.create(tournamentId, roundId, [
+				matchParticipants[i],
+				matchParticipants[i + 1],
+			]);
+			matches.push(match);
 		}
 
 		return matches;
@@ -47,19 +43,14 @@ export class TournamentBracketService {
 	): TournamentMatch[] {
 		const matches: TournamentMatch[] = [];
 
-		for (let i = 0; i < winnerIds.length; i += 2) {
-			if (i + 1 < winnerIds.length) {
-				const match = TournamentMatch.create(tournamentId, roundId, [
-					winnerIds[i],
-					winnerIds[i + 1],
-				]);
-				matches.push(match);
-			} else {
-				const match = TournamentMatch.create(tournamentId, roundId, [
-					winnerIds[i],
-				]);
-				matches.push(match);
-			}
+		// ペアを作成（奇数の場合、最後の1人は次のラウンドに自動進出）
+		const pairCount = Math.floor(winnerIds.length / 2);
+		for (let i = 0; i < pairCount; i++) {
+			const match = TournamentMatch.create(tournamentId, roundId, [
+				winnerIds[i * 2],
+				winnerIds[i * 2 + 1],
+			]);
+			matches.push(match);
 		}
 
 		return matches;

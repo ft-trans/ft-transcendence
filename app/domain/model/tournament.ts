@@ -105,18 +105,13 @@ export class TournamentStatusValue extends ValueObject<
 }
 
 export class MaxParticipants extends ValueObject<number, "MaxParticipants"> {
-	static readonly MIN_PARTICIPANTS = 2;
-	static readonly MAX_PARTICIPANTS = 8;
-	static readonly DEFAULT_PARTICIPANTS = 4;
+	static readonly FIXED_PARTICIPANTS = 5;
 
 	protected validate(value: number): void {
-		if (
-			value < MaxParticipants.MIN_PARTICIPANTS ||
-			value > MaxParticipants.MAX_PARTICIPANTS
-		) {
+		if (value !== MaxParticipants.FIXED_PARTICIPANTS) {
 			throw new ErrBadRequest({
 				details: {
-					maxParticipants: `最大参加者数は${MaxParticipants.MIN_PARTICIPANTS}〜${MaxParticipants.MAX_PARTICIPANTS}である必要があります`,
+					maxParticipants: `最大参加者数は${MaxParticipants.FIXED_PARTICIPANTS}人固定です`,
 				},
 			});
 		}
@@ -137,12 +132,11 @@ export class Tournament {
 		name: TournamentName;
 		description?: TournamentDescription;
 		organizerId: UserId;
-		maxParticipants?: MaxParticipants;
 	}): Tournament {
 		const id = new TournamentId(ulid());
-		const defaultMaxParticipants =
-			params.maxParticipants ||
-			new MaxParticipants(MaxParticipants.DEFAULT_PARTICIPANTS);
+		const maxParticipants = new MaxParticipants(
+			MaxParticipants.FIXED_PARTICIPANTS,
+		);
 		const status = new TournamentStatusValue("registration");
 		const description =
 			params.description || new TournamentDescription(undefined);
@@ -153,7 +147,7 @@ export class Tournament {
 			description,
 			params.organizerId,
 			status,
-			defaultMaxParticipants,
+			maxParticipants,
 		);
 	}
 
@@ -240,7 +234,7 @@ export class Tournament {
 	}
 
 	canStartWithParticipants(participantCount: number): boolean {
-		return this.canStart() && participantCount >= 2;
+		return this.canStart() && participantCount === 5;
 	}
 
 	isFull(currentParticipantCount: number): boolean {
@@ -539,9 +533,9 @@ export class TournamentMatch {
 		roundId: TournamentRoundId,
 		participantIds: TournamentParticipantId[],
 	): TournamentMatch {
-		if (participantIds.length < 1 || participantIds.length > 2) {
+		if (participantIds.length !== 2) {
 			throw new ErrBadRequest({
-				userMessage: "試合には1人または2人の参加者が必要です",
+				userMessage: "試合には2人の参加者が必要です",
 			});
 		}
 
@@ -617,30 +611,6 @@ export class TournamentMatch {
 			this.participantIds,
 			this.matchId,
 			winnerId,
-			new TournamentMatchStatusValue("completed"),
-		);
-	}
-
-	// BYE判定（参加者が1人のみの場合）
-	isBye(): boolean {
-		return this.participantIds.length === 1;
-	}
-
-	// BYEの場合は自動的に勝者を決定
-	completeAsBye(): TournamentMatch {
-		if (!this.isBye()) {
-			throw new ErrBadRequest({
-				userMessage: "BYEは参加者が1人の試合のみ適用できます",
-			});
-		}
-
-		return new TournamentMatch(
-			this.id,
-			this.tournamentId,
-			this.roundId,
-			this.participantIds,
-			this.matchId,
-			this.participantIds[0],
 			new TournamentMatchStatusValue("completed"),
 		);
 	}

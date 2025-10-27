@@ -95,7 +95,6 @@ export type TournamentDetailDTO = TournamentDTO & {
 export type CreateTournamentRequest = {
 	name: string;
 	description?: string;
-	maxParticipants?: number; // デフォルト: 8
 };
 
 /**

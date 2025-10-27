@@ -164,40 +164,6 @@ describe("StartTournamentMatchUsecase", () => {
 		);
 	});
 
-	it("should throw BadRequestError if tournament match is BYE (only 1 participant)", async () => {
-		const tournamentId = new TournamentId("01JAJCJCK5XPWQ9A7DRTBHVXF0");
-		const roundId = new TournamentRoundId("01JAJCJCK5XPWQ9A7DRTBHVXF2");
-		const participant1Id = new TournamentParticipantId(
-			"01JAJCJCK5XPWQ9A7DRTBHVXF3",
-		);
-
-		const tournamentMatch = TournamentMatch.create(tournamentId, roundId, [
-			participant1Id,
-		]);
-
-		const mockTournamentRepo = mock<ITournamentRepository>();
-		mockTournamentRepo.findMatchById.mockResolvedValue(tournamentMatch);
-
-		const mockTx = mock<ITransaction>();
-		mockTx.exec.mockImplementation(async (callback) => {
-			const repo = createMockRepository({
-				newTournamentRepository: () => mockTournamentRepo,
-			});
-			return callback(repo);
-		});
-
-		const usecase = new StartTournamentMatchUsecase(mockTx);
-		const input = {
-			tournamentMatchId: tournamentMatch.id.value,
-			userId: "01JAJCJCK5XPWQ9A7DRTBHVXF1",
-		};
-
-		await expect(usecase.execute(input)).rejects.toThrow(ErrBadRequest);
-		await expect(usecase.execute(input)).rejects.toThrow(
-			"試合には2人の参加者が必要です",
-		);
-	});
-
 	it("should throw BadRequestError if tournament is not in progress", async () => {
 		const tournamentId = new TournamentId("01JAJCJCK5XPWQ9A7DRTBHVXF0");
 		const organizerId = new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF1");

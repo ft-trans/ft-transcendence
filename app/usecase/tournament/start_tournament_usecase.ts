@@ -52,14 +52,21 @@ export class StartTournamentUsecase {
 				});
 			}
 
+			// ステータスチェック（登録受付中かどうか）
+			if (!tournament.canStart()) {
+				throw new ErrBadRequest({
+					userMessage: "登録受付中のトーナメントのみ開始できます",
+				});
+			}
+
 			// 参加者を取得
 			const participants =
 				await tournamentRepo.findParticipantsByTournamentId(tournamentId);
 
-			// 開始可能かチェック（エンティティのメソッドを使用）
-			if (!tournament.canStartWithParticipants(participants.length)) {
+			// 参加者数チェック
+			if (participants.length !== 5) {
 				throw new ErrBadRequest({
-					userMessage: "トーナメントを開始するには最低2人の参加者が必要です",
+					userMessage: "トーナメントを開始するには5人(主催者を含む)が必要です",
 				});
 			}
 

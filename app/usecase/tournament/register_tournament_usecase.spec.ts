@@ -1,6 +1,5 @@
 import { ErrBadRequest } from "@domain/error";
 import {
-	MaxParticipants,
 	Tournament,
 	TournamentId,
 	TournamentName,
@@ -35,7 +34,6 @@ describe("RegisterTournamentUsecase", () => {
 		const tournament = Tournament.create({
 			name: new TournamentName("Test Tournament"),
 			organizerId,
-			maxParticipants: new MaxParticipants(4),
 		});
 
 		const expectedParticipant = TournamentParticipant.create(
@@ -191,10 +189,9 @@ describe("RegisterTournamentUsecase", () => {
 		const tournament = Tournament.create({
 			name: new TournamentName("Test Tournament"),
 			organizerId,
-			maxParticipants: new MaxParticipants(2), // 最大2人
 		});
 
-		// 既に2人の参加者がいる
+		// 既に5人の参加者がいる
 		const existingParticipants = [
 			TournamentParticipant.create(
 				tournamentId,
@@ -203,6 +200,18 @@ describe("RegisterTournamentUsecase", () => {
 			TournamentParticipant.create(
 				tournamentId,
 				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF4"),
+			),
+			TournamentParticipant.create(
+				tournamentId,
+				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF5"),
+			),
+			TournamentParticipant.create(
+				tournamentId,
+				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF6"),
+			),
+			TournamentParticipant.create(
+				tournamentId,
+				new UserId("01JAJCJCK5XPWQ9A7DRTBHVXF7"),
 			),
 		];
 

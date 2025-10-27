@@ -41,8 +41,6 @@ export class TournamentForm extends Component {
 		const formData = new FormData(form);
 		const name = formData.get("name") as string;
 		const description = formData.get("description") as string;
-		const maxParticipantsStr = formData.get("maxParticipants") as string;
-		const maxParticipants = Number.parseInt(maxParticipantsStr, 10);
 
 		// バリデーション
 		if (!name || name.trim().length === 0) {
@@ -53,18 +51,9 @@ export class TournamentForm extends Component {
 			return;
 		}
 
-		if (maxParticipants < 2 || maxParticipants > 64) {
-			this.setState({
-				phase: "error",
-				error: "最大参加者数は2〜64人の範囲で設定してください",
-			});
-			return;
-		}
-
 		const request: CreateTournamentRequest = {
 			name: name.trim(),
 			description: description.trim() || undefined,
-			maxParticipants,
 		};
 
 		try {
@@ -141,25 +130,12 @@ export class TournamentForm extends Component {
             ></textarea>
           </div>
 
-          <div>
-            <label for="maxParticipants" class="block text-sm font-medium text-gray-700 mb-2">
-              最大参加者数 <span class="text-red-500">*</span>
-            </label>
-            <select
-              id="maxParticipants"
-              name="maxParticipants"
-              required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              ${isSubmitting ? "disabled" : ""}
-            >
-              <option value="4">4人</option>
-              <option value="8" selected>8人</option>
-              <option value="16">16人</option>
-              <option value="32">32人</option>
-              <option value="64">64人</option>
-            </select>
-            <p class="mt-1 text-sm text-gray-500">
-              参加者が最大人数に満たない場合でも、トーナメントを開始できます
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p class="text-sm text-blue-800">
+              <strong>参加人数:</strong> 4人固定のトーナメントです
+            </p>
+            <p class="mt-1 text-xs text-blue-600">
+              参加者が4人に満たない場合でも、トーナメントを開始できます
             </p>
           </div>
 

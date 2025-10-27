@@ -122,7 +122,7 @@ model Tournament {
   description     String?
   organizerId     String
   status          String   @default("registration") // "registration", "in_progress", "completed", "cancelled"
-  maxParticipants Int      @default(8)
+  maxParticipants Int      @default(5)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
