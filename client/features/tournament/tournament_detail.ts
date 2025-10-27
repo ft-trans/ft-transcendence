@@ -51,6 +51,7 @@ export class TournamentDetail extends Component {
 		this.tournamentId = params.id;
 		void this.loadTournament();
 		this.connectWebSocket();
+		this.attachEventListeners();
 	}
 
 	private async loadTournament(): Promise<void> {
@@ -60,7 +61,6 @@ export class TournamentDetail extends Component {
 			this.setState({ phase: "loading" });
 			const tournament = await getTournamentDetail(this.tournamentId);
 			this.setState({ phase: "loaded", tournament });
-			this.attachEventListeners();
 		} catch (error) {
 			console.error("Failed to load tournament:", error);
 			this.setState({
@@ -108,38 +108,43 @@ export class TournamentDetail extends Component {
 	}
 
 	private attachEventListeners(): void {
-		// 参加ボタン
-		const registerBtn = document.getElementById("register-btn");
-		if (registerBtn) {
-			registerBtn.addEventListener("click", () => {
+		// イベント委譲を使用して、ルート要素に1回だけリスナーを登録
+		const root = document.getElementById("tournament-detail-root");
+		if (!root) return;
+
+		root.addEventListener("click", (event) => {
+			const target = event.target as HTMLElement;
+
+			// 参加ボタン
+			if (target.id === "register-btn" || target.closest("#register-btn")) {
 				void this.handleRegister();
-			});
-		}
+				return;
+			}
 
-		// 参加取消ボタン
-		const unregisterBtn = document.getElementById("unregister-btn");
-		if (unregisterBtn) {
-			unregisterBtn.addEventListener("click", () => {
+			// 参加取消ボタン
+			if (target.id === "unregister-btn" || target.closest("#unregister-btn")) {
 				void this.handleUnregister();
-			});
-		}
+				return;
+			}
 
-		// トーナメント開始ボタン
-		const startBtn = document.getElementById("start-tournament-btn");
-		if (startBtn) {
-			startBtn.addEventListener("click", () => {
+			// トーナメント開始ボタン
+			if (
+				target.id === "start-tournament-btn" ||
+				target.closest("#start-tournament-btn")
+			) {
 				void this.handleStartTournament();
-			});
-		}
+				return;
+			}
 
-		// 試合開始ボタン
-		document.querySelectorAll("[data-match-id]").forEach((btn) => {
-			btn.addEventListener("click", () => {
-				const matchId = (btn as HTMLElement).dataset.matchId;
+			// 試合開始ボタン
+			const matchBtn = target.closest("[data-match-id]") as HTMLElement;
+			if (matchBtn) {
+				const matchId = matchBtn.dataset.matchId;
 				if (matchId) {
 					void this.handleStartMatch(matchId);
 				}
-			});
+				return;
+			}
 		});
 	}
 
@@ -232,9 +237,7 @@ export class TournamentDetail extends Component {
 		const host = document.querySelector<HTMLElement>("#tournament-detail-root");
 		if (host) {
 			host.innerHTML = this.inner();
-			if (next.phase === "loaded") {
-				this.attachEventListeners();
-			}
+			// イベントリスナーは onLoad で1回だけ登録されているので、ここでは再登録しない
 		}
 	}
 
