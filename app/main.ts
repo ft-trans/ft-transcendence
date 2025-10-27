@@ -70,6 +70,7 @@ import { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_requ
 import { UnblockUserUsecase } from "@usecase/relationship/unblock_user_usecase";
 import { CreateTournamentUsecase } from "@usecase/tournament/create_tournament_usecase";
 import { GetTournamentUsecase } from "@usecase/tournament/get_tournament_usecase";
+import { GetTournamentsUsecase } from "@usecase/tournament/get_tournaments_usecase";
 import { RegisterTournamentUsecase } from "@usecase/tournament/register_tournament_usecase";
 import { UnregisterTournamentUsecase } from "@usecase/tournament/unregister_tournament_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
@@ -398,12 +399,14 @@ const start = async () => {
 
 		const createTournamentUsecase = new CreateTournamentUsecase(tx);
 		const getTournamentUsecase = new GetTournamentUsecase(tx);
+		const getTournamentsUsecase = new GetTournamentsUsecase(tx);
 		const registerTournamentUsecase = new RegisterTournamentUsecase(tx);
 		const unregisterTournamentUsecase = new UnregisterTournamentUsecase(tx);
 		await app.register(
 			tournamentController(
 				createTournamentUsecase,
 				getTournamentUsecase,
+				getTournamentsUsecase,
 				registerTournamentUsecase,
 				unregisterTournamentUsecase,
 				authPrehandler,

@@ -3,7 +3,6 @@ import {
 	Button,
 	Component,
 	FloatingBanner,
-	FormInput,
 	type RouteParams,
 	SectionTitle,
 } from "client/components";
@@ -14,11 +13,9 @@ import type {
 	RegisterTournamentRequest,
 	RegisterTournamentResponse,
 } from "shared/api/tournament";
-import { is } from "zod/v4/locales";
 
 export class ShowTournament extends Component {
 	private apiClient: ApiClient;
-	private isRegistered: boolean = false;
 	private userId: string | undefined = undefined;
 
 	constructor() {
@@ -29,6 +26,11 @@ export class ShowTournament extends Component {
 	}
 
 	async onLoad(params: RouteParams): Promise<void> {
+		const state = authStore.getState();
+		if (!state.isAuthenticated) {
+			navigateTo("/auth/login");
+			return;
+		}
 		const tournamentId = params.tournamentId;
 
 		try {
@@ -43,7 +45,7 @@ export class ShowTournament extends Component {
 			const participants = tournament.tournament?.participants || [];
 			// 自分が参加者に含まれているかチェック
 			const isRegistered = participants.some((p) => p.userId === this.userId);
-			this.setIsRegistered(isRegistered);
+			this.toggleRegisterButtons(isRegistered);
 
 			this.renderDebugDiv(tournamentId);
 		} catch (_error) {
@@ -107,7 +109,7 @@ export class ShowTournament extends Component {
 					message: "トーナメントに参加しました",
 					type: "info",
 				}).show();
-				this.setIsRegistered(true);
+				this.toggleRegisterButtons(true);
 				this.renderDebugDiv(tournamentId);
 			} catch (_error) {
 				new FloatingBanner({
@@ -139,7 +141,7 @@ export class ShowTournament extends Component {
 					message: "トーナメントから離脱しました",
 					type: "info",
 				}).show();
-				this.setIsRegistered(false);
+				this.toggleRegisterButtons(false);
 				this.renderDebugDiv(tournamentId);
 			} catch (_error) {
 				new FloatingBanner({
@@ -150,8 +152,7 @@ export class ShowTournament extends Component {
 		});
 	}
 
-	private setIsRegistered(isRegistered: boolean): void {
-		this.isRegistered = isRegistered;
+	private toggleRegisterButtons(isRegistered: boolean): void {
 		const registerDiv = document.getElementById("register-button-div");
 		if (registerDiv) {
 			registerDiv.classList.toggle("hidden", isRegistered);
@@ -172,7 +173,7 @@ export class ShowTournament extends Component {
 		const participants = tournament.tournament?.participants || [];
 		// 自分が参加者に含まれているか
 		const isRegistered = participants.some((p) => p.userId === this.userId);
-		this.setIsRegistered(isRegistered);
+		this.toggleRegisterButtons(isRegistered);
 
 		const e = document.getElementById("debug-id");
 		if (!e) {

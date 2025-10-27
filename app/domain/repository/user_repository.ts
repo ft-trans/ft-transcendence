@@ -15,4 +15,5 @@ export interface IUserRepository {
 		excludeUserId?: string;
 		limit?: number;
 	}): Promise<User[]>;
+	findByIds(ids: UserId[]): Promise<User[]>;
 }

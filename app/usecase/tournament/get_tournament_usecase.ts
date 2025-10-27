@@ -48,18 +48,9 @@ export class GetTournamentUsecase {
 				await tournamentRepo.findParticipantsByTournamentId(tournamentId);
 
 			// 参加者のユーザー情報を取得
-			const participantDetails = await Promise.all(
-				participants.map(async (participant) => {
-					const user = await userRepo.findById(participant.userId);
-					return {
-						id: participant.id.value,
-						userId: participant.userId.value,
-						username: user?.username.value || "Unknown",
-						avatarUrl: user?.avatar.value,
-						status: participant.status.value,
-					};
-				}),
-			);
+			const participantIds = participants.map((p) => p.userId);
+			const users = await userRepo.findByIds(participantIds);
+			const userMap = new Map(users.map((u) => [u.id.value, u]));
 
 			return {
 				tournament: {
@@ -67,7 +58,16 @@ export class GetTournamentUsecase {
 					organizerId: tournament.organizerId.value,
 					status: tournament.status.value,
 					maxParticipants: tournament.maxParticipants.value,
-					participants: participantDetails,
+					participants: participants.map((participant) => {
+						const user = userMap.get(participant.userId.value);
+						return {
+							id: participant.id.value,
+							userId: participant.userId.value,
+							username: user?.username.value || "Unknown",
+							avatarUrl: user?.avatar.value,
+							status: participant.status.value,
+						};
+					}),
 				},
 			};
 		});

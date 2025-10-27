@@ -1,6 +1,7 @@
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type { CreateTournamentUsecase } from "@usecase/tournament/create_tournament_usecase";
 import type { GetTournamentUsecase } from "@usecase/tournament/get_tournament_usecase";
+import type { GetTournamentsUsecase } from "@usecase/tournament/get_tournaments_usecase";
 import type { RegisterTournamentUsecase } from "@usecase/tournament/register_tournament_usecase";
 import type { UnregisterTournamentUsecase } from "@usecase/tournament/unregister_tournament_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
@@ -12,6 +13,7 @@ import {
 export const tournamentController = (
 	createTournamentUsecase: CreateTournamentUsecase,
 	getTournamentUsecase: GetTournamentUsecase,
+	getTournamentsUsecase: GetTournamentsUsecase,
 	registerTournamentUsecase: RegisterTournamentUsecase,
 	unregisterTournamentUsecase: UnregisterTournamentUsecase,
 	authPrehandler: AuthPrehandler,
@@ -26,6 +28,11 @@ export const tournamentController = (
 			"/tournaments/:tournamentId",
 			{ preHandler: authPrehandler },
 			onGet(getTournamentUsecase),
+		);
+		fastify.get(
+			"/tournaments",
+			{ preHandler: authPrehandler },
+			onGetList(getTournamentsUsecase),
 		);
 		fastify.post(
 			"/tournaments/:tournamentId/register",
@@ -77,6 +84,13 @@ const onGet = (usecase: GetTournamentUsecase) => {
 		const result = await usecase.execute({
 			tournamentId: req.params.tournamentId,
 		});
+		return reply.send(result);
+	};
+};
+
+const onGetList = (usecase: GetTournamentsUsecase) => {
+	return async (_req: FastifyRequest, reply: FastifyReply) => {
+		const result = await usecase.execute();
 		return reply.send(result);
 	};
 };

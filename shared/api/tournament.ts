@@ -41,6 +41,20 @@ export type GetTournamentResponse = {
 	};
 };
 
+export type GetTournamentsResponse = {
+	tournaments: {
+		id: string;
+		organizerId: string;
+		status: string;
+		maxParticipants: number;
+		organizer: {
+			id: string;
+			username: string;
+			avatarUrl?: string;
+		};
+	}[];
+};
+
 export type RegisterTournamentRequest = {
 	tournamentId: string;
 	userId: string;

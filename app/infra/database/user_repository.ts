@@ -196,4 +196,26 @@ export class UserRepository implements IUserRepository {
 			),
 		);
 	}
+
+	async findByIds(ids: UserId[]): Promise<User[]> {
+		const idValues = ids.map((id) => id.value);
+		const users = await this.client.user.findMany({
+			where: {
+				id: {
+					in: idValues,
+				},
+			},
+		});
+
+		return users.map((user) =>
+			User.reconstruct(
+				new UserId(user.id),
+				new UserEmail(user.email),
+				new Username(user.username),
+				new UserAvatar(user.avatar),
+				new UserStatusValue(user.status as UserStatus),
+				user.passwordDigest,
+			),
+		);
+	}
 }

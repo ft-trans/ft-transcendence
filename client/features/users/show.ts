@@ -261,7 +261,7 @@ export class UserProfile extends Component {
 	}
 
 	private profileLink(username: string): string {
-		return `<a href="/users/${username}">${username}</a>`;
+		return `<a href="/users/${username}" data-link>${username}</a>`;
 	}
 
 	private setupEventListeners(): void {
