@@ -161,7 +161,7 @@ export class ListTournament extends Component {
 			</div>
 			<div class="ml-4">
 				<img
-					src="${tournament.organizer.avatarUrl || "/assets/default_avatar.png"}"
+					src="${tournament.organizer.avatarUrl || "/avatars/default.svg"}"
 					alt="Organizer Avatar"
 					class="w-12 h-12 rounded-full object-cover"
 				/>
