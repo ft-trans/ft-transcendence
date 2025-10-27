@@ -3,6 +3,7 @@ import {
 	type UpdateProfileRequest,
 	type UpdateProfileResponse,
 	updateProfileFormSchema,
+	updateProfileFormSchemaWithPassword,
 } from "@shared/api/profile";
 import { ApiClient } from "client/api/api_client";
 import {
@@ -45,7 +46,11 @@ export class EditProfile extends Component {
 					passwordConfirm: formData.get("passwordConfirm"),
 				};
 
-				const input = updateProfileFormSchema.safeParse(rawData);
+				const input =
+					rawData.password?.toString() &&
+					rawData.password?.toString().length > 0
+						? updateProfileFormSchemaWithPassword.safeParse(rawData)
+						: updateProfileFormSchema.safeParse(rawData);
 				if (!input.success) {
 					annotateZodErrors(input.error);
 					new FloatingBanner({
