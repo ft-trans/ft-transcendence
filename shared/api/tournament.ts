@@ -163,6 +163,7 @@ export const TOURNAMENT_WS_EVENTS = {
 	// サーバー -> クライアント
 	PARTICIPANT_JOINED: "tournament.participant_joined",
 	TOURNAMENT_STARTED: "tournament.started",
+	MATCH_STARTED: "tournament.match_started",
 	MATCH_COMPLETED: "tournament.match_completed",
 	ROUND_COMPLETED: "tournament.round_completed",
 	TOURNAMENT_COMPLETED: "tournament.completed",
@@ -189,6 +190,19 @@ export type TournamentStartedEvent = {
 		tournamentId: string;
 		tournament: TournamentDTO;
 		firstRound: TournamentRoundDTO;
+	};
+};
+
+/**
+ * 試合開始イベント
+ */
+export type MatchStartedEvent = {
+	type: typeof TOURNAMENT_WS_EVENTS.MATCH_STARTED;
+	payload: {
+		tournamentId: string;
+		tournamentMatchId: string; // TournamentMatchId
+		matchId: string; // 作成されたMatchのID（Pongゲーム用）
+		match: TournamentMatchDTO;
 	};
 };
 
@@ -247,6 +261,7 @@ export type TournamentErrorEvent = {
 export type TournamentServerMessage =
 	| ParticipantJoinedEvent
 	| TournamentStartedEvent
+	| MatchStartedEvent
 	| MatchCompletedEvent
 	| RoundCompletedEvent
 	| TournamentCompletedEvent

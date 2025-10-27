@@ -1,9 +1,12 @@
 import { ErrBadRequest } from "@domain/error";
 import { Match, TournamentMatchId } from "@domain/model";
+import type { ITournamentClientRepository } from "@domain/repository/tournament_client_repository";
+import { TOURNAMENT_WS_EVENTS } from "@shared/api/tournament";
 import type { ITransaction } from "@usecase/transaction";
 
 export type StartTournamentMatchUsecaseInput = {
 	tournamentMatchId: string;
+	userId: string;
 };
 
 export type StartTournamentMatchUsecaseOutput = {
@@ -11,7 +14,10 @@ export type StartTournamentMatchUsecaseOutput = {
 };
 
 export class StartTournamentMatchUsecase {
-	constructor(private readonly tx: ITransaction) {}
+	constructor(
+		private readonly tx: ITransaction,
+		private readonly tournamentClientRepository?: ITournamentClientRepository,
+	) {}
 
 	async execute(
 		input: StartTournamentMatchUsecaseInput,
@@ -75,6 +81,18 @@ export class StartTournamentMatchUsecase {
 				});
 			}
 
+			// 5.5. バリデーション: リクエストユーザーが試合参加者または主催者であることを確認
+			const isParticipant =
+				participant1.userId.value === input.userId ||
+				participant2.userId.value === input.userId;
+			const isOrganizer = tournament.organizerId.value === input.userId;
+
+			if (!isParticipant && !isOrganizer) {
+				throw new ErrBadRequest({
+					userMessage: "試合を開始できるのは試合参加者または主催者のみです",
+				});
+			}
+
 			const user1 = await userRepo.findById(participant1.userId);
 			const user2 = await userRepo.findById(participant2.userId);
 
@@ -94,9 +112,66 @@ export class StartTournamentMatchUsecase {
 
 			return {
 				matchId: match.id,
+				tournamentId: tournament.id,
+				startedTournamentMatch,
+				participant1,
+				participant2,
+				user1,
+				user2,
 			};
 		});
 
-		return result;
+		// 8. WebSocketでブロードキャスト
+		if (this.tournamentClientRepository) {
+			this.tournamentClientRepository.broadcastToTournament(
+				result.tournamentId,
+				{
+					type: TOURNAMENT_WS_EVENTS.MATCH_STARTED,
+					payload: {
+						tournamentId: result.tournamentId.value,
+						tournamentMatchId: result.startedTournamentMatch.id.value,
+						matchId: result.matchId,
+						match: {
+							id: result.startedTournamentMatch.id.value,
+							tournamentId: result.tournamentId.value,
+							roundId: result.startedTournamentMatch.roundId.value,
+							matchId: result.matchId,
+							participants: [
+								{
+									id: result.participant1.id.value,
+									tournamentId: result.tournamentId.value,
+									userId: result.participant1.userId.value,
+									user: {
+										id: result.user1.id.value,
+										username: result.user1.username.value,
+										avatar: result.user1.avatar.value,
+									},
+									status: result.participant1.status.value,
+								},
+								{
+									id: result.participant2.id.value,
+									tournamentId: result.tournamentId.value,
+									userId: result.participant2.userId.value,
+									user: {
+										id: result.user2.id.value,
+										username: result.user2.username.value,
+										avatar: result.user2.avatar.value,
+									},
+									status: result.participant2.status.value,
+								},
+							],
+							winnerId: undefined,
+							status: result.startedTournamentMatch.status.value,
+							completedAt: undefined,
+							createdAt: new Date().toISOString(),
+						},
+					},
+				},
+			);
+		}
+
+		return {
+			matchId: result.matchId,
+		};
 	}
 }

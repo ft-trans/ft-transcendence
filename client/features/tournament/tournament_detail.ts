@@ -91,6 +91,21 @@ export class TournamentDetail extends Component {
 			try {
 				const message = JSON.parse(event.data);
 				console.log("Tournament WebSocket message:", message);
+
+				// 試合開始イベントの場合、参加者なら自動遷移
+				if (message.type === "tournament.match_started") {
+					const currentUserId = authStore.getState().user?.id;
+					const isParticipant = message.payload.match.participants.some(
+						(p: { userId: string }) => p.userId === currentUserId,
+					);
+
+					if (isParticipant) {
+						// 参加者の場合、試合画面に遷移
+						navigateTo(`/pong/matches/${message.payload.matchId}`);
+						return;
+					}
+				}
+
 				// イベントを受信したらトーナメント情報を再取得
 				void this.loadTournament();
 			} catch (error) {
@@ -444,13 +459,12 @@ export class TournamentDetail extends Component {
 	): string {
 		const player1 = match.participants[0];
 		const player2 = match.participants[1];
-		const canStart =
-			match.status === "pending" &&
-			tournament.status === "in_progress" &&
-			(isOrganizer ||
-				match.participants.some(
-					(p) => p.userId === authStore.getState().user?.id,
-				));
+		const currentUserId = authStore.getState().user?.id;
+		const isMatchParticipant = match.participants.some(
+			(p) => p.userId === currentUserId,
+		);
+		const isPending = match.status === "pending";
+		const isInProgress = tournament.status === "in_progress";
 
 		return `
       <div class="border border-gray-300 rounded-lg p-4 bg-white">
@@ -459,15 +473,21 @@ export class TournamentDetail extends Component {
         ${this.renderMatchPlayer(player2, match.winnerId)}
 
         ${
-					canStart
+					isPending && isInProgress && isOrganizer
 						? `
           <button
             data-match-id="${match.id}"
             class="mt-3 w-full px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
           >
-            試合を開始
+            試合を開始（主催者）
           </button>
         `
+						: ""
+				}
+
+        ${
+					isPending && isInProgress && !isOrganizer && isMatchParticipant
+						? '<p class="mt-3 text-center text-sm text-gray-600">主催者が試合を開始するまでお待ちください</p>'
 						: ""
 				}
 

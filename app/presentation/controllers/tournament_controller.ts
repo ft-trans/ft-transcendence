@@ -477,6 +477,7 @@ const onStartTournamentMatch = (usecase: StartTournamentMatchUsecase) => {
 
 			const result = await usecase.execute({
 				tournamentMatchId: req.params.matchId,
+				userId,
 			});
 
 			const responseBody: StartTournamentMatchResponse = {
