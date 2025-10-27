@@ -209,9 +209,19 @@ const onGetTournaments = (usecase: GetTournamentsUsecase) => {
 				offset: offset ? Number.parseInt(offset) : undefined,
 			});
 
-			// TODO: organizerとparticipantCountを取得する
 			const responseBody: GetTournamentsResponse = {
-				tournaments: [], // 簡略化のため、詳細な変換は後で実装
+				tournaments: result.tournaments.map((item) => ({
+					id: item.tournament.id.value,
+					name: item.tournament.id.value, // TODO: name フィールドを追加する
+					description: undefined, // TODO: description フィールドを追加する
+					organizerId: item.tournament.organizerId.value,
+					organizer: toUserInfo(item.organizer),
+					status: item.tournament.status.value,
+					maxParticipants: item.tournament.maxParticipants.value,
+					participantCount: item.participantCount,
+					createdAt: new Date().toISOString(),
+					updatedAt: new Date().toISOString(),
+				})),
 				total: result.tournaments.length,
 			};
 
@@ -286,23 +296,41 @@ const onGetTournamentDetail = (usecase: GetTournamentDetailUsecase) => {
 				tournamentId: req.params.id,
 			});
 
-			// TODO: User情報を取得して変換する
+			// 各ラウンドの試合に対して参加者情報を取得
+			const roundsWithMatches = result.rounds.map((round) => {
+				const roundMatches = result.matches.filter(
+					(m) => m.roundId.value === round.id.value,
+				);
+
+				const matchesWithParticipants = roundMatches.map((match) => {
+					// この試合の参加者を取得
+					const matchParticipants = result.participants.filter((p) =>
+						match.participantIds.some(
+							(pid) => pid.value === p.participant.id.value,
+						),
+					);
+
+					return { match, participants: matchParticipants };
+				});
+
+				return { round, matches: matchesWithParticipants };
+			});
+
 			const responseBody: TournamentDetailDTO = {
 				id: result.tournament.id.value,
-				name: result.tournament.id.value,
+				name: result.tournament.id.value, // TODO: name フィールドを追加する
+				description: undefined, // TODO: description フィールドを追加する
 				organizerId: result.tournament.organizerId.value,
-				organizer: {
-					id: result.tournament.organizerId.value,
-					username: "",
-					avatar: "",
-				},
+				organizer: toUserInfo(result.organizer),
 				status: result.tournament.status.value,
 				maxParticipants: result.tournament.maxParticipants.value,
 				participantCount: result.participants.length,
 				createdAt: new Date().toISOString(),
 				updatedAt: new Date().toISOString(),
-				participants: [],
-				rounds: [],
+				participants: result.participants.map((p) =>
+					toParticipantDTO(p.participant, p.user),
+				),
+				rounds: roundsWithMatches.map((r) => _toRoundDTO(r.round, r.matches)),
 			};
 
 			return reply.send(responseBody);
@@ -332,23 +360,18 @@ const onRegisterTournament = (usecase: RegisterTournamentUsecase) => {
 				return reply.status(401).send({ error: "Unauthorized" });
 			}
 
-			const participant = await usecase.execute({
+			const result = await usecase.execute({
 				tournamentId: req.params.id,
 				userId,
 			});
 
-			// TODO: User情報を取得する
 			const responseBody: RegisterTournamentResponse = {
 				participant: {
-					id: participant.id.value,
-					tournamentId: participant.tournamentId.value,
-					userId: participant.userId.value,
-					user: {
-						id: userId,
-						username: "", // TODO: ユーザー情報から取得
-						avatar: "", // TODO: ユーザー情報から取得
-					},
-					status: participant.status.value,
+					id: result.participant.id.value,
+					tournamentId: result.participant.tournamentId.value,
+					userId: result.participant.userId.value,
+					user: toUserInfo(result.user),
+					status: result.participant.status.value,
 				},
 			};
 

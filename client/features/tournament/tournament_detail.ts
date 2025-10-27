@@ -12,7 +12,12 @@ import {
 	startTournamentMatch,
 	unregisterTournament,
 } from "client/api/tournament";
-import { Component, type RouteParams, SectionTitle } from "client/components";
+import {
+	Component,
+	FloatingBanner,
+	type RouteParams,
+	SectionTitle,
+} from "client/components";
 import { navigateTo } from "client/router";
 import { authStore } from "client/store/auth_store";
 
@@ -144,9 +149,17 @@ export class TournamentDetail extends Component {
 		try {
 			await registerTournament(this.tournamentId);
 			void this.loadTournament();
+			new FloatingBanner({
+				message: "トーナメントに参加しました",
+				type: "success",
+			});
 		} catch (error) {
 			console.error("Failed to register:", error);
-			alert("参加登録に失敗しました");
+			new FloatingBanner({
+				message:
+					error instanceof Error ? error.message : "参加登録に失敗しました",
+				type: "error",
+			});
 		}
 	}
 
@@ -158,9 +171,17 @@ export class TournamentDetail extends Component {
 		try {
 			await unregisterTournament(this.tournamentId);
 			void this.loadTournament();
+			new FloatingBanner({
+				message: "参加を取り消しました",
+				type: "success",
+			});
 		} catch (error) {
 			console.error("Failed to unregister:", error);
-			alert("参加取消に失敗しました");
+			new FloatingBanner({
+				message:
+					error instanceof Error ? error.message : "参加取消に失敗しました",
+				type: "error",
+			});
 		}
 	}
 
@@ -172,9 +193,19 @@ export class TournamentDetail extends Component {
 		try {
 			await startTournament(this.tournamentId);
 			void this.loadTournament();
+			new FloatingBanner({
+				message: "トーナメントを開始しました",
+				type: "success",
+			});
 		} catch (error) {
 			console.error("Failed to start tournament:", error);
-			alert("トーナメント開始に失敗しました");
+			new FloatingBanner({
+				message:
+					error instanceof Error
+						? error.message
+						: "トーナメント開始に失敗しました",
+				type: "error",
+			});
 		}
 	}
 
@@ -187,7 +218,11 @@ export class TournamentDetail extends Component {
 			navigateTo(`/pong/matches/${response.matchId}`);
 		} catch (error) {
 			console.error("Failed to start match:", error);
-			alert("試合開始に失敗しました");
+			new FloatingBanner({
+				message:
+					error instanceof Error ? error.message : "試合開始に失敗しました",
+				type: "error",
+			});
 		}
 	}
 

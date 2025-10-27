@@ -1,4 +1,5 @@
 import { ErrBadRequest, ErrInternalServer } from "@domain/error";
+import type { User } from "@domain/model";
 import { TournamentId, TournamentParticipant, UserId } from "@domain/model";
 import type { ITournamentClientRepository } from "@domain/repository/tournament_client_repository";
 import { TOURNAMENT_WS_EVENTS } from "@shared/api/tournament";
@@ -9,6 +10,11 @@ export type RegisterTournamentUsecaseInput = {
 	userId: string;
 };
 
+export type RegisterTournamentUsecaseOutput = {
+	participant: TournamentParticipant;
+	user: User;
+};
+
 export class RegisterTournamentUsecase {
 	constructor(
 		private readonly tx: ITransaction,
@@ -17,13 +23,14 @@ export class RegisterTournamentUsecase {
 
 	async execute(
 		input: RegisterTournamentUsecaseInput,
-	): Promise<TournamentParticipant> {
+	): Promise<RegisterTournamentUsecaseOutput> {
 		const tournamentId = new TournamentId(input.tournamentId);
 		const userId = new UserId(input.userId);
 
-		const participant = await this.tx.exec(async (repo) => {
+		const result = await this.tx.exec(async (repo) => {
 			const tournamentRepo = repo.newTournamentRepository();
 			const friendshipRepo = repo.newFriendshipRepository();
+			const userRepo = repo.newUserRepository();
 
 			// トーナメントの存在確認
 			const tournament = await tournamentRepo.findById(tournamentId);
@@ -80,8 +87,18 @@ export class RegisterTournamentUsecase {
 				throw new ErrInternalServer();
 			}
 
-			return createdParticipant;
+			// ユーザー情報を取得
+			const user = await userRepo.findById(userId);
+			if (!user) {
+				throw new ErrBadRequest({
+					userMessage: "ユーザーが見つかりません",
+				});
+			}
+
+			return { participant: createdParticipant, user };
 		});
+
+		const { participant, user } = result;
 
 		// WebSocket通知: 参加者追加
 		if (this.tournamentClientRepository) {
@@ -89,7 +106,6 @@ export class RegisterTournamentUsecase {
 				this.tournamentClientRepository.findByTournamentId(tournamentId);
 			for (const client of clients) {
 				try {
-					// TODO: ユーザー情報を取得してDTOに変換する
 					client.send({
 						type: TOURNAMENT_WS_EVENTS.PARTICIPANT_JOINED,
 						payload: {
@@ -99,9 +115,9 @@ export class RegisterTournamentUsecase {
 								tournamentId: participant.tournamentId.value,
 								userId: participant.userId.value,
 								user: {
-									id: participant.userId.value,
-									username: "", // TODO: ユーザー情報から取得
-									avatar: "", // TODO: ユーザー情報から取得
+									id: user.id.value,
+									username: user.username.value,
+									avatar: user.avatar.value,
 								},
 								status: participant.status.value,
 							},
@@ -116,6 +132,6 @@ export class RegisterTournamentUsecase {
 			}
 		}
 
-		return participant;
+		return { participant, user };
 	}
 }

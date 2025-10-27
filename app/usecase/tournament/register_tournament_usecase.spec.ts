@@ -4,9 +4,17 @@ import {
 	Tournament,
 	TournamentId,
 	TournamentParticipant,
+	User,
+	UserAvatar,
+	UserEmail,
 	UserId,
+	Username,
+	UserStatusValue,
 } from "@domain/model";
-import type { ITournamentRepository } from "@domain/repository";
+import type {
+	ITournamentRepository,
+	IUserRepository,
+} from "@domain/repository";
 import { createMockRepository } from "@usecase/test_helper";
 import type { ITransaction } from "@usecase/transaction";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -33,6 +41,14 @@ describe("RegisterTournamentUsecase", () => {
 			userId,
 		);
 
+		const mockUser = User.reconstruct(
+			userId,
+			new UserEmail("test@example.com"),
+			new Username("testuser"),
+			new UserAvatar("/avatars/default.png"),
+			new UserStatusValue("online"),
+		);
+
 		const mockTournamentRepo = mock<ITournamentRepository>();
 		mockTournamentRepo.findById.mockResolvedValue(tournament);
 		mockTournamentRepo.findParticipantByTournamentAndUserId.mockResolvedValue(
@@ -41,10 +57,14 @@ describe("RegisterTournamentUsecase", () => {
 		mockTournamentRepo.findParticipantsByTournamentId.mockResolvedValue([]);
 		mockTournamentRepo.createParticipant.mockResolvedValue(expectedParticipant);
 
+		const mockUserRepo = mock<IUserRepository>();
+		mockUserRepo.findById.mockResolvedValue(mockUser);
+
 		const mockTx = mock<ITransaction>();
 		mockTx.exec.mockImplementation(async (callback) => {
 			const repo = createMockRepository({
 				newTournamentRepository: () => mockTournamentRepo,
+				newUserRepository: () => mockUserRepo,
 			});
 			return callback(repo);
 		});
@@ -54,11 +74,12 @@ describe("RegisterTournamentUsecase", () => {
 			tournamentId: tournamentId.value,
 			userId: userId.value,
 		};
-		const participant = await usecase.execute(input);
+		const result = await usecase.execute(input);
 
-		expect(participant.tournamentId.equals(tournamentId)).toBe(true);
-		expect(participant.userId.equals(userId)).toBe(true);
-		expect(participant.status.value).toBe("active");
+		expect(result.participant.tournamentId.equals(tournamentId)).toBe(true);
+		expect(result.participant.userId.equals(userId)).toBe(true);
+		expect(result.participant.status.value).toBe("active");
+		expect(result.user.id.equals(userId)).toBe(true);
 		expect(mockTournamentRepo.createParticipant).toHaveBeenCalledTimes(1);
 	});
 
