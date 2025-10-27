@@ -23,6 +23,7 @@ export class RegisterTournamentUsecase {
 
 		const participant = await this.tx.exec(async (repo) => {
 			const tournamentRepo = repo.newTournamentRepository();
+			const friendshipRepo = repo.newFriendshipRepository();
 
 			// トーナメントの存在確認
 			const tournament = await tournamentRepo.findById(tournamentId);
@@ -57,6 +58,17 @@ export class RegisterTournamentUsecase {
 			if (tournament.isFull(participants.length)) {
 				throw new ErrBadRequest({
 					userMessage: "このトーナメントは定員に達しています",
+				});
+			}
+
+			// ブロックされていないかチェック
+			const friendship = await friendshipRepo.findByUserIds(
+				tournament.organizerId.value,
+				userId.value,
+			);
+			if (friendship?.isBlocked()) {
+				throw new ErrBadRequest({
+					userMessage: "このトーナメントに参加することはできません",
 				});
 			}
 

@@ -9,6 +9,7 @@ import {
 	TournamentMatchStatusValue,
 	TournamentParticipant,
 	TournamentParticipantId,
+	TournamentParticipantStatusValue,
 	TournamentRound,
 	TournamentRoundId,
 	TournamentRoundStatusValue,
@@ -42,10 +43,20 @@ describe("CompleteMatchUsecase", () => {
 
 	it("should complete a match and update loser status to eliminated", async () => {
 		const tournamentId = new TournamentId(ulid());
+		const organizerId = new UserId(ulid());
 		const roundId = new TournamentRoundId(ulid());
 		const matchId = new TournamentMatchId(ulid());
+		const user1Id = new UserId(ulid());
+		const user2Id = new UserId(ulid());
 		const participant1Id = new TournamentParticipantId(ulid());
 		const participant2Id = new TournamentParticipantId(ulid());
+
+		const tournament = Tournament.reconstruct({
+			id: tournamentId,
+			organizerId,
+			status: new TournamentStatusValue("in_progress"),
+			maxParticipants: new MaxParticipants(4),
+		});
 
 		const match = TournamentMatch.reconstruct(
 			matchId,
@@ -57,13 +68,17 @@ describe("CompleteMatchUsecase", () => {
 			new TournamentMatchStatusValue("in_progress"),
 		);
 
-		const participant1 = TournamentParticipant.create(
+		const participant1 = TournamentParticipant.reconstruct(
+			participant1Id,
 			tournamentId,
-			new UserId(ulid()),
+			user1Id,
+			new TournamentParticipantStatusValue("active"),
 		);
-		const participant2 = TournamentParticipant.create(
+		const participant2 = TournamentParticipant.reconstruct(
+			participant2Id,
 			tournamentId,
-			new UserId(ulid()),
+			user2Id,
+			new TournamentParticipantStatusValue("active"),
 		);
 
 		const round = TournamentRound.reconstruct(
@@ -89,6 +104,7 @@ describe("CompleteMatchUsecase", () => {
 		);
 
 		mockTournamentRepo.findMatchById = vi.fn().mockResolvedValue(match);
+		mockTournamentRepo.findById = vi.fn().mockResolvedValue(tournament);
 		mockTournamentRepo.updateMatch = vi
 			.fn()
 			.mockImplementation((m) => Promise.resolve(m));
@@ -111,6 +127,7 @@ describe("CompleteMatchUsecase", () => {
 		const result = await usecase.execute({
 			matchId: matchId.value,
 			winnerId: participant1Id.value,
+			requesterId: organizerId.value, // 主催者として実行
 		});
 
 		expect(result.match.winnerId?.equals(participant1Id)).toBe(true);
@@ -122,10 +139,18 @@ describe("CompleteMatchUsecase", () => {
 
 	it("should complete round when all matches are completed", async () => {
 		const tournamentId = new TournamentId(ulid());
+		const organizerId = new UserId(ulid());
 		const roundId = new TournamentRoundId(ulid());
 		const matchId = new TournamentMatchId(ulid());
 		const participant1Id = new TournamentParticipantId(ulid());
 		const participant2Id = new TournamentParticipantId(ulid());
+
+		const tournament = Tournament.reconstruct({
+			id: tournamentId,
+			organizerId,
+			status: new TournamentStatusValue("in_progress"),
+			maxParticipants: new MaxParticipants(4),
+		});
 
 		const match = TournamentMatch.reconstruct(
 			matchId,
@@ -159,6 +184,7 @@ describe("CompleteMatchUsecase", () => {
 		);
 
 		mockTournamentRepo.findMatchById = vi.fn().mockResolvedValue(match);
+		mockTournamentRepo.findById = vi.fn().mockResolvedValue(tournament);
 		mockTournamentRepo.updateMatch = vi
 			.fn()
 			.mockImplementation((m) => Promise.resolve(m));
@@ -190,6 +216,7 @@ describe("CompleteMatchUsecase", () => {
 		const result = await usecase.execute({
 			matchId: matchId.value,
 			winnerId: participant1Id.value,
+			requesterId: organizerId.value,
 		});
 
 		expect(result.isRoundCompleted).toBe(true);
@@ -261,6 +288,7 @@ describe("CompleteMatchUsecase", () => {
 		const result = await usecase.execute({
 			matchId: matchId.value,
 			winnerId: participant1Id.value,
+			requesterId: tournament.organizerId.value,
 		});
 
 		expect(result.isRoundCompleted).toBe(true);
@@ -278,17 +306,26 @@ describe("CompleteMatchUsecase", () => {
 			usecase.execute({
 				matchId: ulid(),
 				winnerId: ulid(),
+				requesterId: ulid(),
 			}),
 		).rejects.toThrow(ErrBadRequest);
 	});
 
 	it("should throw error if winner is not a participant", async () => {
 		const tournamentId = new TournamentId(ulid());
+		const organizerId = new UserId(ulid());
 		const roundId = new TournamentRoundId(ulid());
 		const matchId = new TournamentMatchId(ulid());
 		const participant1Id = new TournamentParticipantId(ulid());
 		const participant2Id = new TournamentParticipantId(ulid());
 		const invalidWinnerId = new TournamentParticipantId(ulid());
+
+		const tournament = Tournament.reconstruct({
+			id: tournamentId,
+			organizerId,
+			status: new TournamentStatusValue("in_progress"),
+			maxParticipants: new MaxParticipants(4),
+		});
 
 		const match = TournamentMatch.reconstruct(
 			matchId,
@@ -301,12 +338,14 @@ describe("CompleteMatchUsecase", () => {
 		);
 
 		mockTournamentRepo.findMatchById = vi.fn().mockResolvedValue(match);
+		mockTournamentRepo.findById = vi.fn().mockResolvedValue(tournament);
 
 		const usecase = new CompleteMatchUsecase(mockTx);
 		await expect(
 			usecase.execute({
 				matchId: matchId.value,
 				winnerId: invalidWinnerId.value,
+				requesterId: organizerId.value,
 			}),
 		).rejects.toThrow(ErrBadRequest);
 	});

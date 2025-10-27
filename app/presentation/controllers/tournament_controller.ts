@@ -5,7 +5,6 @@ import type {
 	TournamentRound,
 	User,
 } from "@domain/model";
-import { TournamentId, TournamentMatchId } from "@domain/model";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type {
 	CreateTournamentRequest,
@@ -152,7 +151,7 @@ const toMatchDTO = (
 /**
  * TournamentRoundをDTOに変換
  */
-const toRoundDTO = (
+const _toRoundDTO = (
 	round: TournamentRound,
 	matches: Array<{
 		match: TournamentMatch;
@@ -172,7 +171,7 @@ const toRoundDTO = (
 /**
  * TournamentをDTOに変換（基本情報）
  */
-const toTournamentDTO = (
+const _toTournamentDTO = (
 	tournament: Tournament,
 	organizer: User,
 	participantCount: number,
@@ -490,6 +489,7 @@ const onCompleteTournamentMatch = (usecase: CompleteMatchUsecase) => {
 			const result = await usecase.execute({
 				matchId: req.params.matchId,
 				winnerId,
+				requesterId: userId,
 			});
 
 			return reply.send({

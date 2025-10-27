@@ -9,6 +9,7 @@ import {
 	TournamentMatchId,
 	TournamentParticipantId,
 	TournamentRound as TournamentRoundEntity,
+	UserId,
 } from "@domain/model";
 import type { ITournamentClientRepository } from "@domain/repository/tournament_client_repository";
 import { TournamentBracketService } from "@domain/service";
@@ -18,6 +19,7 @@ import type { ITransaction } from "@usecase/transaction";
 export type CompleteMatchUsecaseInput = {
 	matchId: string;
 	winnerId: string; // TournamentParticipantId
+	requesterId: string; // UserId - リクエストを送信したユーザー
 };
 
 export type CompleteMatchUsecaseOutput = {
@@ -40,6 +42,7 @@ export class CompleteMatchUsecase {
 	): Promise<CompleteMatchUsecaseOutput> {
 		const matchId = new TournamentMatchId(input.matchId);
 		const winnerId = new TournamentParticipantId(input.winnerId);
+		const requesterId = new UserId(input.requesterId);
 
 		const result = await this.tx.exec(async (repo) => {
 			const tournamentRepo = repo.newTournamentRepository();
@@ -49,6 +52,56 @@ export class CompleteMatchUsecase {
 			if (!match) {
 				throw new ErrBadRequest({
 					userMessage: "試合が見つかりません",
+				});
+			}
+
+			// 試合がin_progressステータスであることを確認
+			if (!match.status.isInProgress()) {
+				throw new ErrBadRequest({
+					userMessage: "この試合は進行中ではありません",
+				});
+			}
+
+			// 重複した結果報告の防止
+			if (match.winnerId !== undefined) {
+				throw new ErrBadRequest({
+					userMessage: "この試合は既に結果が報告されています",
+				});
+			}
+
+			// トーナメントを取得して主催者かどうか確認
+			const tournamentForAuth = await tournamentRepo.findById(
+				match.tournamentId,
+			);
+			if (!tournamentForAuth) {
+				throw new ErrBadRequest({
+					userMessage: "トーナメントが見つかりません",
+				});
+			}
+
+			// 勝者が試合の参加者であることを確認
+			if (!match.participantIds.some((id) => id.equals(winnerId))) {
+				throw new ErrBadRequest({
+					userMessage: "指定された勝者は試合の参加者ではありません",
+				});
+			}
+
+			// リクエスト者の権限チェック（主催者または試合参加者のみ）
+			const isOrganizer = tournamentForAuth.isOrganizer(requesterId);
+
+			// 試合参加者かどうかをチェック
+			const matchParticipants = await Promise.all(
+				match.participantIds.map((id) =>
+					tournamentRepo.findParticipantById(id),
+				),
+			);
+			const isMatchParticipant = matchParticipants.some((p) =>
+				p?.userId.equals(requesterId),
+			);
+
+			if (!isOrganizer && !isMatchParticipant) {
+				throw new ErrBadRequest({
+					userMessage: "試合結果を報告する権限がありません",
 				});
 			}
 

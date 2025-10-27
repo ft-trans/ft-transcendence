@@ -1,20 +1,15 @@
 import { ErrBadRequest } from "@domain/error";
 import {
-	RoundNumber,
 	Tournament,
 	TournamentId,
 	TournamentMatch,
-	TournamentMatchId,
 	TournamentParticipant,
 	TournamentParticipantId,
-	TournamentRound,
 	TournamentRoundId,
 	User,
-	UserAvatar,
 	UserEmail,
 	UserId,
 	Username,
-	UserStatusValue,
 } from "@domain/model";
 import type {
 	IMatchRepository,
