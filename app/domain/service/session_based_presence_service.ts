@@ -4,7 +4,8 @@
  * より効率的で信頼性の高いプレゼンス管理を提供
  */
 
-import type { UserId } from "@domain/model/user";
+import { PRESENCE_CONSTANTS } from "@domain/constants/presence_constants";
+import { UserId } from "@domain/model/user";
 import type { IRepository } from "@domain/repository";
 
 export interface SessionInfo {
@@ -20,9 +21,6 @@ export class SessionBasedPresenceService {
 
 	// クリーンアップタイマーのID
 	private cleanupIntervalId: NodeJS.Timeout | null = null;
-
-	// オンライン判定の閾値（秒）
-	private static readonly ONLINE_THRESHOLD = 300; // 5分
 
 	constructor(private readonly repository: IRepository) {
 		// 定期的なクリーンアップを開始
@@ -109,7 +107,7 @@ export class SessionBasedPresenceService {
 
 		// フォールバック: Redis上のオンライン状態をチェック
 		const presenceRepo = this.repository.newUserPresenceRepository();
-		return await presenceRepo.isUserOnline({ value: userId } as UserId);
+		return await presenceRepo.isUserOnline(new UserId(userId));
 	}
 
 	/**
@@ -162,7 +160,7 @@ export class SessionBasedPresenceService {
 	private async setUserOnline(userId: string): Promise<void> {
 		try {
 			const presenceRepo = this.repository.newUserPresenceRepository();
-			await presenceRepo.setUserOnline({ value: userId } as UserId);
+			await presenceRepo.setUserOnline(new UserId(userId));
 		} catch (error) {
 			console.error(
 				`[SessionPresence] Failed to set user ${userId} online:`,
@@ -174,7 +172,7 @@ export class SessionBasedPresenceService {
 	private async setUserOffline(userId: string): Promise<void> {
 		try {
 			const presenceRepo = this.repository.newUserPresenceRepository();
-			await presenceRepo.setUserOffline({ value: userId } as UserId);
+			await presenceRepo.setUserOffline(new UserId(userId));
 		} catch (error) {
 			console.error(
 				`[SessionPresence] Failed to set user ${userId} offline:`,
@@ -186,7 +184,7 @@ export class SessionBasedPresenceService {
 	private async extendUserOnline(userId: string): Promise<void> {
 		try {
 			const presenceRepo = this.repository.newUserPresenceRepository();
-			await presenceRepo.extendUserOnline({ value: userId } as UserId);
+			await presenceRepo.extendUserOnline(new UserId(userId));
 		} catch (error) {
 			console.error(
 				`[SessionPresence] Failed to extend user ${userId} online:`,
@@ -198,7 +196,7 @@ export class SessionBasedPresenceService {
 	private isRecentActivity(lastActivity: Date): boolean {
 		const now = new Date();
 		const diffSeconds = (now.getTime() - lastActivity.getTime()) / 1000;
-		return diffSeconds <= SessionBasedPresenceService.ONLINE_THRESHOLD;
+		return diffSeconds <= PRESENCE_CONSTANTS.ONLINE_THRESHOLD;
 	}
 
 	/**
@@ -207,7 +205,7 @@ export class SessionBasedPresenceService {
 	private startCleanupTimer(): void {
 		this.cleanupIntervalId = setInterval(() => {
 			this.cleanupInactiveSessions();
-		}, 60000); // 1分ごと
+		}, PRESENCE_CONSTANTS.CLEANUP_INTERVAL);
 	}
 
 	/**
@@ -233,12 +231,16 @@ export class SessionBasedPresenceService {
 				(now.getTime() - sessionInfo.lastActivity.getTime()) / 1000;
 
 			// 閾値を超えた場合は非アクティブとしてマーク
-			if (diffSeconds > SessionBasedPresenceService.ONLINE_THRESHOLD) {
+			if (diffSeconds > PRESENCE_CONSTANTS.ONLINE_THRESHOLD) {
 				sessionInfo.isActive = false;
 			}
 
 			// さらに長時間経過した場合はセッション情報を削除
-			if (diffSeconds > SessionBasedPresenceService.ONLINE_THRESHOLD * 2) {
+			if (
+				diffSeconds >
+				PRESENCE_CONSTANTS.ONLINE_THRESHOLD *
+					PRESENCE_CONSTANTS.SESSION_CLEANUP_MULTIPLIER
+			) {
 				sessionsToRemove.push(sessionToken);
 			}
 		}

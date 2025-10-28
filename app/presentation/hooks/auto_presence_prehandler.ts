@@ -1,3 +1,4 @@
+import { PRESENCE_CONSTANTS } from "@domain/constants/presence_constants";
 import { UserId } from "@domain/model/user";
 import type { IRepository } from "@domain/repository";
 import type {
@@ -15,9 +16,6 @@ import type {
  * そちらに委譲し、利用できない場合のフォールバックとして機能します
  */
 export class AutoPresencePrehandler {
-	// オンライン状態のTTL（秒）
-	private static readonly ONLINE_TTL = 300; // 5分
-
 	constructor(private readonly repository: IRepository) {}
 
 	/**
@@ -62,7 +60,7 @@ export class AutoPresencePrehandler {
 		const presenceRepo = this.repository.newUserPresenceRepository();
 		await presenceRepo.extendUserOnline(
 			new UserId(userId),
-			AutoPresencePrehandler.ONLINE_TTL,
+			PRESENCE_CONSTANTS.ONLINE_TTL,
 		);
 
 		console.debug(`[AutoPresence] Extended online status for user ${userId}`);
