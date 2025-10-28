@@ -482,12 +482,6 @@ const start = async () => {
 			return reply.html();
 		});
 
-		// メモリリーク防止のための定期クリーンアップ
-		// AutoPresencePrehandlerは静的キャッシュを使用しないため、
-		// SessionBasedPresenceServiceの自動クリーンアップに依存
-		// setInterval(() => {
-		// 	AutoPresencePrehandler.cleanupCache();
-		// }, 600000); // 10分ごと
 
 		await app.vite.ready();
 		await app.listen({ host: "0.0.0.0", port: 3000 });
