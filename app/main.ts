@@ -27,7 +27,9 @@ import { userController } from "@presentation/controllers/user_controller";
 import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
 import { tournamentWsController } from "@presentation/controllers/ws/tournament_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
+import { AutoPresencePrehandler } from "@presentation/hooks/auto_presence_prehandler";
 import { errorHandler } from "@presentation/hooks/error_handler";
+import { SessionBasedPresenceService } from "@domain/service/session_based_presence_service";
 import { MESSAGE_TYPES } from "@shared/api/chat";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
 import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
@@ -152,19 +154,30 @@ const start = async () => {
 
 		const repo = new Repository(prisma, app.redis);
 		const tx = new Transaction(prisma, app.redis);
+		
+		// セッションベースのプレゼンス管理サービスを初期化
+		const presenceService = new SessionBasedPresenceService(repo);
+		
 		const registerUserUsecase = new RegisterUserUsecase(tx);
 		const loginUserUsecase = new LoginUserUsecase(tx);
 		const logoutUserUsecase = new LogoutUserUsecase(tx);
+		
+		// 認証プレハンドラーにプレゼンス管理を統合
 		const authPrehandler = createAuthPrehandler(
 			repo.newSessionRepository(),
 			repo.newUserRepository(),
+			presenceService,
 		);
+		
+		// 自動プレゼンス更新プレハンドラーを作成
+		const autoPresencePrehandler = AutoPresencePrehandler.create(repo);
 		await app.register(
 			authController(
 				registerUserUsecase,
 				loginUserUsecase,
 				logoutUserUsecase,
 				authPrehandler,
+				presenceService,
 			),
 			{ prefix: "/api" },
 		);
@@ -210,6 +223,7 @@ const start = async () => {
 				updateUserUsecase,
 				deleteUserUsecase,
 				uploadAvatarUsecase,
+				// 自動プレゼンス更新を統合した認証プレハンドラーを使用
 				authPrehandler,
 			),
 			{ prefix: "/api" },
@@ -227,7 +241,7 @@ const start = async () => {
 
 		// WebSocketチャットコントローラーを後で登録（WebSocketプラグイン登録後）
 
-		// GET ハンドラー - メッセージ履歴取得
+		// GET ハンドラー - メッセージ履歴取得（自動プレゼンス更新統合）
 		app.get<{ Params: { partnerId: string } }>(
 			"/api/dms/:partnerId",
 			{ preHandler: authPrehandler },
@@ -374,15 +388,18 @@ const start = async () => {
 			{ prefix: "/api" },
 		);
 
+		// プレゼンス管理API（改善版）
 		await app.register(
 			presenceController(
 				setUserOnlineUsecase,
-				setUserOfflineUsecase,
-				extendUserOnlineUsecase,
+				// offline/heartbeat エンドポイントは削除済み
 				getOnlineUsersUsecase,
 				getUsersOnlineStatusUsecase,
 				isUserOnlineUsecase,
+				// 認証のみ（自動プレゼンス更新は既に認証プレハンドラーで処理済み）
 				authPrehandler,
+				// セッションベースのプレゼンス管理を統合
+				presenceService,
 			),
 			{ prefix: "/api" },
 		);
@@ -451,8 +468,6 @@ const start = async () => {
 				authPrehandler,
 				matchmakingClientRepository,
 				setUserOnlineUsecase,
-				setUserOfflineUsecase,
-				extendUserOnlineUsecase,
 			),
 			{ prefix: "/ws" },
 		);
@@ -479,9 +494,15 @@ const start = async () => {
 			return reply.html();
 		});
 
+		// メモリリーク防止のための定期クリーンアップを開始
+		setInterval(() => {
+			AutoPresencePrehandler.cleanupCache();
+		}, 600000); // 10分ごと
+
 		await app.vite.ready();
 		await app.listen({ host: "0.0.0.0", port: 3000 });
 		app.log.info("HTTP server listening on :3000");
+		app.log.info("Enhanced presence management system initialized");
 	} catch (err) {
 		app.log.error(err);
 		process.exit(1);

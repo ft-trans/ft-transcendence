@@ -13,19 +13,22 @@ import type { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import z from "zod";
 
+import type { SessionBasedPresenceService } from "@domain/service/session_based_presence_service";
+
 export const authController = (
 	registerUserUsecase: RegisterUserUsecase,
 	loginUserUsecase: LoginUserUsecase,
 	logoutUserUsecase: LogoutUserUsecase,
 	authPrehandler: AuthPrehandler,
+	presenceService?: SessionBasedPresenceService,
 ) => {
 	return async (fastify: FastifyInstance) => {
 		fastify.post("/auth/register", onRegisterUser(registerUserUsecase));
-		fastify.post("/auth/login", onLoginUser(loginUserUsecase));
+		fastify.post("/auth/login", onLoginUser(loginUserUsecase, presenceService));
 		fastify.delete(
 			"/auth/logout",
 			{ preHandler: authPrehandler },
-			onLogoutUser(logoutUserUsecase),
+			onLogoutUser(logoutUserUsecase, presenceService),
 		);
 		fastify.get("/auth/status", { preHandler: authPrehandler }, onAuthStatus());
 	};
@@ -82,7 +85,7 @@ const onRegisterUser = (usecase: RegisterUserUsecase) => {
 	};
 };
 
-const onLoginUser = (usecase: LoginUserUsecase) => {
+const onLoginUser = (usecase: LoginUserUsecase, presenceService?: SessionBasedPresenceService) => {
 	return async (
 		req: FastifyRequest<{ Body: LoginUserRequest }>,
 		reply: FastifyReply,
@@ -112,6 +115,18 @@ const onLoginUser = (usecase: LoginUserUsecase) => {
 			expires: output.session.expiresAt,
 		});
 
+		// セッション開始時のプレゼンス管理
+		if (presenceService) {
+			try {
+				await presenceService.onSessionStart(
+					output.session.userId.value,
+					output.sessionToken,
+				);
+			} catch (error) {
+				console.error("[AuthController] Failed to start session presence:", error);
+			}
+		}
+
 		reply.send({
 			user: {
 				id: output.session.userId.value,
@@ -121,13 +136,22 @@ const onLoginUser = (usecase: LoginUserUsecase) => {
 	};
 };
 
-const onLogoutUser = (usecase: LogoutUserUsecase) => {
+const onLogoutUser = (usecase: LogoutUserUsecase, presenceService?: SessionBasedPresenceService) => {
 	return async (req: FastifyRequest, reply: FastifyReply) => {
 		const sessionToken = req.unsignCookie(req.cookies[cookieName] || "").value;
 		if (!sessionToken) {
 			throw new ErrBadRequest({
 				userMessage: "セッションが見つかりません",
 			});
+		}
+
+		// セッション終了時のプレゼンス管理
+		if (presenceService) {
+			try {
+				await presenceService.onSessionEnd(sessionToken);
+			} catch (error) {
+				console.error("[AuthController] Failed to end session presence:", error);
+			}
 		}
 
 		await usecase.execute({

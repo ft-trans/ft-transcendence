@@ -18,7 +18,7 @@ type AuthState = {
  * - Page Visibility APIを活用した効率的なプレゼンス管理
  * - セッションベースの統合管理
  */
-class AuthStore {
+class EnhancedAuthStore {
 	private state: AuthState = {
 		isAuthenticated: false,
 		loading: true,
@@ -33,7 +33,7 @@ class AuthStore {
 	private beforeUnloadHandler = this.handleBeforeUnload.bind(this);
 	private pageHideHandler = this.handlePageHide.bind(this);
 
-	// 状態同期用のタイマー（フォールバックとして最小限に使用）
+	// 状態同期用のタイマー
 	private statusSyncInterval: number | null = null;
 	private readonly STATUS_SYNC_INTERVAL = 300000; // 5分ごと（フォールバック）
 
@@ -104,14 +104,14 @@ class AuthStore {
 		if (this.state.isAuthenticated) {
 			if (this.isPageVisible && !wasVisible) {
 				// ページが表示されたとき：通常のAPIリクエストで状態が自動更新される
-				console.log("[AuthStore] Page became visible - status will be updated by next API request");
+				console.log("[EnhancedAuthStore] Page became visible");
 				
 				// 念のため状態同期APIを呼び出し
 				this.syncStatusIfNeeded();
 			} else if (!this.isPageVisible && wasVisible) {
 				// ページが非表示になったとき：特別な処理は不要
 				// サーバー側のTTLが自然に期限切れになる
-				console.log("[AuthStore] Page became hidden - status will naturally expire");
+				console.log("[EnhancedAuthStore] Page became hidden");
 			}
 		}
 	}
@@ -121,9 +121,8 @@ class AuthStore {
 	 */
 	private handleBeforeUnload(): void {
 		if (this.state.isAuthenticated) {
-			// 新しいシステムではセッション管理で自動的にオフライン化されるため、
-			// 明示的なオフライン通知は不要
-			console.log("[AuthStore] Page unloading - session will auto-expire");
+			// navigator.sendBeacon で確実にオフライン通知を送信
+			this.sendOfflineBeacon();
 		}
 	}
 
@@ -132,9 +131,25 @@ class AuthStore {
 	 */
 	private handlePageHide(): void {
 		if (this.state.isAuthenticated) {
-			// 新しいシステムではセッション管理で自動的にオフライン化されるため、
-			// 明示的なオフライン通知は不要
-			console.log("[AuthStore] Page hidden - session will auto-expire");
+			// モバイル端末などでのページ非表示
+			this.sendOfflineBeacon();
+		}
+	}
+
+	/**
+	 * Beaconを使った確実なオフライン通知
+	 */
+	private sendOfflineBeacon(): void {
+		try {
+			if (navigator.sendBeacon) {
+				const data = new Blob([JSON.stringify({})], {
+					type: "application/json",
+				});
+				const success = navigator.sendBeacon("/api/presence/offline", data);
+				console.log(`[EnhancedAuthStore] Offline beacon sent: ${success}`);
+			}
+		} catch (error) {
+			console.error("[EnhancedAuthStore] Failed to send offline beacon:", error);
 		}
 	}
 
@@ -148,22 +163,20 @@ class AuthStore {
 
 		try {
 			// 軽量なAPI呼び出しで状態同期（例：認証状態確認）
-			// このリクエストによってサーバー側で自動的にプレゼンスが更新される
 			await this.apiClient.get("/api/auth/status");
-			console.log("[AuthStore] Status sync completed via natural API request");
+			console.log("[EnhancedAuthStore] Status sync completed");
 		} catch (error) {
-			console.error("[AuthStore] Status sync failed:", error);
+			console.error("[EnhancedAuthStore] Status sync failed:", error);
 		}
 	}
 
 	/**
-	 * フォールバック用の定期状態同期を開始（最小限）
+	 * フォールバック用の定期状態同期を開始
 	 */
 	private startStatusSync(): void {
 		this.stopStatusSync();
 		
 		// 5分ごとに軽量なAPIリクエストで状態確認（フォールバック）
-		// 通常のAPIリクエストが頻繁に発生する場合、これは実質的に動作しない
 		this.statusSyncInterval = window.setInterval(() => {
 			if (this.isPageVisible) {
 				this.syncStatusIfNeeded();
@@ -182,7 +195,7 @@ class AuthStore {
 	}
 
 	/**
-	 * クリーンアップ処理（必要に応じて呼び出し）
+	 * クリーンアップ処理
 	 */
 	destroy(): void {
 		if (typeof document !== "undefined") {
@@ -194,4 +207,7 @@ class AuthStore {
 	}
 }
 
-export const authStore = new AuthStore();
+export const enhancedAuthStore = new EnhancedAuthStore();
+
+// 後方互換性のため既存のexportも残す
+export { enhancedAuthStore as authStore };
