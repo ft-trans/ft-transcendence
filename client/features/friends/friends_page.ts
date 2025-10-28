@@ -651,10 +651,33 @@ export class FriendsPage extends Component {
 				".blocked-users-link",
 			) as HTMLButtonElement;
 			if (blockedUsersBtn) {
+				// 重複クリックを防ぐ
+				if (blockedUsersBtn.disabled) {
+					console.log(
+						"[DEBUG] Blocked users button already disabled, ignoring click",
+					);
+					return;
+				}
+
 				console.log("[DEBUG] Blocked users button clicked");
 				const link = blockedUsersBtn.getAttribute("data-link");
 				console.log("[DEBUG] Navigating to:", link);
 				if (link) {
+					// 現在のパスと同じ場合は何もしない
+					if (window.location.pathname === link) {
+						console.log(
+							"[DEBUG] Already on blocked users page, ignoring navigation",
+						);
+						return;
+					}
+
+					// 一時的にボタンを無効化して重複クリックを防ぐ
+					blockedUsersBtn.disabled = true;
+					setTimeout(() => {
+						blockedUsersBtn.disabled = false;
+					}, 1000);
+
+					// 通常のナビゲーション（replaceは同じパスの場合のみ自動適用される）
 					navigateTo(link);
 				} else {
 					console.error("[ERROR] No data-link attribute found");
