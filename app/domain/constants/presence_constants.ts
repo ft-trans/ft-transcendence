@@ -1,7 +1,3 @@
-/**
- * プレゼンス管理の定数
- * 各サービス間で一貫性を保つために共有定数として定義
- */
 export const PRESENCE_CONSTANTS = {
 	/** オンライン状態のTTL（秒） - 5分 */
 	ONLINE_TTL: 300,

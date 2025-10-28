@@ -482,7 +482,6 @@ const start = async () => {
 			return reply.html();
 		});
 
-
 		await app.vite.ready();
 		await app.listen({ host: "0.0.0.0", port: 3000 });
 		app.log.info("HTTP server listening on :3000");
