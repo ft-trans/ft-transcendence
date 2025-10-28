@@ -2,6 +2,7 @@ import { ErrUnauthorized } from "@domain/error";
 import { SessionToken } from "@domain/model";
 import type { ISessionRepository } from "@domain/repository/session_repository";
 import type { IUserRepository } from "@domain/repository/user_repository";
+import type { SessionBasedPresenceService } from "@domain/service/session_based_presence_service";
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 declare module "fastify" {
@@ -32,6 +33,7 @@ export type AuthPrehandler = (
 export const createAuthPrehandler = (
 	sessionRepository: ISessionRepository,
 	userRepository: IUserRepository,
+	presenceService?: SessionBasedPresenceService,
 ): AuthPrehandler => {
 	return async (request: FastifyRequest, reply: FastifyReply) => {
 		// 認証処理開始
@@ -60,5 +62,18 @@ export const createAuthPrehandler = (
 			id: user.id.value,
 			email: user.email.value,
 		};
+
+		// セッションベースのプレゼンス管理が有効な場合、アクティビティを更新
+		if (presenceService) {
+			try {
+				await presenceService.updateSessionActivity(token);
+			} catch (error) {
+				// プレゼンス更新エラーは認証処理をブロックしない
+				console.error(
+					"[AuthPrehandler] Failed to update session activity:",
+					error,
+				);
+			}
+		}
 	};
 };

@@ -10,6 +10,8 @@ import type {
 	IPongPaddleRepository,
 	IRepository,
 	ISessionRepository,
+	ITournamentClientRepository,
+	ITournamentRepository,
 	IUserPresenceRepository,
 	IUserRepository,
 } from "@domain/repository";
@@ -19,10 +21,12 @@ import { MatchHistoryRepository } from "./database/match_history_repository";
 import { MatchRepository } from "./database/match_repository";
 import type { Client } from "./database/prisma";
 import { SessionRepository } from "./database/session_repository";
+import { TournamentRepository } from "./database/tournament_repository";
 import { UserRepository } from "./database/user_repository";
 import { PongClientRepository } from "./in_memory/pong_client_repository";
 import { PongLoopRepository } from "./in_memory/pong_loop_repository";
 import { PongMatchStateRepository } from "./in_memory/pong_match_state_repository";
+import { InMemoryTournamentClientRepository } from "./in_memory/tournament_client_repository";
 import type { KvsClient } from "./kvs/client";
 import { PongBallRepository } from "./kvs/pong_ball_repository";
 import { PongPaddleRepository } from "./kvs/pong_paddle_repository";
@@ -59,6 +63,10 @@ export class Repository implements IRepository {
 		return new MatchHistoryRepository(this.client);
 	}
 
+	newTournamentRepository(): ITournamentRepository {
+		return new TournamentRepository(this.client);
+	}
+
 	// KVS repositories
 	newPongBallRepository(): IPongBallRepository {
 		return new PongBallRepository(this.kvsClient);
@@ -79,5 +87,8 @@ export class Repository implements IRepository {
 	}
 	newPongMatchStateRepository(): IPongMatchStateRepository {
 		return new PongMatchStateRepository();
+	}
+	newTournamentClientRepository(): ITournamentClientRepository {
+		return new InMemoryTournamentClientRepository();
 	}
 }

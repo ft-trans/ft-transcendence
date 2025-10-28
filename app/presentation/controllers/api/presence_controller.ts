@@ -1,10 +1,9 @@
+import type { SessionBasedPresenceService } from "@domain/service/session_based_presence_service";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import type {
-	ExtendUserOnlineUsecase,
 	GetOnlineUsersUsecase,
 	GetUsersOnlineStatusUsecase,
 	IsUserOnlineUsecase,
-	SetUserOfflineUsecase,
 	SetUserOnlineUsecase,
 } from "@usecase/presence";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
@@ -36,12 +35,11 @@ type GetUserOnlineStatusResponse = {
 
 export const presenceController = (
 	setUserOnlineUsecase: SetUserOnlineUsecase,
-	setUserOfflineUsecase: SetUserOfflineUsecase,
-	extendUserOnlineUsecase: ExtendUserOnlineUsecase,
 	getOnlineUsersUsecase: GetOnlineUsersUsecase,
 	getUsersOnlineStatusUsecase: GetUsersOnlineStatusUsecase,
 	isUserOnlineUsecase: IsUserOnlineUsecase,
 	authPrehandler: AuthPrehandler,
+	presenceService?: SessionBasedPresenceService,
 ) => {
 	return async (fastify: FastifyInstance) => {
 		// 現在のユーザーをオンライン状態にする
@@ -53,27 +51,36 @@ export const presenceController = (
 			onSetUserOnline(setUserOnlineUsecase),
 		);
 
-		// 現在のユーザーをオフライン状態にする
-		fastify.post(
-			"/presence/offline",
+		// オフライン状態は自動的にセッション管理で処理されるため、
+		// 明示的なofflineエンドポイントは削除
+
+		// ハートビートも自動的にAPIリクエストで処理されるため、
+		// 専用のheartbeatエンドポイントは削除
+
+		// デバッグ用：現在のユーザーのオンライン状態を確認
+		fastify.get(
+			"/presence/my-status",
 			{ preHandler: [authPrehandler] },
-			onSetUserOffline(setUserOfflineUsecase),
+			async (request, reply) => {
+				const userId = request.authenticatedUser?.id;
+				if (!userId) {
+					return reply.status(401).send({ message: "Unauthorized" });
+				}
+
+				const isOnline = await isUserOnlineUsecase.execute(userId);
+				return reply.send({
+					userId,
+					isOnline,
+					timestamp: new Date().toISOString(),
+				});
+			},
 		);
 
-		// 現在のユーザーのオンライン状態を延長（ハートビート）
-		fastify.post<{
-			Body: SetUserOnlineRequest;
-		}>(
-			"/presence/heartbeat",
-			{ preHandler: [authPrehandler] },
-			onExtendUserOnline(extendUserOnlineUsecase),
-		);
-
-		// 全てのオンラインユーザーを取得
+		// 全てのオンラインユーザーを取得（セッション統合版）
 		fastify.get(
 			"/presence/online-users",
 			{ preHandler: [authPrehandler] },
-			onGetOnlineUsers(getOnlineUsersUsecase),
+			onGetOnlineUsers(getOnlineUsersUsecase, presenceService),
 		);
 
 		// 複数ユーザーのオンライン状態を一括取得
@@ -116,47 +123,25 @@ const onSetUserOnline = (usecase: SetUserOnlineUsecase) => {
 	};
 };
 
-const onSetUserOffline = (usecase: SetUserOfflineUsecase) => {
-	return async (request: FastifyRequest, reply: FastifyReply) => {
-		const userId = request.authenticatedUser?.id;
-		if (!userId) {
-			return reply.status(401).send({ message: "Unauthorized" });
-		}
+// onSetUserOffline と onExtendUserOnline ハンドラーは削除
+// 新しいシステムではセッション管理とAPIリクエスト自動追跡で代替
 
-		try {
-			await usecase.execute(userId);
-			return reply.status(200).send({ message: "User set to offline" });
-		} catch (error) {
-			console.error("Failed to set user offline:", error);
-			return reply.status(500).send({ message: "Internal server error" });
-		}
-	};
-};
-
-const onExtendUserOnline = (usecase: ExtendUserOnlineUsecase) => {
-	return async (
-		request: FastifyRequest<{ Body: SetUserOnlineRequest }>,
-		reply: FastifyReply,
-	) => {
-		const userId = request.authenticatedUser?.id;
-		if (!userId) {
-			return reply.status(401).send({ message: "Unauthorized" });
-		}
-
-		try {
-			await usecase.execute(userId, request.body.ttl);
-			return reply.status(200).send({ message: "User online status extended" });
-		} catch (error) {
-			console.error("Failed to extend user online status:", error);
-			return reply.status(500).send({ message: "Internal server error" });
-		}
-	};
-};
-
-const onGetOnlineUsers = (usecase: GetOnlineUsersUsecase) => {
+const onGetOnlineUsers = (
+	usecase: GetOnlineUsersUsecase,
+	presenceService?: SessionBasedPresenceService,
+) => {
 	return async (_request: FastifyRequest, reply: FastifyReply) => {
 		try {
-			const onlineUsers = await usecase.execute();
+			let onlineUsers: string[];
+
+			if (presenceService) {
+				// セッションベースの統合管理を使用
+				onlineUsers = await presenceService.getOnlineUsersWithSession();
+			} else {
+				// 従来のRedisベースのみ使用
+				onlineUsers = await usecase.execute();
+			}
+
 			const response: GetOnlineUsersResponse = { onlineUsers };
 			return reply.status(200).send(response);
 		} catch (error) {

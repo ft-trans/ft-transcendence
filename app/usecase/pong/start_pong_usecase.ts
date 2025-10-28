@@ -62,6 +62,8 @@ export class StartPongUsecase {
 		const pongMatchStateRepo = this.repo.newPongMatchStateRepository();
 		const matchRepo = this.repo.newMatchRepository();
 		const matchHistoryRepo = this.repo.newMatchHistoryRepository();
+		const tournamentRepo = this.repo.newTournamentRepository();
+		const tournamentClientRepo = this.repo.newTournamentClientRepository();
 		const pongGameEngineService = new PongGameEngineService(
 			matchId,
 			pongBallRepo,
@@ -71,6 +73,8 @@ export class StartPongUsecase {
 			matchRepo,
 			pongLoopService,
 			matchHistoryRepo,
+			tournamentRepo,
+			tournamentClientRepo,
 		);
 		pongLoopService.start(matchId, () => pongGameEngineService.processFrame());
 	}

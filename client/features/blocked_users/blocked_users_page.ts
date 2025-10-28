@@ -28,13 +28,20 @@ export class BlockedUsersPage extends Component {
 
 	private updateView(): void {
 		console.log("[DEBUG] BlockedUsersPage updateView - Starting");
-		const container = document.querySelector("#app");
+		// Navigationコンポーネントで包まれているため、mainコンテナ内のコンテンツのみ更新
+		const container = document.querySelector("main");
 		if (!container) {
-			console.error("[ERROR] BlockedUsersPage - #app container not found");
-			return;
+			console.error(
+				"[ERROR] BlockedUsersPage - main container not found, trying #app",
+			);
+			const appContainer = document.querySelector("#app");
+			if (appContainer) {
+				appContainer.innerHTML = this.render();
+			}
+		} else {
+			container.innerHTML = this.render();
 		}
 
-		container.innerHTML = this.render();
 		this.setupEventListeners();
 		console.log("[DEBUG] BlockedUsersPage updateView - Completed");
 	}
@@ -84,13 +91,11 @@ export class BlockedUsersPage extends Component {
 			"blocked users",
 		);
 		return `
-			<div class="min-h-screen bg-gray-100 py-6">
-				<div class="max-w-4xl mx-auto px-4">
-					${new SectionTitle({ text: "ブロックしたユーザー" }).render()}
-					
-					<div class="bg-white rounded-lg shadow-md p-6">
-						${this.blockedUsers.length === 0 ? this.renderEmptyState() : this.renderBlockedUsersList()}
-					</div>
+			<div class="space-y-6">
+				${new SectionTitle({ text: "ブロックしたユーザー" }).render()}
+				
+				<div class="bg-white rounded-lg shadow-md p-6">
+					${this.blockedUsers.length === 0 ? this.renderEmptyState() : this.renderBlockedUsersList()}
 				</div>
 			</div>
 		`;
@@ -181,8 +186,10 @@ export class BlockedUsersPage extends Component {
 				e.preventDefault();
 				const link = (e.target as HTMLElement).getAttribute("data-link");
 				if (link) {
-					window.history.pushState(null, "", link);
-					window.dispatchEvent(new PopStateEvent("popstate"));
+					// 直接pushStateを使わず、navigateToを使用して一貫性を保つ
+					import("../../router").then(({ navigateTo }) => {
+						navigateTo(link);
+					});
 				}
 			});
 		});

@@ -92,6 +92,9 @@ export class MessagesPage extends Component {
 	}
 
 	async onLoad(): Promise<void> {
+		// 重複初期化を防ぐため、既存のリスナーをクリーンアップ
+		this.cleanup();
+
 		await this.loadFriends();
 
 		// データロード後にUIを更新
@@ -194,6 +197,14 @@ export class MessagesPage extends Component {
 		const container = document.querySelector("main");
 		if (container) {
 			container.innerHTML = this.render();
+
+			// リスナーの重複登録を防ぐため、明示的にクリーンアップしてから再設定
+			if (this.clickHandler) {
+				document.removeEventListener("click", this.clickHandler);
+			}
+			if (this.messageSentHandler) {
+				document.removeEventListener("messageSent", this.messageSentHandler);
+			}
 			this.setupEventListeners();
 
 			// Initialize MessageForm if a friend is selected
@@ -209,33 +220,66 @@ export class MessagesPage extends Component {
 	private async handleGameInvite(): Promise<void> {
 		if (!this.selectedFriendId || !this.selectedFriend) return;
 
+		const btn = document.getElementById("game-invite-btn") as HTMLButtonElement;
+		if (!btn) return;
+
+		const originalText = btn.textContent;
+
 		try {
+			// Show loading state
+			btn.textContent = "送信中...";
+			btn.disabled = true;
+			btn.classList.add("bg-gray-500");
+			btn.classList.remove("bg-green-600", "hover:bg-green-700");
+
+			// Ensure WebSocket is connected before sending
+			if (!wsManager.isConnected()) {
+				console.log(
+					"[Messages] WebSocket not connected, attempting to reconnect...",
+				);
+				wsManager.connect();
+				// Wait a bit for connection to establish
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+			}
+
 			// Send game invite via WebSocket
 			wsManager.sendGameInvite(this.selectedFriendId);
 
 			// Show success feedback
-			const btn = document.getElementById(
-				"game-invite-btn",
-			) as HTMLButtonElement;
-			if (btn) {
-				const originalText = btn.textContent;
-				btn.textContent = "✓ Invited!";
-				btn.disabled = true;
-				btn.classList.add("bg-gray-500");
-				btn.classList.remove("bg-green-600", "hover:bg-green-700");
+			btn.textContent = "✓ Invited!";
+			btn.classList.remove("bg-gray-500");
+			btn.classList.add("bg-green-500");
 
-				// Reset button after 3 seconds
-				setTimeout(() => {
-					btn.textContent = originalText;
-					btn.disabled = false;
-					btn.classList.remove("bg-gray-500");
-					btn.classList.add("bg-green-600", "hover:bg-green-700");
-				}, 3000);
-			}
+			new FloatingBanner({
+				message: `${this.selectedFriend.username}にゲーム招待を送信しました`,
+				type: "success",
+			}).show();
+
+			// Reset button after 3 seconds
+			setTimeout(() => {
+				btn.textContent = originalText;
+				btn.disabled = false;
+				btn.classList.remove("bg-green-500");
+				btn.classList.add("bg-green-600", "hover:bg-green-700");
+			}, 3000);
 		} catch (error) {
 			console.error("Failed to send game invite:", error);
+
+			// Reset button immediately on error
+			btn.textContent = originalText;
+			btn.disabled = false;
+			btn.classList.remove("bg-gray-500");
+			btn.classList.add("bg-green-600", "hover:bg-green-700");
+
+			const errorMessage =
+				error instanceof Error
+					? error.message.includes("WebSocket")
+						? "WebSocket接続が切断されています。ページを更新してください。"
+						: "ゲーム招待の送信に失敗しました"
+					: "ゲーム招待の送信に失敗しました";
+
 			new FloatingBanner({
-				message: "ゲーム招待の送信に失敗しました",
+				message: errorMessage,
 				type: "error",
 			}).show();
 		}
@@ -384,10 +428,9 @@ export class MessagesPage extends Component {
 			// Game invite handling is now done globally in main.ts
 		});
 
-		// Cleanup on page unload
-		window.addEventListener("beforeunload", () => {
-			this.cleanupWebSocket();
-		});
+		// Cleanup on page unload (remove existing listener first to prevent duplicates)
+		window.removeEventListener("beforeunload", this.cleanup);
+		window.addEventListener("beforeunload", this.cleanup.bind(this));
 	}
 
 	private cleanupWebSocket(): void {
@@ -397,5 +440,25 @@ export class MessagesPage extends Component {
 		}
 		// Don't disconnect WebSocket as it's managed globally
 		// wsManager.disconnect();
+	}
+
+	private cleanup(): void {
+		console.log("[DEBUG] MessagesPage cleanup - Removing event listeners");
+
+		// Remove document-level event listeners
+		if (this.clickHandler) {
+			document.removeEventListener("click", this.clickHandler);
+			this.clickHandler = null;
+		}
+		if (this.messageSentHandler) {
+			document.removeEventListener("messageSent", this.messageSentHandler);
+			this.messageSentHandler = null;
+		}
+
+		// Cleanup WebSocket subscriptions
+		this.cleanupWebSocket();
+
+		// Remove beforeunload listener (if previously added)
+		window.removeEventListener("beforeunload", this.cleanup);
 	}
 }

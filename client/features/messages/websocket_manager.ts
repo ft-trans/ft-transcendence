@@ -1,5 +1,6 @@
 import type { ClientMessage, ServerMessage } from "@shared/api/chat";
 import { MESSAGE_TYPES } from "@shared/api/chat";
+import { buildWebSocketUrl } from "client/utils/websocket";
 
 type MessageHandler = (message: ServerMessage) => void;
 
@@ -10,13 +11,17 @@ export class WebSocketManager {
 	private maxReconnectAttempts = 5;
 	private reconnectDelay = 1000;
 
+	isConnected(): boolean {
+		return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
+	}
+
 	connect(): void {
 		if (this.ws && this.ws.readyState === WebSocket.OPEN) {
 			return;
 		}
 
 		// Use cookie-based authentication - cookies are automatically sent with WebSocket connections
-		const wsUrl = `${import.meta.env.VITE_WS_URL || "ws://localhost:3000"}/ws/chat`;
+		const wsUrl = buildWebSocketUrl("/ws/chat");
 		console.log("[WS] Attempting to connect to:", wsUrl);
 		this.ws = new WebSocket(wsUrl);
 
@@ -70,7 +75,7 @@ export class WebSocketManager {
 	sendMessage(receiverId: string, content: string): void {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
 			console.error("[WS] WebSocket not connected");
-			return;
+			throw new Error("WebSocket is not connected. Cannot send message.");
 		}
 
 		const message: ClientMessage = {
@@ -81,13 +86,14 @@ export class WebSocketManager {
 			},
 		};
 
+		console.log("[WS] Sending message to:", receiverId);
 		this.ws.send(JSON.stringify(message));
 	}
 
 	sendGameInvite(receiverId: string): void {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
 			console.error("[WS] WebSocket not connected");
-			return;
+			throw new Error("WebSocket is not connected. Cannot send game invite.");
 		}
 
 		const message: ClientMessage = {
@@ -97,6 +103,7 @@ export class WebSocketManager {
 			},
 		};
 
+		console.log("[WS] Sending game invite to:", receiverId);
 		this.ws.send(JSON.stringify(message));
 	}
 

@@ -38,6 +38,10 @@ model User {
   // MatchHistory relations
   wonMatches  MatchHistory[] @relation("Winner")
   lostMatches MatchHistory[] @relation("Loser")
+
+  // Tournament relations
+  organizedTournaments Tournament[] @relation("TournamentOrganizer")
+  tournamentParticipations TournamentParticipant[]
 }
 
 model Friendship {
@@ -47,8 +51,8 @@ model Friendship {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  requester User @relation("Requester", fields: [requesterId], references: [id])
-  receiver  User @relation("Receiver", fields: [receiverId], references: [id])
+  requester User @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  receiver  User @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@id([requesterId, receiverId])
 }
@@ -61,8 +65,8 @@ model DirectMessage {
   isRead     Boolean  @default(false)
   sentAt     DateTime @default(now())
 
-  sender   User @relation("Sender", fields: [senderId], references: [id])
-  receiver User @relation("Receiver", fields: [receiverId], references: [id])
+  sender   User @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
 }
 
 model Match {
@@ -72,8 +76,9 @@ model Match {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  participants MatchParticipant[]
-  history      MatchHistory?
+  participants    MatchParticipant[]
+  history         MatchHistory?
+  tournamentMatch TournamentMatch?
 }
 
 // MatchとUserの多対多を表現する中間テーブル
@@ -81,8 +86,8 @@ model MatchParticipant {
   matchId String
   userId  String
 
-  match Match @relation(fields: [matchId], references: [id])
-  user  User  @relation(fields: [userId], references: [id])
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([matchId, userId])
 }
@@ -96,9 +101,9 @@ model MatchHistory {
   loserScore  Int
   playedAt    DateTime @default(now())
 
-  match  Match  @relation(fields: [matchId], references: [id])
-  winner User @relation("Winner", fields: [winnerId], references: [id])
-  loser  User @relation("Loser", fields: [loserId], references: [id])
+  match  Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  winner User @relation("Winner", fields: [winnerId], references: [id], onDelete: Cascade)
+  loser  User @relation("Loser", fields: [loserId], references: [id], onDelete: Cascade)
 }
 
 model Session {
@@ -109,4 +114,71 @@ model Session {
   createdAt   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Tournament {
+  id              String   @id
+  name            String   @default("")
+  description     String?
+  organizerId     String
+  status          String   @default("registration") // "registration", "in_progress", "completed", "cancelled"
+  maxParticipants Int      @default(5)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organizer    User                    @relation("TournamentOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
+  participants TournamentParticipant[]
+  rounds       TournamentRound[]
+  matches      TournamentMatch[]
+}
+
+model TournamentParticipant {
+  id           String @id
+  tournamentId String
+  userId       String
+  status       String @default("active") // "active", "eliminated", "withdrawn"
+
+  tournament Tournament                    @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user       User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches    TournamentMatchParticipant[]
+
+  @@unique([tournamentId, userId])
+}
+
+model TournamentRound {
+  id           String   @id
+  tournamentId String
+  roundNumber  Int
+  status       String   @default("pending") // "pending", "in_progress", "completed"
+  createdAt    DateTime @default(now())
+
+  tournament Tournament        @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  matches    TournamentMatch[]
+
+  @@unique([tournamentId, roundNumber])
+}
+
+model TournamentMatch {
+  id           String   @id
+  tournamentId String
+  roundId      String
+  matchId      String?  @unique // 既存のMatchテーブルとの関連
+  winnerId     String?  // TournamentParticipantのID
+  status       String   @default("pending") // "pending", "in_progress", "completed"
+  createdAt    DateTime @default(now())
+
+  tournament   Tournament                   @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  round        TournamentRound              @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  match        Match?                       @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  participants TournamentMatchParticipant[]
+}
+
+model TournamentMatchParticipant {
+  matchId       String
+  participantId String
+
+  match       TournamentMatch       @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  participant TournamentParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@id([matchId, participantId])
 }

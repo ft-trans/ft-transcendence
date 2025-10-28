@@ -13,16 +13,19 @@ import {
 } from "client/components";
 import { PongGame } from "client/components/pong_game";
 import { navigateTo } from "client/router";
+import { buildWebSocketUrl } from "client/utils/websocket";
 
 export class MatchesPong extends Component {
-	private readonly pongGame: PongGame;
-
-	constructor() {
-		super();
-		this.pongGame = new PongGame();
-	}
+	private pongGame: PongGame | null = null;
 
 	onLoad(params: RouteParams): void {
+		// URLクエリパラメータからトーナメントIDを取得
+		const urlParams = new URLSearchParams(window.location.search);
+		const tournamentId = urlParams.get("tournamentId");
+
+		// トーナメントIDがあればPongGameに渡す
+		this.pongGame = new PongGame(tournamentId ? { tournamentId } : {});
+
 		const pongCourt = document.getElementById("pong-court");
 		if (pongCourt) {
 			this.pongGame.appendTo(pongCourt);
@@ -32,7 +35,9 @@ export class MatchesPong extends Component {
 		if (!matchId) {
 			throw new Error("Match ID is required");
 		}
-		const socket = new WebSocket(`/ws/pong/matches/${matchId}`);
+
+		const wsUrl = buildWebSocketUrl(`/ws/pong/matches/${matchId}`);
+		const socket = new WebSocket(wsUrl);
 
 		socket.onmessage = (event) => {
 			const state: PongGameStateResponse = JSON.parse(event.data);
@@ -44,7 +49,7 @@ export class MatchesPong extends Component {
 				navigateTo("/matchmaking");
 				return;
 			}
-			this.pongGame.draw(state);
+			this.pongGame?.draw(state);
 		};
 
 		// TODO 画面遷移時にイベントを削除する

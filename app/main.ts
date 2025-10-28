@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { AvatarUploadService } from "@domain/service/avatar_upload_service";
 import { MatchmakingService } from "@domain/service/matchmaking_service";
+import { SessionBasedPresenceService } from "@domain/service/session_based_presence_service";
 import FastifyCookie from "@fastify/cookie";
 import FastifyMultipart from "@fastify/multipart";
 import FastifyRedis from "@fastify/redis";
@@ -13,6 +14,7 @@ import { prisma } from "@infra/database/prisma";
 import { Transaction } from "@infra/database/transaction";
 import { InMemoryChatClientRepository } from "@infra/in_memory/chat_client_repository";
 import { InMemoryMatchmakingClientRepository } from "@infra/in_memory/matchmaking_client_repository";
+import { InMemoryTournamentClientRepository } from "@infra/in_memory/tournament_client_repository";
 import { Repository } from "@infra/repository";
 import { presenceController } from "@presentation/controllers/api/presence_controller";
 import { authController } from "@presentation/controllers/auth_controller";
@@ -21,8 +23,10 @@ import { matchmakingWsController } from "@presentation/controllers/matchmaking_w
 import { pongController } from "@presentation/controllers/pong_controller";
 import { profileController } from "@presentation/controllers/profile_controller";
 import { relationshipController } from "@presentation/controllers/relationship_controller";
+import { tournamentController } from "@presentation/controllers/tournament_controller";
 import { userController } from "@presentation/controllers/user_controller";
 import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
+import { tournamentWsController } from "@presentation/controllers/ws/tournament_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import { errorHandler } from "@presentation/hooks/error_handler";
 import { MESSAGE_TYPES } from "@shared/api/chat";
@@ -50,11 +54,9 @@ import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import { StopPongUsecase } from "@usecase/pong/stop_pong_usecase";
 import { UpdatePongPaddleUsecase } from "@usecase/pong/update_pong_paddle_usecase";
 import {
-	ExtendUserOnlineUsecase,
 	GetOnlineUsersUsecase,
 	GetUsersOnlineStatusUsecase,
 	IsUserOnlineUsecase,
-	SetUserOfflineUsecase,
 	SetUserOnlineUsecase,
 } from "@usecase/presence";
 import { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
@@ -67,6 +69,14 @@ import { RemoveFriendUsecase } from "@usecase/relationship/remove_friend_usecase
 import { RespondToFriendRequestUsecase } from "@usecase/relationship/respond_to_friend_request_usecase";
 import { SendFriendRequestUsecase } from "@usecase/relationship/send_friend_request_usecase";
 import { UnblockUserUsecase } from "@usecase/relationship/unblock_user_usecase";
+import { CompleteMatchUsecase } from "@usecase/tournament/complete_match_usecase";
+import { CreateTournamentUsecase } from "@usecase/tournament/create_tournament_usecase";
+import { GetTournamentDetailUsecase } from "@usecase/tournament/get_tournament_detail_usecase";
+import { GetTournamentsUsecase } from "@usecase/tournament/get_tournaments_usecase";
+import { RegisterTournamentUsecase } from "@usecase/tournament/register_tournament_usecase";
+import { StartTournamentMatchUsecase } from "@usecase/tournament/start_tournament_match_usecase";
+import { StartTournamentUsecase } from "@usecase/tournament/start_tournament_usecase";
+import { UnregisterTournamentUsecase } from "@usecase/tournament/unregister_tournament_usecase";
 import { DeleteUserUsecase } from "@usecase/user/delete_user_usecase";
 import { FindUserByUsernameUsecase } from "@usecase/user/find_user_by_username_usecase";
 import { FindUserUsecase } from "@usecase/user/find_user_usecase";
@@ -190,24 +200,30 @@ const start = async () => {
 
 		await app.register(FastifyRedis, { url: redisUrl });
 
-		// グローバルエラーハンドラを設定
 		app.setErrorHandler(errorHandler);
 
 		const repo = new Repository(prisma, app.redis);
 		const tx = new Transaction(prisma, app.redis);
+
+		const presenceService = new SessionBasedPresenceService(repo);
+
 		const registerUserUsecase = new RegisterUserUsecase(tx);
 		const loginUserUsecase = new LoginUserUsecase(tx);
 		const logoutUserUsecase = new LogoutUserUsecase(tx);
+
 		const authPrehandler = createAuthPrehandler(
 			repo.newSessionRepository(),
 			repo.newUserRepository(),
+			presenceService,
 		);
+
 		await app.register(
 			authController(
 				registerUserUsecase,
 				loginUserUsecase,
 				logoutUserUsecase,
 				authPrehandler,
+				presenceService,
 			),
 			{ prefix: "/api" },
 		);
@@ -224,6 +240,7 @@ const start = async () => {
 		});
 		const matchmakingClientRepository =
 			new InMemoryMatchmakingClientRepository();
+		const tournamentClientRepository = new InMemoryTournamentClientRepository();
 
 		const matchmakingService = new MatchmakingService(
 			tx,
@@ -240,8 +257,8 @@ const start = async () => {
 
 		// プレゼンス機能のユースケース
 		const setUserOnlineUsecase = new SetUserOnlineUsecase(repo);
-		const setUserOfflineUsecase = new SetUserOfflineUsecase(repo);
-		const extendUserOnlineUsecase = new ExtendUserOnlineUsecase(repo);
+		// const setUserOfflineUsecase = new SetUserOfflineUsecase(repo); // 未使用
+		// const extendUserOnlineUsecase = new ExtendUserOnlineUsecase(repo); // 未使用
 		const getOnlineUsersUsecase = new GetOnlineUsersUsecase(repo);
 		const getUsersOnlineStatusUsecase = new GetUsersOnlineStatusUsecase(repo);
 		const isUserOnlineUsecase = new IsUserOnlineUsecase(repo);
@@ -252,6 +269,7 @@ const start = async () => {
 				updateUserUsecase,
 				deleteUserUsecase,
 				uploadAvatarUsecase,
+				// 自動プレゼンス更新を統合した認証プレハンドラーを使用
 				authPrehandler,
 			),
 			{ prefix: "/api" },
@@ -269,7 +287,7 @@ const start = async () => {
 
 		// WebSocketチャットコントローラーを後で登録（WebSocketプラグイン登録後）
 
-		// GET ハンドラー - メッセージ履歴取得
+		// GET ハンドラー - メッセージ履歴取得（自動プレゼンス更新統合）
 		app.get<{ Params: { partnerId: string } }>(
 			"/api/dms/:partnerId",
 			{ preHandler: authPrehandler },
@@ -364,6 +382,12 @@ const start = async () => {
 			{ prefix: "/ws" },
 		);
 
+		// WebSocketトーナメントコントローラーを登録（WebSocketプラグイン登録後）
+		app.register(
+			tournamentWsController(tournamentClientRepository, authPrehandler),
+			{ prefix: "/ws" },
+		);
+
 		const getFriendsUsecase = new GetFriendsUsecase(tx);
 		const getFriendRequestsUsecase = new GetFriendRequestsUsecase(tx);
 		const getSentFriendRequestsUsecase = new GetSentFriendRequestsUsecase(tx);
@@ -413,11 +437,50 @@ const start = async () => {
 		await app.register(
 			presenceController(
 				setUserOnlineUsecase,
-				setUserOfflineUsecase,
-				extendUserOnlineUsecase,
 				getOnlineUsersUsecase,
 				getUsersOnlineStatusUsecase,
 				isUserOnlineUsecase,
+				authPrehandler,
+				presenceService,
+			),
+			{ prefix: "/api" },
+		);
+
+		// トーナメント機能
+		const getTournamentsUsecase = new GetTournamentsUsecase(tx);
+		const getTournamentDetailUsecase = new GetTournamentDetailUsecase(tx);
+		const createTournamentUsecase = new CreateTournamentUsecase(tx);
+		const registerTournamentUsecase = new RegisterTournamentUsecase(
+			tx,
+			tournamentClientRepository,
+		);
+		const unregisterTournamentUsecase = new UnregisterTournamentUsecase(
+			tx,
+			tournamentClientRepository,
+		);
+		const startTournamentUsecase = new StartTournamentUsecase(
+			tx,
+			tournamentClientRepository,
+		);
+		const startTournamentMatchUsecase = new StartTournamentMatchUsecase(
+			tx,
+			tournamentClientRepository,
+		);
+		const completeMatchUsecase = new CompleteMatchUsecase(
+			tx,
+			tournamentClientRepository,
+		);
+
+		await app.register(
+			tournamentController(
+				getTournamentsUsecase,
+				getTournamentDetailUsecase,
+				createTournamentUsecase,
+				registerTournamentUsecase,
+				unregisterTournamentUsecase,
+				startTournamentUsecase,
+				startTournamentMatchUsecase,
+				completeMatchUsecase,
 				authPrehandler,
 			),
 			{ prefix: "/api" },
@@ -450,8 +513,6 @@ const start = async () => {
 				authPrehandler,
 				matchmakingClientRepository,
 				setUserOnlineUsecase,
-				setUserOfflineUsecase,
-				extendUserOnlineUsecase,
 			),
 			{ prefix: "/ws" },
 		);
@@ -481,6 +542,7 @@ const start = async () => {
 		await app.vite.ready();
 		await app.listen({ host: "0.0.0.0", port: 3000 });
 		app.log.info("HTTP server listening on :3000");
+		app.log.info("Enhanced presence management system initialized");
 	} catch (err) {
 		app.log.error(err);
 		process.exit(1);
