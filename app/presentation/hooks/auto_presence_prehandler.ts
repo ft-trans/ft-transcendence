@@ -10,16 +10,13 @@ import type {
  * 自動プレゼンス更新プレハンドラー
  * 認証済みユーザーの通常のAPIリクエストを自動的にheartbeatとして扱い、
  * オンライン状態を延長する
+ *
+ * 注: このミドルウェアはSessionBasedPresenceServiceが利用可能な場合は
+ * そちらに委譲し、利用できない場合のフォールバックとして機能します
  */
 export class AutoPresencePrehandler {
-	// リクエスト間隔制限（秒）- 同じユーザーの頻繁なリクエストを制限
-	private static readonly MIN_UPDATE_INTERVAL = 30;
-
-	// 最後の更新時刻を記録（メモリ内キャッシュ）
-	private static lastUpdateTimes = new Map<string, number>();
-
 	// オンライン状態のTTL（秒）
-	private static readonly ONLINE_TTL = 180; // 3分
+	private static readonly ONLINE_TTL = 300; // 5分
 
 	constructor(private readonly repository: IRepository) {}
 
@@ -40,19 +37,8 @@ export class AutoPresencePrehandler {
 				return done();
 			}
 
-			// 頻繁な更新を防ぐためのレート制限
-			const now = Date.now();
-			const lastUpdate = AutoPresencePrehandler.lastUpdateTimes.get(userId);
-
-			if (
-				lastUpdate &&
-				now - lastUpdate < AutoPresencePrehandler.MIN_UPDATE_INTERVAL * 1000
-			) {
-				// 最小間隔以内の場合は更新をスキップ
-				return done();
-			}
-
 			// プレゼンス更新を非同期実行（リクエストをブロックしない）
+			// セッション管理が統合されているため、ここでは単純に延長のみ実行
 			this.updatePresenceAsync(userId).catch((error) => {
 				// エラーログは記録するが、リクエスト処理は続行
 				console.error(
@@ -60,9 +46,6 @@ export class AutoPresencePrehandler {
 					error,
 				);
 			});
-
-			// 最終更新時刻を記録
-			AutoPresencePrehandler.lastUpdateTimes.set(userId, now);
 
 			done();
 		} catch (error) {
@@ -91,23 +74,5 @@ export class AutoPresencePrehandler {
 	static create(repository: IRepository) {
 		const handler = new AutoPresencePrehandler(repository);
 		return handler.handler;
-	}
-
-	/**
-	 * メモリ内キャッシュのクリーンアップ
-	 * 定期的に呼び出してメモリリークを防ぐ
-	 */
-	static cleanupCache(): void {
-		const now = Date.now();
-		const expireTime = 10 * 60 * 1000; // 10分
-
-		for (const [
-			userId,
-			lastUpdate,
-		] of AutoPresencePrehandler.lastUpdateTimes.entries()) {
-			if (now - lastUpdate > expireTime) {
-				AutoPresencePrehandler.lastUpdateTimes.delete(userId);
-			}
-		}
 	}
 }

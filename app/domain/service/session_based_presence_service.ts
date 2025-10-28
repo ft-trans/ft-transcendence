@@ -18,6 +18,9 @@ export class SessionBasedPresenceService {
 	// アクティブセッションの管理
 	private activeSessions = new Map<string, SessionInfo>();
 
+	// クリーンアップタイマーのID
+	private cleanupIntervalId: NodeJS.Timeout | null = null;
+
 	// オンライン判定の閾値（秒）
 	private static readonly ONLINE_THRESHOLD = 300; // 5分
 
@@ -202,9 +205,20 @@ export class SessionBasedPresenceService {
 	 * 定期的なクリーンアップタイマーを開始
 	 */
 	private startCleanupTimer(): void {
-		setInterval(() => {
+		this.cleanupIntervalId = setInterval(() => {
 			this.cleanupInactiveSessions();
 		}, 60000); // 1分ごと
+	}
+
+	/**
+	 * サービスのクリーンアップ
+	 */
+	destroy(): void {
+		if (this.cleanupIntervalId) {
+			clearInterval(this.cleanupIntervalId);
+			this.cleanupIntervalId = null;
+		}
+		this.activeSessions.clear();
 	}
 
 	/**

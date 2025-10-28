@@ -10,14 +10,7 @@ export const checkAuthStatus = async (): Promise<void> => {
 			await apiClient.get<AuthStatusResponse>("/api/auth/status");
 		if (response?.user) {
 			authStore.setUser(response.user);
-
-			// 認証済みユーザーをオンライン状態に設定
-			try {
-				await apiClient.post("/api/presence/online", {});
-				console.log("[AuthAPI] User set to online on authentication check");
-			} catch (error) {
-				console.error("[AuthAPI] Failed to set user online:", error);
-			}
+			// オンライン状態は認証済みAPIリクエストにより自動的に設定されます
 		} else {
 			authStore.clearUser();
 		}
