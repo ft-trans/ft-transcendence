@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { AvatarUploadService } from "@domain/service/avatar_upload_service";
 import { MatchmakingService } from "@domain/service/matchmaking_service";
+import { SessionBasedPresenceService } from "@domain/service/session_based_presence_service";
 import FastifyCookie from "@fastify/cookie";
 import FastifyMultipart from "@fastify/multipart";
 import FastifyRedis from "@fastify/redis";
@@ -29,7 +30,6 @@ import { tournamentWsController } from "@presentation/controllers/ws/tournament_
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import { AutoPresencePrehandler } from "@presentation/hooks/auto_presence_prehandler";
 import { errorHandler } from "@presentation/hooks/error_handler";
-import { SessionBasedPresenceService } from "@domain/service/session_based_presence_service";
 import { MESSAGE_TYPES } from "@shared/api/chat";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
 import { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
@@ -55,11 +55,9 @@ import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import { StopPongUsecase } from "@usecase/pong/stop_pong_usecase";
 import { UpdatePongPaddleUsecase } from "@usecase/pong/update_pong_paddle_usecase";
 import {
-	ExtendUserOnlineUsecase,
 	GetOnlineUsersUsecase,
 	GetUsersOnlineStatusUsecase,
 	IsUserOnlineUsecase,
-	SetUserOfflineUsecase,
 	SetUserOnlineUsecase,
 } from "@usecase/presence";
 import { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
@@ -149,28 +147,23 @@ const start = async () => {
 
 		await app.register(FastifyRedis, { url: redisUrl });
 
-		// グローバルエラーハンドラを設定
 		app.setErrorHandler(errorHandler);
 
 		const repo = new Repository(prisma, app.redis);
 		const tx = new Transaction(prisma, app.redis);
-		
-		// セッションベースのプレゼンス管理サービスを初期化
+
 		const presenceService = new SessionBasedPresenceService(repo);
-		
+
 		const registerUserUsecase = new RegisterUserUsecase(tx);
 		const loginUserUsecase = new LoginUserUsecase(tx);
 		const logoutUserUsecase = new LogoutUserUsecase(tx);
-		
-		// 認証プレハンドラーにプレゼンス管理を統合
+
 		const authPrehandler = createAuthPrehandler(
 			repo.newSessionRepository(),
 			repo.newUserRepository(),
 			presenceService,
 		);
-		
-		// 自動プレゼンス更新プレハンドラーを作成
-		const autoPresencePrehandler = AutoPresencePrehandler.create(repo);
+
 		await app.register(
 			authController(
 				registerUserUsecase,
@@ -211,8 +204,8 @@ const start = async () => {
 
 		// プレゼンス機能のユースケース
 		const setUserOnlineUsecase = new SetUserOnlineUsecase(repo);
-		const setUserOfflineUsecase = new SetUserOfflineUsecase(repo);
-		const extendUserOnlineUsecase = new ExtendUserOnlineUsecase(repo);
+		// const setUserOfflineUsecase = new SetUserOfflineUsecase(repo); // 未使用
+		// const extendUserOnlineUsecase = new ExtendUserOnlineUsecase(repo); // 未使用
 		const getOnlineUsersUsecase = new GetOnlineUsersUsecase(repo);
 		const getUsersOnlineStatusUsecase = new GetUsersOnlineStatusUsecase(repo);
 		const isUserOnlineUsecase = new IsUserOnlineUsecase(repo);
@@ -388,17 +381,13 @@ const start = async () => {
 			{ prefix: "/api" },
 		);
 
-		// プレゼンス管理API（改善版）
 		await app.register(
 			presenceController(
 				setUserOnlineUsecase,
-				// offline/heartbeat エンドポイントは削除済み
 				getOnlineUsersUsecase,
 				getUsersOnlineStatusUsecase,
 				isUserOnlineUsecase,
-				// 認証のみ（自動プレゼンス更新は既に認証プレハンドラーで処理済み）
 				authPrehandler,
-				// セッションベースのプレゼンス管理を統合
 				presenceService,
 			),
 			{ prefix: "/api" },

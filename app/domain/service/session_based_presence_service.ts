@@ -4,8 +4,8 @@
  * より効率的で信頼性の高いプレゼンス管理を提供
  */
 
-import type { IRepository } from "@domain/repository";
 import type { UserId } from "@domain/model/user";
+import type { IRepository } from "@domain/repository";
 
 export interface SessionInfo {
 	userId: string;
@@ -17,7 +17,7 @@ export interface SessionInfo {
 export class SessionBasedPresenceService {
 	// アクティブセッションの管理
 	private activeSessions = new Map<string, SessionInfo>();
-	
+
 	// オンライン判定の閾値（秒）
 	private static readonly ONLINE_THRESHOLD = 300; // 5分
 
@@ -38,10 +38,10 @@ export class SessionBasedPresenceService {
 		};
 
 		this.activeSessions.set(sessionToken, sessionInfo);
-		
+
 		// オンライン状態を設定
 		await this.setUserOnline(userId);
-		
+
 		console.log(`[SessionPresence] Session started for user ${userId}`);
 	}
 
@@ -50,15 +50,17 @@ export class SessionBasedPresenceService {
 	 */
 	async onSessionEnd(sessionToken: string): Promise<void> {
 		const sessionInfo = this.activeSessions.get(sessionToken);
-		
+
 		if (sessionInfo) {
 			// 同じユーザーの他のアクティブセッションがあるかチェック
-			const hasOtherActiveSessions = Array.from(this.activeSessions.values())
-				.some(session => 
-					session.userId === sessionInfo.userId && 
-					session.sessionToken !== sessionToken && 
-					session.isActive
-				);
+			const hasOtherActiveSessions = Array.from(
+				this.activeSessions.values(),
+			).some(
+				(session) =>
+					session.userId === sessionInfo.userId &&
+					session.sessionToken !== sessionToken &&
+					session.isActive,
+			);
 
 			// 他のアクティブセッションがない場合のみオフラインに
 			if (!hasOtherActiveSessions) {
@@ -66,7 +68,9 @@ export class SessionBasedPresenceService {
 			}
 
 			this.activeSessions.delete(sessionToken);
-			console.log(`[SessionPresence] Session ended for user ${sessionInfo.userId}`);
+			console.log(
+				`[SessionPresence] Session ended for user ${sessionInfo.userId}`,
+			);
 		}
 	}
 
@@ -75,10 +79,10 @@ export class SessionBasedPresenceService {
 	 */
 	async updateSessionActivity(sessionToken: string): Promise<void> {
 		const sessionInfo = this.activeSessions.get(sessionToken);
-		
-		if (sessionInfo && sessionInfo.isActive) {
+
+		if (sessionInfo?.isActive) {
 			sessionInfo.lastActivity = new Date();
-			
+
 			// オンライン状態を延長
 			await this.extendUserOnline(sessionInfo.userId);
 		}
@@ -89,12 +93,12 @@ export class SessionBasedPresenceService {
 	 */
 	async isUserOnlineWithSession(userId: string): Promise<boolean> {
 		// アクティブセッションをチェック
-		const hasActiveSession = Array.from(this.activeSessions.values())
-			.some(session => 
-				session.userId === userId && 
+		const hasActiveSession = Array.from(this.activeSessions.values()).some(
+			(session) =>
+				session.userId === userId &&
 				session.isActive &&
-				this.isRecentActivity(session.lastActivity)
-			);
+				this.isRecentActivity(session.lastActivity),
+		);
 
 		if (hasActiveSession) {
 			return true;
@@ -111,20 +115,20 @@ export class SessionBasedPresenceService {
 	async getOnlineUsersWithSession(): Promise<string[]> {
 		// アクティブセッションから取得
 		const sessionBasedOnlineUsers = Array.from(this.activeSessions.values())
-			.filter(session => 
-				session.isActive && 
-				this.isRecentActivity(session.lastActivity)
+			.filter(
+				(session) =>
+					session.isActive && this.isRecentActivity(session.lastActivity),
 			)
-			.map(session => session.userId);
+			.map((session) => session.userId);
 
 		// Redis上のオンライン状態からも取得
 		const presenceRepo = this.repository.newUserPresenceRepository();
 		const presenceBasedOnlineUsers = await presenceRepo.getOnlineUsers();
-		
+
 		// 重複を除去してマージ
 		const allOnlineUsers = new Set([
 			...sessionBasedOnlineUsers,
-			...presenceBasedOnlineUsers.map(id => id.value)
+			...presenceBasedOnlineUsers.map((id) => id.value),
 		]);
 
 		return Array.from(allOnlineUsers);
@@ -135,13 +139,15 @@ export class SessionBasedPresenceService {
 	 */
 	getSessionStats() {
 		const totalSessions = this.activeSessions.size;
-		const activeSessions = Array.from(this.activeSessions.values())
-			.filter(session => session.isActive).length;
-		const recentActiveSessions = Array.from(this.activeSessions.values())
-			.filter(session => 
-				session.isActive && 
-				this.isRecentActivity(session.lastActivity)
-			).length;
+		const activeSessions = Array.from(this.activeSessions.values()).filter(
+			(session) => session.isActive,
+		).length;
+		const recentActiveSessions = Array.from(
+			this.activeSessions.values(),
+		).filter(
+			(session) =>
+				session.isActive && this.isRecentActivity(session.lastActivity),
+		).length;
 
 		return {
 			totalSessions,
@@ -155,7 +161,10 @@ export class SessionBasedPresenceService {
 			const presenceRepo = this.repository.newUserPresenceRepository();
 			await presenceRepo.setUserOnline({ value: userId } as UserId);
 		} catch (error) {
-			console.error(`[SessionPresence] Failed to set user ${userId} online:`, error);
+			console.error(
+				`[SessionPresence] Failed to set user ${userId} online:`,
+				error,
+			);
 		}
 	}
 
@@ -164,7 +173,10 @@ export class SessionBasedPresenceService {
 			const presenceRepo = this.repository.newUserPresenceRepository();
 			await presenceRepo.setUserOffline({ value: userId } as UserId);
 		} catch (error) {
-			console.error(`[SessionPresence] Failed to set user ${userId} offline:`, error);
+			console.error(
+				`[SessionPresence] Failed to set user ${userId} offline:`,
+				error,
+			);
 		}
 	}
 
@@ -173,7 +185,10 @@ export class SessionBasedPresenceService {
 			const presenceRepo = this.repository.newUserPresenceRepository();
 			await presenceRepo.extendUserOnline({ value: userId } as UserId);
 		} catch (error) {
-			console.error(`[SessionPresence] Failed to extend user ${userId} online:`, error);
+			console.error(
+				`[SessionPresence] Failed to extend user ${userId} online:`,
+				error,
+			);
 		}
 	}
 
@@ -200,8 +215,9 @@ export class SessionBasedPresenceService {
 		const sessionsToRemove: string[] = [];
 
 		for (const [sessionToken, sessionInfo] of this.activeSessions.entries()) {
-			const diffSeconds = (now.getTime() - sessionInfo.lastActivity.getTime()) / 1000;
-			
+			const diffSeconds =
+				(now.getTime() - sessionInfo.lastActivity.getTime()) / 1000;
+
 			// 閾値を超えた場合は非アクティブとしてマーク
 			if (diffSeconds > SessionBasedPresenceService.ONLINE_THRESHOLD) {
 				sessionInfo.isActive = false;
@@ -218,25 +234,32 @@ export class SessionBasedPresenceService {
 			const sessionInfo = this.activeSessions.get(sessionToken);
 			if (sessionInfo) {
 				// 他のアクティブセッションがない場合はオフラインに設定
-				const hasOtherActiveSessions = Array.from(this.activeSessions.values())
-					.some(session => 
-						session.userId === sessionInfo.userId && 
-						session.sessionToken !== sessionToken && 
-						session.isActive
-					);
+				const hasOtherActiveSessions = Array.from(
+					this.activeSessions.values(),
+				).some(
+					(session) =>
+						session.userId === sessionInfo.userId &&
+						session.sessionToken !== sessionToken &&
+						session.isActive,
+				);
 
 				if (!hasOtherActiveSessions) {
-					this.setUserOffline(sessionInfo.userId).catch(error => {
-						console.error(`[SessionPresence] Cleanup offline error for user ${sessionInfo.userId}:`, error);
+					this.setUserOffline(sessionInfo.userId).catch((error) => {
+						console.error(
+							`[SessionPresence] Cleanup offline error for user ${sessionInfo.userId}:`,
+							error,
+						);
 					});
 				}
 			}
-			
+
 			this.activeSessions.delete(sessionToken);
 		}
 
 		if (sessionsToRemove.length > 0) {
-			console.log(`[SessionPresence] Cleaned up ${sessionsToRemove.length} inactive sessions`);
+			console.log(
+				`[SessionPresence] Cleaned up ${sessionsToRemove.length} inactive sessions`,
+			);
 		}
 	}
 }

@@ -223,10 +223,12 @@ export class MessagesPage extends Component {
 
 			// Ensure WebSocket is connected before sending
 			if (!wsManager.isConnected()) {
-				console.log("[Messages] WebSocket not connected, attempting to reconnect...");
+				console.log(
+					"[Messages] WebSocket not connected, attempting to reconnect...",
+				);
 				wsManager.connect();
 				// Wait a bit for connection to establish
-				await new Promise(resolve => setTimeout(resolve, 1000));
+				await new Promise((resolve) => setTimeout(resolve, 1000));
 			}
 
 			// Send game invite via WebSocket
@@ -251,18 +253,19 @@ export class MessagesPage extends Component {
 			}, 3000);
 		} catch (error) {
 			console.error("Failed to send game invite:", error);
-			
+
 			// Reset button immediately on error
 			btn.textContent = originalText;
 			btn.disabled = false;
 			btn.classList.remove("bg-gray-500");
 			btn.classList.add("bg-green-600", "hover:bg-green-700");
 
-			const errorMessage = error instanceof Error 
-				? error.message.includes("WebSocket") 
-					? "WebSocket接続が切断されています。ページを更新してください。"
-					: "ゲーム招待の送信に失敗しました"
-				: "ゲーム招待の送信に失敗しました";
+			const errorMessage =
+				error instanceof Error
+					? error.message.includes("WebSocket")
+						? "WebSocket接続が切断されています。ページを更新してください。"
+						: "ゲーム招待の送信に失敗しました"
+					: "ゲーム招待の送信に失敗しました";
 
 			new FloatingBanner({
 				message: errorMessage,

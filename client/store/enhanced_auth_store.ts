@@ -26,7 +26,7 @@ class EnhancedAuthStore {
 
 	private listeners: Set<(state: AuthState) => void> = new Set();
 	private apiClient = new ApiClient();
-	
+
 	// Page Visibility状態管理
 	private isPageVisible = true;
 	private visibilityChangeHandler = this.handleVisibilityChange.bind(this);
@@ -40,12 +40,15 @@ class EnhancedAuthStore {
 	constructor() {
 		if (typeof document !== "undefined") {
 			// Page Visibility API の監視
-			document.addEventListener("visibilitychange", this.visibilityChangeHandler);
-			
+			document.addEventListener(
+				"visibilitychange",
+				this.visibilityChangeHandler,
+			);
+
 			// ページ離脱時のイベント
 			window.addEventListener("beforeunload", this.beforeUnloadHandler);
 			window.addEventListener("pagehide", this.pageHideHandler);
-			
+
 			// 初期表示状態を設定
 			this.isPageVisible = !document.hidden;
 		}
@@ -71,7 +74,7 @@ class EnhancedAuthStore {
 			loading: false,
 		};
 		this.notify();
-		
+
 		// ログイン時にオンライン状態を設定（サーバー側で自動処理）
 		this.startStatusSync();
 	}
@@ -105,7 +108,7 @@ class EnhancedAuthStore {
 			if (this.isPageVisible && !wasVisible) {
 				// ページが表示されたとき：通常のAPIリクエストで状態が自動更新される
 				console.log("[EnhancedAuthStore] Page became visible");
-				
+
 				// 念のため状態同期APIを呼び出し
 				this.syncStatusIfNeeded();
 			} else if (!this.isPageVisible && wasVisible) {
@@ -149,7 +152,10 @@ class EnhancedAuthStore {
 				console.log(`[EnhancedAuthStore] Offline beacon sent: ${success}`);
 			}
 		} catch (error) {
-			console.error("[EnhancedAuthStore] Failed to send offline beacon:", error);
+			console.error(
+				"[EnhancedAuthStore] Failed to send offline beacon:",
+				error,
+			);
 		}
 	}
 
@@ -175,7 +181,7 @@ class EnhancedAuthStore {
 	 */
 	private startStatusSync(): void {
 		this.stopStatusSync();
-		
+
 		// 5分ごとに軽量なAPIリクエストで状態確認（フォールバック）
 		this.statusSyncInterval = window.setInterval(() => {
 			if (this.isPageVisible) {
@@ -199,7 +205,10 @@ class EnhancedAuthStore {
 	 */
 	destroy(): void {
 		if (typeof document !== "undefined") {
-			document.removeEventListener("visibilitychange", this.visibilityChangeHandler);
+			document.removeEventListener(
+				"visibilitychange",
+				this.visibilityChangeHandler,
+			);
 			window.removeEventListener("beforeunload", this.beforeUnloadHandler);
 			window.removeEventListener("pagehide", this.pageHideHandler);
 		}

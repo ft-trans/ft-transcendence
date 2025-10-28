@@ -10,7 +10,7 @@ export const checkAuthStatus = async (): Promise<void> => {
 			await apiClient.get<AuthStatusResponse>("/api/auth/status");
 		if (response?.user) {
 			authStore.setUser(response.user);
-			
+
 			// 認証済みユーザーをオンライン状態に設定
 			try {
 				await apiClient.post("/api/presence/online", {});

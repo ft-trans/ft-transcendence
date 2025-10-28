@@ -1,4 +1,5 @@
 import { ErrBadRequest } from "@domain/error";
+import type { SessionBasedPresenceService } from "@domain/service/session_based_presence_service";
 import type { AuthPrehandler } from "@presentation/hooks/auth_prehandler";
 import {
 	type AuthStatusResponse,
@@ -12,8 +13,6 @@ import type { LogoutUserUsecase } from "@usecase/auth/logout_user_usecase";
 import type { RegisterUserUsecase } from "@usecase/auth/register_user_usecase";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import z from "zod";
-
-import type { SessionBasedPresenceService } from "@domain/service/session_based_presence_service";
 
 export const authController = (
 	registerUserUsecase: RegisterUserUsecase,
@@ -85,7 +84,10 @@ const onRegisterUser = (usecase: RegisterUserUsecase) => {
 	};
 };
 
-const onLoginUser = (usecase: LoginUserUsecase, presenceService?: SessionBasedPresenceService) => {
+const onLoginUser = (
+	usecase: LoginUserUsecase,
+	presenceService?: SessionBasedPresenceService,
+) => {
 	return async (
 		req: FastifyRequest<{ Body: LoginUserRequest }>,
 		reply: FastifyReply,
@@ -123,7 +125,10 @@ const onLoginUser = (usecase: LoginUserUsecase, presenceService?: SessionBasedPr
 					output.sessionToken,
 				);
 			} catch (error) {
-				console.error("[AuthController] Failed to start session presence:", error);
+				console.error(
+					"[AuthController] Failed to start session presence:",
+					error,
+				);
 			}
 		}
 
@@ -136,7 +141,10 @@ const onLoginUser = (usecase: LoginUserUsecase, presenceService?: SessionBasedPr
 	};
 };
 
-const onLogoutUser = (usecase: LogoutUserUsecase, presenceService?: SessionBasedPresenceService) => {
+const onLogoutUser = (
+	usecase: LogoutUserUsecase,
+	presenceService?: SessionBasedPresenceService,
+) => {
 	return async (req: FastifyRequest, reply: FastifyReply) => {
 		const sessionToken = req.unsignCookie(req.cookies[cookieName] || "").value;
 		if (!sessionToken) {
@@ -150,7 +158,10 @@ const onLogoutUser = (usecase: LogoutUserUsecase, presenceService?: SessionBased
 			try {
 				await presenceService.onSessionEnd(sessionToken);
 			} catch (error) {
-				console.error("[AuthController] Failed to end session presence:", error);
+				console.error(
+					"[AuthController] Failed to end session presence:",
+					error,
+				);
 			}
 		}
 

@@ -37,10 +37,12 @@ export const matchmakingWsController = (
 					connection.on("close", async () => {
 						console.log(`[WS Matchmaking] Client disconnected: ${userId}`);
 						clientRepository.remove(userId);
-						
+
 						// 新しいシステムでは明示的なオフライン化は不要
 						// セッション管理で自動的にハンドリングされる
-						console.log(`[WS Matchmaking] User ${userId} presence will auto-expire`);
+						console.log(
+							`[WS Matchmaking] User ${userId} presence will auto-expire`,
+						);
 					});
 				}
 			},

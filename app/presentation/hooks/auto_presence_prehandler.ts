@@ -1,6 +1,10 @@
-import type { IRepository } from "@domain/repository";
 import { UserId } from "@domain/model/user";
-import type { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from "fastify";
+import type { IRepository } from "@domain/repository";
+import type {
+	FastifyReply,
+	FastifyRequest,
+	HookHandlerDoneFunction,
+} from "fastify";
 
 /**
  * 自動プレゼンス更新プレハンドラー
@@ -10,10 +14,10 @@ import type { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from "fast
 export class AutoPresencePrehandler {
 	// リクエスト間隔制限（秒）- 同じユーザーの頻繁なリクエストを制限
 	private static readonly MIN_UPDATE_INTERVAL = 30;
-	
+
 	// 最後の更新時刻を記録（メモリ内キャッシュ）
 	private static lastUpdateTimes = new Map<string, number>();
-	
+
 	// オンライン状態のTTL（秒）
 	private static readonly ONLINE_TTL = 180; // 3分
 
@@ -25,12 +29,12 @@ export class AutoPresencePrehandler {
 	 */
 	handler = async (
 		request: FastifyRequest,
-		reply: FastifyReply,
+		_reply: FastifyReply,
 		done: HookHandlerDoneFunction,
 	): Promise<void> => {
 		try {
 			const userId = request.authenticatedUser?.id;
-			
+
 			// 認証されていない場合はスキップ
 			if (!userId) {
 				return done();
@@ -39,16 +43,22 @@ export class AutoPresencePrehandler {
 			// 頻繁な更新を防ぐためのレート制限
 			const now = Date.now();
 			const lastUpdate = AutoPresencePrehandler.lastUpdateTimes.get(userId);
-			
-			if (lastUpdate && (now - lastUpdate) < (AutoPresencePrehandler.MIN_UPDATE_INTERVAL * 1000)) {
+
+			if (
+				lastUpdate &&
+				now - lastUpdate < AutoPresencePrehandler.MIN_UPDATE_INTERVAL * 1000
+			) {
 				// 最小間隔以内の場合は更新をスキップ
 				return done();
 			}
 
 			// プレゼンス更新を非同期実行（リクエストをブロックしない）
-			this.updatePresenceAsync(userId).catch(error => {
+			this.updatePresenceAsync(userId).catch((error) => {
 				// エラーログは記録するが、リクエスト処理は続行
-				console.error(`[AutoPresence] Failed to update presence for user ${userId}:`, error);
+				console.error(
+					`[AutoPresence] Failed to update presence for user ${userId}:`,
+					error,
+				);
 			});
 
 			// 最終更新時刻を記録
@@ -66,17 +76,13 @@ export class AutoPresencePrehandler {
 	 * プレゼンス状態を非同期で更新
 	 */
 	private async updatePresenceAsync(userId: string): Promise<void> {
-		try {
-			const presenceRepo = this.repository.newUserPresenceRepository();
-			await presenceRepo.extendUserOnline(
-				new UserId(userId),
-				AutoPresencePrehandler.ONLINE_TTL
-			);
-			
-			console.debug(`[AutoPresence] Extended online status for user ${userId}`);
-		} catch (error) {
-			throw error;
-		}
+		const presenceRepo = this.repository.newUserPresenceRepository();
+		await presenceRepo.extendUserOnline(
+			new UserId(userId),
+			AutoPresencePrehandler.ONLINE_TTL,
+		);
+
+		console.debug(`[AutoPresence] Extended online status for user ${userId}`);
 	}
 
 	/**
@@ -94,8 +100,11 @@ export class AutoPresencePrehandler {
 	static cleanupCache(): void {
 		const now = Date.now();
 		const expireTime = 10 * 60 * 1000; // 10分
-		
-		for (const [userId, lastUpdate] of AutoPresencePrehandler.lastUpdateTimes.entries()) {
+
+		for (const [
+			userId,
+			lastUpdate,
+		] of AutoPresencePrehandler.lastUpdateTimes.entries()) {
 			if (now - lastUpdate > expireTime) {
 				AutoPresencePrehandler.lastUpdateTimes.delete(userId);
 			}

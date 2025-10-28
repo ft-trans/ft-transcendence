@@ -69,7 +69,10 @@ export const createAuthPrehandler = (
 				await presenceService.updateSessionActivity(token);
 			} catch (error) {
 				// プレゼンス更新エラーは認証処理をブロックしない
-				console.error("[AuthPrehandler] Failed to update session activity:", error);
+				console.error(
+					"[AuthPrehandler] Failed to update session activity:",
+					error,
+				);
 			}
 		}
 	};

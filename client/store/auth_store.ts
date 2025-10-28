@@ -26,7 +26,7 @@ class AuthStore {
 
 	private listeners: Set<(state: AuthState) => void> = new Set();
 	private apiClient = new ApiClient();
-	
+
 	// Page Visibility状態管理
 	private isPageVisible = true;
 	private visibilityChangeHandler = this.handleVisibilityChange.bind(this);
@@ -40,12 +40,15 @@ class AuthStore {
 	constructor() {
 		if (typeof document !== "undefined") {
 			// Page Visibility API の監視
-			document.addEventListener("visibilitychange", this.visibilityChangeHandler);
-			
+			document.addEventListener(
+				"visibilitychange",
+				this.visibilityChangeHandler,
+			);
+
 			// ページ離脱時のイベント
 			window.addEventListener("beforeunload", this.beforeUnloadHandler);
 			window.addEventListener("pagehide", this.pageHideHandler);
-			
+
 			// 初期表示状態を設定
 			this.isPageVisible = !document.hidden;
 		}
@@ -71,7 +74,7 @@ class AuthStore {
 			loading: false,
 		};
 		this.notify();
-		
+
 		// ログイン時にオンライン状態を設定（サーバー側で自動処理）
 		this.startStatusSync();
 	}
@@ -104,14 +107,18 @@ class AuthStore {
 		if (this.state.isAuthenticated) {
 			if (this.isPageVisible && !wasVisible) {
 				// ページが表示されたとき：通常のAPIリクエストで状態が自動更新される
-				console.log("[AuthStore] Page became visible - status will be updated by next API request");
-				
+				console.log(
+					"[AuthStore] Page became visible - status will be updated by next API request",
+				);
+
 				// 念のため状態同期APIを呼び出し
 				this.syncStatusIfNeeded();
 			} else if (!this.isPageVisible && wasVisible) {
 				// ページが非表示になったとき：特別な処理は不要
 				// サーバー側のTTLが自然に期限切れになる
-				console.log("[AuthStore] Page became hidden - status will naturally expire");
+				console.log(
+					"[AuthStore] Page became hidden - status will naturally expire",
+				);
 			}
 		}
 	}
@@ -161,7 +168,7 @@ class AuthStore {
 	 */
 	private startStatusSync(): void {
 		this.stopStatusSync();
-		
+
 		// 5分ごとに軽量なAPIリクエストで状態確認（フォールバック）
 		// 通常のAPIリクエストが頻繁に発生する場合、これは実質的に動作しない
 		this.statusSyncInterval = window.setInterval(() => {
@@ -186,7 +193,10 @@ class AuthStore {
 	 */
 	destroy(): void {
 		if (typeof document !== "undefined") {
-			document.removeEventListener("visibilitychange", this.visibilityChangeHandler);
+			document.removeEventListener(
+				"visibilitychange",
+				this.visibilityChangeHandler,
+			);
 			window.removeEventListener("beforeunload", this.beforeUnloadHandler);
 			window.removeEventListener("pagehide", this.pageHideHandler);
 		}
