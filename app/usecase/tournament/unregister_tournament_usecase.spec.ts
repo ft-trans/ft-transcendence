@@ -4,9 +4,17 @@ import {
 	TournamentId,
 	TournamentName,
 	TournamentParticipant,
+	User,
+	UserAvatar,
+	UserEmail,
 	UserId,
+	Username,
+	UserStatusValue,
 } from "@domain/model";
-import type { ITournamentRepository } from "@domain/repository";
+import type {
+	ITournamentRepository,
+	IUserRepository,
+} from "@domain/repository";
 import { createMockRepository } from "@usecase/test_helper";
 import type { ITransaction } from "@usecase/transaction";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -37,10 +45,22 @@ describe("UnregisterTournamentUsecase", () => {
 		);
 		mockTournamentRepo.deleteParticipant.mockResolvedValue(participant);
 
+		const mockUser = User.reconstruct(
+			userId,
+			new UserEmail("test@example.com"),
+			new Username("testuser"),
+			new UserAvatar("/avatars/default.png"),
+			new UserStatusValue("online"),
+		);
+
+		const mockUserRepo = mock<IUserRepository>();
+		mockUserRepo.findById.mockResolvedValue(mockUser);
+
 		const mockTx = mock<ITransaction>();
 		mockTx.exec.mockImplementation(async (callback) => {
 			const repo = createMockRepository({
 				newTournamentRepository: () => mockTournamentRepo,
+				newUserRepository: () => mockUserRepo,
 			});
 			return callback(repo);
 		});

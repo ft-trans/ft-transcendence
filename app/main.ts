@@ -400,7 +400,10 @@ const start = async () => {
 			tx,
 			tournamentClientRepository,
 		);
-		const unregisterTournamentUsecase = new UnregisterTournamentUsecase(tx);
+		const unregisterTournamentUsecase = new UnregisterTournamentUsecase(
+			tx,
+			tournamentClientRepository,
+		);
 		const startTournamentUsecase = new StartTournamentUsecase(
 			tx,
 			tournamentClientRepository,
