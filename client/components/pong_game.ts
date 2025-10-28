@@ -99,7 +99,7 @@ export class PongGame {
 			this.context.textAlign = "center";
 			this.context.fillStyle = "#fff";
 			this.context.fillText(
-				"クリックして対戦履歴を表示する",
+				"クリックして戻る",
 				this.canvas.width / 2,
 				this.canvas.height / 2 + 60,
 			);

@@ -111,7 +111,7 @@ export class MaxParticipants extends ValueObject<number, "MaxParticipants"> {
 		if (value !== MaxParticipants.FIXED_PARTICIPANTS) {
 			throw new ErrBadRequest({
 				details: {
-					maxParticipants: `最大参加者数は${MaxParticipants.FIXED_PARTICIPANTS}人固定です`,
+					maxParticipants: `最大参加者数は${MaxParticipants.FIXED_PARTICIPANTS - 1}人固定です`,
 				},
 			});
 		}
