@@ -28,7 +28,6 @@ import { userController } from "@presentation/controllers/user_controller";
 import { chatController as webSocketChatController } from "@presentation/controllers/ws/chat_controller";
 import { tournamentWsController } from "@presentation/controllers/ws/tournament_controller";
 import { createAuthPrehandler } from "@presentation/hooks/auth_prehandler";
-import { AutoPresencePrehandler } from "@presentation/hooks/auto_presence_prehandler";
 import { errorHandler } from "@presentation/hooks/error_handler";
 import { MESSAGE_TYPES } from "@shared/api/chat";
 import { LoginUserUsecase } from "@usecase/auth/login_user_usecase";
