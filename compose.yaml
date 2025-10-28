@@ -7,6 +7,7 @@ services:
       args:
         DATABASE_URL: ${DATABASE_URL}
         VITE_API_URL: ${VITE_API_URL}
+        VITE_WS_URL: ${VITE_WS_URL}
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}

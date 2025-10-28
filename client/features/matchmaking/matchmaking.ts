@@ -7,6 +7,7 @@ import {
 	SectionTitle,
 } from "client/components";
 import { navigateTo } from "client/router";
+import { buildWebSocketUrl } from "client/utils/websocket";
 
 type MatchParticipant = { id: string };
 type MatchResult = {
@@ -218,8 +219,7 @@ export class Matchmaking extends Component {
 	private setupWebSocket(): void {
 		if (this.ws) return;
 
-		const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
-		const wsUrl = `${wsProtocol}//${location.host}/ws/matchmaking`;
+		const wsUrl = buildWebSocketUrl("/ws/matchmaking");
 
 		console.log(`[WS] Connecting to ${wsUrl}`);
 		this.ws = new WebSocket(wsUrl);
