@@ -79,7 +79,7 @@ export class TournamentDetail extends Component {
 		this.ws = new WebSocket(wsUrl);
 
 		this.ws.addEventListener("open", () => {
-			console.log("Tournament WebSocket connected");
+			// console.log("Tournament WebSocket connected");
 			// トーナメントを購読
 			this.ws?.send(
 				JSON.stringify({
@@ -92,26 +92,26 @@ export class TournamentDetail extends Component {
 		this.ws.addEventListener("message", (event) => {
 			try {
 				const message = JSON.parse(event.data);
-				console.log("Tournament WebSocket message:", message);
+				// console.log("Tournament WebSocket message:", message);
 
 				// 試合開始イベントの場合、参加者なら自動遷移
 				if (message.type === "tournament.match_started") {
 					const currentUserId = authStore.getState().user?.id;
-					console.log("Current user ID:", currentUserId);
-					console.log(
-						"Match participants:",
-						message.payload.match.participants,
-					);
+					// console.log("Current user ID:", currentUserId);
+					// console.log(
+					// 	"Match participants:",
+					// 	message.payload.match.participants,
+					// );
 
 					const isParticipant = message.payload.match.participants.some(
 						(p: { userId: string }) => p.userId === currentUserId,
 					);
 
-					console.log("Is participant?", isParticipant);
+					// console.log("Is participant?", isParticipant);
 
 					if (isParticipant) {
 						// 参加者の場合、試合画面に遷移（トーナメントIDをクエリパラメータで渡す）
-						console.log("Navigating to match:", message.payload.matchId);
+						// console.log("Navigating to match:", message.payload.matchId);
 						navigateTo(
 							`/pong/matches/${message.payload.matchId}?tournamentId=${this.tournamentId}`,
 						);
@@ -127,7 +127,7 @@ export class TournamentDetail extends Component {
 		});
 
 		this.ws.addEventListener("close", () => {
-			console.log("Tournament WebSocket disconnected");
+			// console.log("Tournament WebSocket disconnected");
 		});
 
 		this.ws.addEventListener("error", (error) => {
@@ -246,11 +246,11 @@ export class TournamentDetail extends Component {
 		if (!this.tournamentId) return;
 
 		try {
-			console.log("Starting tournament match:", matchId);
+			// console.log("Starting tournament match:", matchId);
 			await startTournamentMatch(this.tournamentId, matchId);
-			console.log(
-				"Tournament match started successfully, waiting for WebSocket event...",
-			);
+			// console.log(
+			// 	"Tournament match started successfully, waiting for WebSocket event...",
+			// );
 			// WebSocketイベントで画面遷移するため、ここでは遷移しない
 			new FloatingBanner({
 				message: "試合を開始しました。まもなく試合画面に移動します...",
@@ -330,7 +330,7 @@ export class TournamentDetail extends Component {
           </div>
 
           <div class="flex gap-6 text-sm text-gray-600">
-            <span>参加者: ${tournament.participantCount}/${tournament.maxParticipants}</span>
+            <span>参加者: ${tournament.participantCount}/${tournament.maxParticipants - 1}</span>
             <span>作成日: ${new Date(tournament.createdAt).toLocaleDateString()}</span>
           </div>
 
@@ -415,7 +415,7 @@ export class TournamentDetail extends Component {
           >
             トーナメントを開始
           </button>
-          ${!canStart ? '<span class="text-sm text-gray-600">※4人以上(主催者を含む)必要です</span>' : ""}
+          ${!canStart ? '<span class="text-sm text-gray-600">※4人必要です</span>' : ""}
         `;
 			}
 

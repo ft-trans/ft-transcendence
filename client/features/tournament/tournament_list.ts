@@ -181,7 +181,7 @@ export class TournamentList extends Component {
           </div>
 
           <div class="flex justify-between text-sm text-gray-600">
-            <span>参加者: ${tournament.participantCount}/${tournament.maxParticipants}</span>
+            <span>参加者: ${tournament.participantCount}/${tournament.maxParticipants - 1}</span>
             <span>${new Date(tournament.createdAt).toLocaleDateString()}</span>
           </div>
         </div>
