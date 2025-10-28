@@ -92,6 +92,9 @@ export class MessagesPage extends Component {
 	}
 
 	async onLoad(): Promise<void> {
+		// 重複初期化を防ぐため、既存のリスナーをクリーンアップ
+		this.cleanup();
+
 		await this.loadFriends();
 
 		// データロード後にUIを更新
@@ -194,6 +197,14 @@ export class MessagesPage extends Component {
 		const container = document.querySelector("main");
 		if (container) {
 			container.innerHTML = this.render();
+
+			// リスナーの重複登録を防ぐため、明示的にクリーンアップしてから再設定
+			if (this.clickHandler) {
+				document.removeEventListener("click", this.clickHandler);
+			}
+			if (this.messageSentHandler) {
+				document.removeEventListener("messageSent", this.messageSentHandler);
+			}
 			this.setupEventListeners();
 
 			// Initialize MessageForm if a friend is selected
@@ -417,10 +428,9 @@ export class MessagesPage extends Component {
 			// Game invite handling is now done globally in main.ts
 		});
 
-		// Cleanup on page unload
-		window.addEventListener("beforeunload", () => {
-			this.cleanupWebSocket();
-		});
+		// Cleanup on page unload (remove existing listener first to prevent duplicates)
+		window.removeEventListener("beforeunload", this.cleanup);
+		window.addEventListener("beforeunload", this.cleanup.bind(this));
 	}
 
 	private cleanupWebSocket(): void {
@@ -430,5 +440,25 @@ export class MessagesPage extends Component {
 		}
 		// Don't disconnect WebSocket as it's managed globally
 		// wsManager.disconnect();
+	}
+
+	private cleanup(): void {
+		console.log("[DEBUG] MessagesPage cleanup - Removing event listeners");
+
+		// Remove document-level event listeners
+		if (this.clickHandler) {
+			document.removeEventListener("click", this.clickHandler);
+			this.clickHandler = null;
+		}
+		if (this.messageSentHandler) {
+			document.removeEventListener("messageSent", this.messageSentHandler);
+			this.messageSentHandler = null;
+		}
+
+		// Cleanup WebSocket subscriptions
+		this.cleanupWebSocket();
+
+		// Remove beforeunload listener (if previously added)
+		window.removeEventListener("beforeunload", this.cleanup);
 	}
 }
