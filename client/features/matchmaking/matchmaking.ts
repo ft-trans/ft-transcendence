@@ -219,7 +219,7 @@ export class Matchmaking extends Component {
 	private setupWebSocket(): void {
 		if (this.ws) return;
 
-		const wsUrl = buildWebSocketUrl('/ws/matchmaking');
+		const wsUrl = buildWebSocketUrl("/ws/matchmaking");
 
 		console.log(`[WS] Connecting to ${wsUrl}`);
 		this.ws = new WebSocket(wsUrl);

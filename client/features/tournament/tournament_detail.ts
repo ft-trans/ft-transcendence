@@ -74,7 +74,7 @@ export class TournamentDetail extends Component {
 	private connectWebSocket(): void {
 		if (!this.tournamentId) return;
 
-		const wsUrl = buildWebSocketUrl('/ws/tournaments');
+		const wsUrl = buildWebSocketUrl("/ws/tournaments");
 		this.ws = new WebSocket(wsUrl);
 
 		this.ws.addEventListener("open", () => {

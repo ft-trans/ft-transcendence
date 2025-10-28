@@ -35,7 +35,7 @@ export class MatchesPong extends Component {
 		if (!matchId) {
 			throw new Error("Match ID is required");
 		}
-		
+
 		const wsUrl = buildWebSocketUrl(`/ws/pong/matches/${matchId}`);
 		const socket = new WebSocket(wsUrl);
 

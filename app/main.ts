@@ -286,7 +286,9 @@ const start = async () => {
 						},
 					});
 				} else {
-					console.log(`[Chat] Receiver ${sentMessage.receiver.id} not connected via WebSocket`);
+					console.log(
+						`[Chat] Receiver ${sentMessage.receiver.id} not connected via WebSocket`,
+					);
 				}
 
 				const responseBody = {

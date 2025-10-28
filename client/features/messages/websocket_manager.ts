@@ -17,7 +17,7 @@ export class WebSocketManager {
 		}
 
 		// Use cookie-based authentication - cookies are automatically sent with WebSocket connections
-		const wsUrl = buildWebSocketUrl('/ws/chat');
+		const wsUrl = buildWebSocketUrl("/ws/chat");
 		console.log("[WS] Attempting to connect to:", wsUrl);
 		this.ws = new WebSocket(wsUrl);
 

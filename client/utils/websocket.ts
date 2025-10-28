@@ -10,11 +10,11 @@
  */
 export function buildWebSocketUrl(path: string): string {
 	const baseWsUrl = import.meta.env.VITE_WS_URL;
-	
+
 	if (baseWsUrl) {
 		return `${baseWsUrl}${path}`;
 	}
-	
+
 	// Fallback to location-based URL
 	const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
 	return `${wsProtocol}//${location.host}${path}`;
