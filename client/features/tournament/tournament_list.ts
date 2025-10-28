@@ -1,6 +1,6 @@
 import type { TournamentDTO, TournamentStatus } from "@shared/api/tournament";
 import { getTournaments } from "client/api/tournament";
-import { Component, SectionTitle } from "client/components";
+import { Avatar, Component, SectionTitle } from "client/components";
 import { authStore } from "client/store/auth_store";
 
 type ViewState =
@@ -172,11 +172,11 @@ export class TournamentList extends Component {
 					}
 
           <div class="flex items-center gap-2 mb-4">
-            <img
-              src="${tournament.organizer.avatar}"
-              alt="${tournament.organizer.username}"
-              class="w-6 h-6 rounded-full"
-            />
+		  	${new Avatar({
+					src: tournament.organizer.avatar,
+					size: 6,
+					alt: tournament.organizer.username,
+				}).render()}
             <span class="text-sm text-gray-600">主催: ${tournament.organizer.username}</span>
           </div>
 

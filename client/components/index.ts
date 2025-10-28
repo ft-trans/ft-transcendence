@@ -1,3 +1,4 @@
+export * from "./avatar";
 export * from "./component";
 export * from "./floating_banner";
 export * from "./form";
