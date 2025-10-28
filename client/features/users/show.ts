@@ -16,6 +16,7 @@ import { authStore } from "client/store/auth_store";
 export class UserProfile extends Component {
 	private userId: string | undefined = undefined;
 	private apiClient = new ApiClient();
+	private clickHandler: ((event: Event) => void) | null = null;
 
 	async onLoad(params: RouteParams): Promise<void> {
 		try {
@@ -265,7 +266,12 @@ export class UserProfile extends Component {
 	}
 
 	private setupEventListeners(): void {
-		document.addEventListener("click", async (event) => {
+		// Remove existing listener to prevent duplicates
+		if (this.clickHandler) {
+			document.removeEventListener("click", this.clickHandler);
+		}
+
+		this.clickHandler = async (event) => {
 			const target = event.target as HTMLElement;
 
 			if (target.id === "block-user-btn") {
@@ -274,7 +280,9 @@ export class UserProfile extends Component {
 					await this.handleBlockUser(userId);
 				}
 			}
-		});
+		};
+
+		document.addEventListener("click", this.clickHandler);
 	}
 
 	private async handleBlockUser(userId: string): Promise<void> {
@@ -367,6 +375,17 @@ export class UserProfile extends Component {
 					button.textContent = "🚫 ブロック";
 				}
 			}
+		}
+	}
+
+	// コンポーネントのクリーンアップ
+	destroy(): void {
+		console.log("[DEBUG] UserProfile cleanup - Removing event listeners");
+
+		// Remove document-level event listeners
+		if (this.clickHandler) {
+			document.removeEventListener("click", this.clickHandler);
+			this.clickHandler = null;
 		}
 	}
 }

@@ -978,4 +978,22 @@ export class FriendsPage extends Component {
 			this.initializeChildComponents();
 		}
 	}
+
+	// コンポーネントのクリーンアップ
+	destroy(): void {
+		console.log("[DEBUG] FriendsPage cleanup - Removing event listeners");
+
+		// Remove document-level event listeners
+		if (this.clickHandler) {
+			document.removeEventListener("click", this.clickHandler);
+			this.clickHandler = null;
+		}
+		if (this.friendRequestHandler) {
+			document.removeEventListener(
+				"friendRequestUpdate",
+				this.friendRequestHandler,
+			);
+			this.friendRequestHandler = null;
+		}
+	}
 }

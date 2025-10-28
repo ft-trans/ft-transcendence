@@ -1,5 +1,5 @@
 import { pathToRegexp } from "path-to-regexp";
-import { createRouteParams, Navigation } from "./components";
+import { type Component, createRouteParams, Navigation } from "./components";
 import { Login, Register } from "./features/auth";
 import { BlockedUsersPage } from "./features/blocked_users/blocked_users_page";
 import { FriendsPage } from "./features/friends";
@@ -16,6 +16,7 @@ import {
 import { UserProfile } from "./features/users/show";
 
 let isRouting = false;
+let currentComponent: Component | null = null;
 
 export const router = async () => {
 	// 無限ループ防止：既にルーティング中の場合は処理をスキップ
@@ -97,6 +98,18 @@ export const router = async () => {
 			const match = regexp.exec(path);
 
 			if (match) {
+				// 前のコンポーネントのクリーンアップ
+				if (
+					currentComponent &&
+					typeof currentComponent.destroy === "function"
+				) {
+					console.log("[DEBUG] Router: Cleaning up previous component");
+					currentComponent.destroy();
+				}
+
+				// 新しいコンポーネントをセット
+				currentComponent = route.component;
+
 				container.innerHTML = route.component.render();
 				if (keys.length === 0) {
 					await route.component.onLoad();
