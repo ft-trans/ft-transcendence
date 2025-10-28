@@ -161,6 +161,7 @@ export type CompleteTournamentMatchResponse = {
 export const TOURNAMENT_WS_EVENTS = {
 	// サーバー -> クライアント
 	PARTICIPANT_JOINED: "tournament.participant_joined",
+	PARTICIPANT_LEFT: "tournament.participant_left",
 	TOURNAMENT_STARTED: "tournament.started",
 	MATCH_STARTED: "tournament.match_started",
 	MATCH_COMPLETED: "tournament.match_completed",
@@ -174,6 +175,17 @@ export const TOURNAMENT_WS_EVENTS = {
  */
 export type ParticipantJoinedEvent = {
 	type: typeof TOURNAMENT_WS_EVENTS.PARTICIPANT_JOINED;
+	payload: {
+		tournamentId: string;
+		participant: TournamentParticipantDTO;
+	};
+};
+
+/**
+ * 参加者削除イベント
+ */
+export type ParticipantLeftEvent = {
+	type: typeof TOURNAMENT_WS_EVENTS.PARTICIPANT_LEFT;
 	payload: {
 		tournamentId: string;
 		participant: TournamentParticipantDTO;
@@ -259,6 +271,7 @@ export type TournamentErrorEvent = {
  */
 export type TournamentServerMessage =
 	| ParticipantJoinedEvent
+	| ParticipantLeftEvent
 	| TournamentStartedEvent
 	| MatchStartedEvent
 	| MatchCompletedEvent
