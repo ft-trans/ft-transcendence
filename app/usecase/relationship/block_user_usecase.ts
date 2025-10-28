@@ -38,6 +38,9 @@ export class BlockUserUsecase {
 			);
 
 			if (friendship) {
+				if (friendship.isBlocked()) {
+					return;
+				}
 				// requester/receiverの向きがblocker/blockedと一致しない場合は既存を削除して新規作成
 				if (
 					!friendship.requesterId.equals(blockerId) ||
@@ -45,9 +48,6 @@ export class BlockUserUsecase {
 				) {
 					await friendshipRepository.delete(friendship);
 					friendship = Friendship.create(blocker, blocked);
-				}
-				if (friendship.isBlocked()) {
-					return;
 				}
 				friendship.block();
 			} else {
