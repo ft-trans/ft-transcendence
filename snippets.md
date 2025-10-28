@@ -196,3 +196,22 @@ GET all-logs/_search?size=1
     "url.original","user_agent.original"
   ]
 }
+
+## ILMの動作確認
+
+### ILMポリシーとテンプレートの存在確認
+GET _ilm/policy/app-logs-policy
+GET _ilm/policy/nginx-logs-policy
+GET _index_template/app-logs-single-node
+GET _index_template/logstash-single-node
+
+### 現在のインデックスに ILM 設定が実際についてるか（重要）
+GET app-logs/_settings?filter_path=**.index.lifecycle,**.number_of_replicas
+GET logstash-*/_settings?filter_path=**.index.lifecycle,**.number_of_replicas
+
+### ILM の進行状況（今どのフェーズにいるか、人間読みで）
+GET app-logs/_ilm/explain?human
+GET logstash-2025.10.28/_ilm/explain?human
+
+### ILM エンジン自体の状態
+GET _ilm/status
