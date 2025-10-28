@@ -1,12 +1,7 @@
 FROM nginx:1.29 AS production
 
-# 証明書作成用スクリプト
-COPY --chmod=755 deploy/nginx/scripts/generate_certs.sh /home/generate_certs.sh
-
 RUN set -x \
-  && rm -f /etc/nginx/conf.d/default.conf \
-  && /home/generate_certs.sh \
-  && rm -f /home/generate_certs.sh
+  && rm -f /etc/nginx/conf.d/default.conf
 
 RUN rm -f /var/log/nginx/access.log /var/log/nginx/error.log \
  && touch /var/log/nginx/access.log /var/log/nginx/error.log \

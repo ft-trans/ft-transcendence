@@ -1,14 +1,15 @@
 #!/bin/bash
 
 # 証明書ディレクトリを作成
-CERT_DIR="/etc/nginx/certs"
+CERT_DIR="secrets/certs"
 mkdir -p $CERT_DIR
 
-# 証明書が既に存在する場合はスキップ
-if [ -f "$CERT_DIR/server.crt" ] && [ -f "$CERT_DIR/server.key" ]; then
-    echo "SSL certificates already exist. Skipping generation."
-    exit 0
-fi
+# CA秘密鍵を生成
+openssl genrsa -out $CERT_DIR/ca.key 2048
+# CA自己署名証明書を生成
+openssl req -x509 -new -nodes -key $CERT_DIR/ca.key \
+    -sha256 -days 365 -out $CERT_DIR/ca.crt \
+    -subj "/C=JP/ST=Tokyo/L=Shinjuku/O=42Tokyo/OU=Student/CN=localhost/emailAddress=syagi@student.42tokyo.jp"
 
 echo "Generating SSL certificates..."
 
@@ -43,6 +44,9 @@ openssl req -new -key $CERT_DIR/server.key -out $CERT_DIR/server.csr -config $CE
 
 # 自己署名証明書を生成（有効期限365日）
 openssl x509 -req -days 365 \
+    -CA $CERT_DIR/ca.crt \
+    -CAkey $CERT_DIR/ca.key \
+    -CAcreateserial \
     -in $CERT_DIR/server.csr \
     -signkey $CERT_DIR/server.key \
     -out $CERT_DIR/server.crt \

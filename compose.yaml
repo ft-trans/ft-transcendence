@@ -147,7 +147,7 @@ services:
       - certs:/usr/share/elasticsearch/config/certs:ro
       - es-secrets:/run/es-secrets:ro
       - elasticsearch-data:/usr/share/elasticsearch/data
-    mem_limit: "1g" 
+    mem_limit: "1g"
     ulimits: {}
     networks: [elk_net]
     depends_on:
@@ -158,7 +158,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
- 
+
   kibana:
     build:
       context: ./deploy/elk/kibana
@@ -239,7 +239,7 @@ services:
       - es-secrets:/work/es-secrets
       - kb-secrets:/work/kb-secrets
     networks: [elk_net]
-  
+
   setup-elasticsearch:
     build:
       context: ./deploy/elk/setup-elasticsearch
@@ -259,7 +259,7 @@ services:
       - certs:/usr/share/elasticsearch/config/certs:ro
     networks: [elk_net]
     depends_on:
-      elasticsearch: 
+      elasticsearch:
         condition: service_healthy
 
   setup-kibana:
@@ -277,7 +277,7 @@ services:
       - certs:/certs:ro
     networks: [elk_net]
     depends_on:
-      elasticsearch: 
+      elasticsearch:
         condition: service_healthy
       kibana:
         condition: service_healthy
@@ -298,6 +298,10 @@ volumes:
   kb-secrets:
 
 secrets:
+  nginx_cert:
+    file: ./secrets/certs/server.crt
+  nginx_key:
+    file: ./secrets/certs/server.key
   grafana_admin_password:
     file: ./secrets/grafana_admin_password.txt
   app_cookie_secret:

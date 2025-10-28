@@ -61,6 +61,10 @@ docker.build:
 docker.clean:
 	docker compose -f $(COMPOSE_YML) down --rmi all -v
 
+.PHONY: gen_certs
+gen_certs:
+	./deploy/nginx/scripts/generate_certs.sh
+
 .PHONY: clean
 clean:
 	rm -rf dist
