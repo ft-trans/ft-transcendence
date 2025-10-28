@@ -13,6 +13,7 @@ import {
 	unregisterTournament,
 } from "client/api/tournament";
 import {
+	Avatar,
 	Component,
 	FloatingBanner,
 	type RouteParams,
@@ -313,11 +314,11 @@ export class TournamentDetail extends Component {
           <div class="flex justify-between items-start mb-4">
             <div>
               <div class="flex items-center gap-3 mb-2">
-                <img
-                  src="${tournament.organizer.avatar}"
-                  alt="${tournament.organizer.username}"
-                  class="w-8 h-8 rounded-full"
-                />
+			    ${new Avatar({
+						src: tournament.organizer.avatar,
+						size: 8,
+						alt: tournament.organizer.username,
+					}).render()}
                 <span class="text-gray-600">主催: ${tournament.organizer.username}</span>
               </div>
               ${tournament.description ? `<p class="text-gray-700 mt-2">${tournament.description}</p>` : ""}
@@ -377,11 +378,12 @@ export class TournamentDetail extends Component {
         </div>
         <h2 class="text-3xl font-bold text-yellow-800 mb-4">トーナメント優勝</h2>
         <div class="flex items-center justify-center gap-4 mb-2">
-          <img
-            src="${winner.user.avatar}"
-            alt="${winner.user.username}"
-            class="w-20 h-20 rounded-full border-4 border-yellow-400"
-          />
+			${new Avatar({
+				src: winner.user.avatar,
+				size: 20,
+				alt: winner.user.username,
+				extraClass: "border-4 border-yellow-400",
+			}).render()}
           <span class="text-2xl font-bold text-yellow-900">${winner.user.username}</span>
         </div>
         <p class="text-yellow-700 mt-4">おめでとうございます！</p>
@@ -456,11 +458,11 @@ export class TournamentDetail extends Component {
 					.map(
 						(p) => `
           <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <img
-              src="${p.user.avatar}"
-              alt="${p.user.username}"
-              class="w-10 h-10 rounded-full"
-            />
+		  	${new Avatar({
+					src: p.user.avatar,
+					size: 10,
+					alt: p.user.username,
+				}).render()}
             <div class="flex-1">
               <p class="font-medium">${p.user.username}</p>
               <p class="text-xs text-gray-500">${this.getParticipantStatusLabel(p.status)}</p>
@@ -586,11 +588,11 @@ export class TournamentDetail extends Component {
 
 		return `
       <div class="flex items-center gap-3 p-2 rounded ${isWinner ? "bg-yellow-100" : ""}">
-        <img
-          src="${participant.user.avatar}"
-          alt="${participant.user.username}"
-          class="w-10 h-10 rounded-full"
-        />
+        ${new Avatar({
+					src: participant.user.avatar,
+					size: 10,
+					alt: participant.user.username,
+				}).render()}
         <span class="flex-1 text-base font-medium ${isWinner ? "text-yellow-700" : ""}">${participant.user.username}</span>
         ${isWinner ? '<span class="text-yellow-500 text-xl">★</span>' : ""}
       </div>
