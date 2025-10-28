@@ -1,0 +1,4 @@
+ARG STACK_VERSION=9.1.5
+FROM docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+
+COPY config/elasticsearch.yml /usr/share/elasticsearch/config/elasticsearch.yml

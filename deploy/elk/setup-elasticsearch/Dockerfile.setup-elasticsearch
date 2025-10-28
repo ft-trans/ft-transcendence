@@ -1,0 +1,9 @@
+ARG STACK_VERSION=9.1.5
+FROM docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+
+USER root
+
+COPY setup-elasticsearch.sh /usr/local/bin/setup-elasticsearch.sh
+RUN chmod +x /usr/local/bin/setup-elasticsearch.sh
+
+ENTRYPOINT ["/usr/local/bin/setup-elasticsearch.sh"]

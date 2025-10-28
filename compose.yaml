@@ -11,19 +11,30 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
+      NODE_ENV: production
+      ELASTIC_CA: /app/certs/ca/ca.crt
+      ELASTIC_URL: ${ELASTIC_URL}
+      ELASTIC_USER: ${ELASTIC_USER}
     secrets:
       - app_cookie_secret
     networks:
       - transcendence_net
+      - elk_net
     # TODO 提出前に削除, metrics確認用
     ports:
       - "9464:9464"
     depends_on:
+      setup-elasticsearch:
+        condition: service_completed_successfully
+      elasticsearch:
+        condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
       - prisma:/app/dist/prisma
       - avatars:/app/dist/client/avatars
+      - certs:/app/certs:ro
+      - app-secrets:/run/app-secrets:ro
     # TODO 提出前にコメントアウトを外す
     # restart: always
     healthcheck:
@@ -39,6 +50,8 @@ services:
       target: production
     ports:
       - "4443:443"
+    volumes:
+      - nginx-logs:/var/log/nginx
     networks:
       - transcendence_net
     depends_on:
@@ -54,8 +67,8 @@ services:
   redis:
     image: redis:8.0.2
     # TODO 提出前にports削除
-    ports:
-      - "6379:6379"
+    # ports:
+    #  - "6379:6379"
     volumes:
       - redis:/data
     networks:
@@ -117,18 +130,189 @@ services:
     networks:
       - transcendence_net
 
+  elasticsearch:
+    build:
+      context: ./deploy/elk/elasticsearch
+      dockerfile: Dockerfile.elasticsearch
+      args:
+        STACK_VERSION: ${STACK_VERSION}
+    container_name: elasticsearch
+    environment:
+      ELASTIC_PASSWORD_FILE: "/run/es-secrets/elasticsearch_password"
+      node.store.allow_mmap: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - 127.0.0.1:${ELASTIC_PORT}:9200
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs:ro
+      - es-secrets:/run/es-secrets:ro
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    mem_limit: "1g" 
+    ulimits: {}
+    networks: [elk_net]
+    depends_on:
+      setup-certs:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS --cacert config/certs/ca/ca.crt -I https://localhost:9200 | grep -q ' 401 '"]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+ 
+  kibana:
+    build:
+      context: ./deploy/elk/kibana
+      dockerfile: Dockerfile.kibana
+      args:
+        STACK_VERSION: ${STACK_VERSION}
+    container_name: kibana
+    environment:
+      ELASTIC_URL: ${ELASTIC_URL}
+      KIBANA_USER: ${KIBANA_USER}
+      NODE_OPTIONS: "--max-old-space-size=512"
+    ports:
+      - "127.0.0.1:${KIBANA_PORT}:5601"
+    volumes:
+      - certs:/usr/share/kibana/config/certs:ro
+      - kb-secrets:/run/kb-secrets:ro
+      - kibana-data:/usr/share/kibana/data
+    mem_limit: "1g"
+    networks: [elk_net]
+    depends_on:
+      setup-elasticsearch:
+        condition: service_completed_successfully
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL","curl -fsS --cacert config/certs/ca/ca.crt https://localhost:5601/api/status | grep -q '\"level\":\"available\"'"]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+
+  logstash:
+    build:
+      context: ./deploy/elk/logstash
+      dockerfile: Dockerfile.logstash
+      args:
+        STACK_VERSION: ${STACK_VERSION}
+    container_name: logstash
+    environment:
+      ELASTIC_URL: ${ELASTIC_URL}
+      ELASTIC_USER: ${ELASTIC_USER}
+      LS_JAVA_OPTS: "-Xms256m -Xmx256m"
+    volumes:
+      - certs:/usr/share/logstash/config/certs:ro
+      - es-secrets:/run/es-secrets:ro
+      - nginx-logs:/usr/share/logstash/nginx:ro
+      - logstash-data:/usr/share/logstash/data
+    mem_limit: "1g"
+    depends_on:
+      setup-elasticsearch:
+        condition: service_completed_successfully
+      elasticsearch:
+        condition: service_healthy
+    networks: [elk_net]
+    healthcheck:
+      test: ["CMD-SHELL","curl -fsS http://localhost:9600/_node/pipelines | grep -q '\"pipelines\"'"]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+
+  setup-certs:
+    build:
+      context: ./deploy/elk/setup-certs
+      dockerfile: Dockerfile.setup-certs
+      args:
+        STACK_VERSION: ${STACK_VERSION}
+    container_name: setup-certs
+    restart: "no"
+    user: "0"
+    secrets:
+      - elasticsearch_password
+      - kibana_password
+      - kbn_security_key
+      - kbn_eso_key
+      - kbn_reporting_key
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs
+      - app-secrets:/work/app-secrets
+      - es-secrets:/work/es-secrets
+      - kb-secrets:/work/kb-secrets
+    networks: [elk_net]
+  
+  setup-elasticsearch:
+    build:
+      context: ./deploy/elk/setup-elasticsearch
+      dockerfile: Dockerfile.setup-elasticsearch
+      args:
+        STACK_VERSION: ${STACK_VERSION}
+    container_name: setup-elasticsearch
+    restart: "no"
+    environment:
+      ELASTIC_URL: ${ELASTIC_URL}
+      ELASTIC_USER: ${ELASTIC_USER}
+      KIBANA_USER: ${KIBANA_USER}
+    secrets:
+      - elasticsearch_password
+      - kibana_password
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs:ro
+    networks: [elk_net]
+    depends_on:
+      elasticsearch: 
+        condition: service_healthy
+
+  setup-kibana:
+    build:
+      context: ./deploy/elk/setup-kibana
+      dockerfile: Dockerfile.setup-kibana
+    container_name: setup-kibana
+    restart: "no"
+    environment:
+      ELASTIC_USER: ${ELASTIC_USER}
+      KIBANA_URL: ${KIBANA_URL}
+    secrets:
+      - elasticsearch_password
+    volumes:
+      - certs:/certs:ro
+    networks: [elk_net]
+    depends_on:
+      elasticsearch: 
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+
 volumes:
   redis:
   prisma:
   avatars:
   prometheus-data:
   grafana-data:
+  certs:
+  elasticsearch-data:
+  logstash-data:
+  kibana-data:
+  nginx-logs:
+  app-secrets:
+  es-secrets:
+  kb-secrets:
 
 secrets:
   grafana_admin_password:
     file: ./secrets/grafana_admin_password.txt
   app_cookie_secret:
     file: ./secrets/app_cookie_secret.txt
+  elasticsearch_password:
+    file: ./secrets/elasticsearch_password.txt
+  kibana_password:
+    file: ./secrets/kibana_password.txt
+  kbn_security_key:
+    file: ./secrets/kbn_security_key.txt
+  kbn_eso_key:
+    file: ./secrets/kbn_eso_key.txt
+  kbn_reporting_key:
+    file: ./secrets/kbn_reporting_key.txt
 
 networks:
   transcendence_net:
+  elk_net:

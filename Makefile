@@ -28,12 +28,12 @@ db.studio:
 
 .PHONY: db.seed
 db.seed:
-	sqlite3 transcendence_dev.sqlite3 < prisma/seed_test_data_fixed.sql
+	sqlite3 prisma/transcendence_dev.sqlite3 < prisma/seed_test_data_fixed.sql
 
 .PHONY: db.reset
 db.reset:
 	pnpm prisma migrate reset --force
-	sqlite3 transcendence_dev.sqlite3 < prisma/seed_test_data_fixed.sql
+	sqlite3 prisma/transcendence_dev.sqlite3 < prisma/seed_test_data_fixed.sql
 
 .PHONY: run
 run:
@@ -64,3 +64,23 @@ docker.clean:
 .PHONY: clean
 clean:
 	rm -rf dist
+
+.PHONY: secrets.generate
+secrets.generate:
+	@mkdir -p secrets
+	@[ -f secrets/elasticsearch_password.txt ] || (umask 077 && openssl rand -base64 8 | tr -d '\r\n' > secrets/elasticsearch_password.txt)
+	@[ -f secrets/kibana_password.txt ]        || (umask 077 && openssl rand -base64 8 | tr -d '\r\n' > secrets/kibana_password.txt)
+	@[ -f secrets/grafana_admin_password.txt ] || (umask 077 && openssl rand -base64 8 | tr -d '\r\n' > secrets/grafana_admin_password.txt)
+	@[ -f secrets/kbn_eso_key.txt ]       || (umask 077 && openssl rand -base64 32 | tr -d '\r\n' > secrets/kbn_eso_key.txt)
+	@[ -f secrets/kbn_reporting_key.txt ] || (umask 077 && openssl rand -base64 32 | tr -d '\r\n' > secrets/kbn_reporting_key.txt)
+	@[ -f secrets/kbn_security_key.txt ]  || (umask 077 && openssl rand -base64 32 | tr -d '\r\n' > secrets/kbn_security_key.txt)
+	@echo "local secrets generated"
+
+.PHONY: secrets.check
+secrets.check:
+	@test -s secrets/elasticsearch_password.txt
+	@test -s secrets/kibana_password.txt
+	@test -s secrets/kbn_eso_key.txt
+	@test -s secrets/kbn_reporting_key.txt
+	@test -s secrets/kbn_security_key.txt
+	@echo "secrets.check passed"

@@ -1,0 +1,33 @@
+server.name: kibana
+server.host: "0.0.0.0"
+server.publicBaseUrl: https://localhost:5601
+
+# Kibana TLS
+server.ssl.enabled: true
+server.ssl.certificate: config/certs/kibana/kibana.crt
+server.ssl.key: config/certs/kibana/kibana.key
+xpack.security.secureCookies: true
+
+# Elasticsearch Connection
+elasticsearch.hosts: ["${ELASTIC_URL}"]
+elasticsearch.username: ${KIBANA_USER}
+elasticsearch.password: ${KIBANA_PASSWORD}
+elasticsearch.ssl.certificateAuthorities: ["config/certs/ca/ca.crt"]
+
+# Encryption
+xpack.security.encryptionKey: ${KBN_SECURITY_KEY}
+xpack.encryptedSavedObjects.encryptionKey: ${KBN_ENCRYPTED_SAVED_OBJECTS_KEY}
+xpack.reporting.encryptionKey: ${KBN_REPORTING_KEY}
+
+# Other
+server.shutdownTimeout: "5s"
+telemetry.enabled: false
+xpack.fleet.enabled: false
+# xpack.securitySolution.telemetry.enabled: false
+server.securityResponseHeaders.strictTransportSecurity: "max-age=31536000"
+server.securityResponseHeaders.disableEmbedding: true
+server.securityResponseHeaders.referrerPolicy: "no-referrer"
+server.securityResponseHeaders.xContentTypeOptions: "nosniff"
+# csp.strict: true 
+
+# https://www.elastic.co/docs/deploy-manage/security/using-kibana-with-security
