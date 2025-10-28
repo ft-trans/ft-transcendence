@@ -38,6 +38,7 @@ export class MessagesPage extends Component {
 	private wsUnsubscribe: (() => void) | null = null;
 	private clickHandler: ((event: Event) => void) | null = null;
 	private messageSentHandler: (() => void) | null = null;
+	private isDestroyed: boolean = false;
 	render(): string {
 		return `
       <div>
@@ -94,6 +95,7 @@ export class MessagesPage extends Component {
 	async onLoad(): Promise<void> {
 		// 重複初期化を防ぐため、既存のリスナーをクリーンアップ
 		this.cleanup();
+		this.isDestroyed = false;
 
 		await this.loadFriends();
 
@@ -141,6 +143,14 @@ export class MessagesPage extends Component {
 	}
 
 	private setupEventListeners(): void {
+		// コンポーネントが破棄されている場合は何もしない
+		if (this.isDestroyed) {
+			console.log(
+				"[DEBUG] MessagesPage is destroyed, skipping event listener setup",
+			);
+			return;
+		}
+
 		// Remove existing event listeners to prevent duplicates
 		if (this.clickHandler) {
 			document.removeEventListener("click", this.clickHandler);
@@ -151,6 +161,12 @@ export class MessagesPage extends Component {
 
 		// Friend selection event
 		this.clickHandler = (event) => {
+			// コンポーネントが破棄されている場合は何もしない
+			if (this.isDestroyed) {
+				console.log("[DEBUG] MessagesPage is destroyed, ignoring click event");
+				return;
+			}
+
 			const target = event.target as HTMLElement;
 			const friendItem = target.closest("[data-friend-id]");
 			if (friendItem) {
@@ -175,6 +191,14 @@ export class MessagesPage extends Component {
 
 		// Message send event - Reload messages from server to get fresh data
 		this.messageSentHandler = () => {
+			// コンポーネントが破棄されている場合は何もしない
+			if (this.isDestroyed) {
+				console.log(
+					"[DEBUG] MessagesPage is destroyed, ignoring messageSent event",
+				);
+				return;
+			}
+
 			// Instead of manually adding the message, reload from server to get accurate data
 			if (this.selectedFriendId) {
 				this.loadMessages(this.selectedFriendId).then(() => {
@@ -286,12 +310,27 @@ export class MessagesPage extends Component {
 	}
 
 	private async handleBlockUser(): Promise<void> {
+		// コンポーネントが破棄されている場合は何もしない
+		if (this.isDestroyed) {
+			console.log(
+				"[DEBUG] MessagesPage is destroyed, ignoring block user action",
+			);
+			return;
+		}
+
 		if (!this.selectedFriendId || !this.selectedFriend) return;
 
 		const button = document.getElementById(
 			"block-user-btn",
 		) as HTMLButtonElement;
-		const isBlocked = button.textContent?.includes("解除");
+
+		// ボタンが既に無効化されている場合は何もしない（重複実行防止）
+		if (button?.disabled) {
+			console.log("[DEBUG] Block button is disabled, ignoring action");
+			return;
+		}
+
+		const isBlocked = button?.textContent?.includes("解除");
 		const friendName = this.selectedFriend.username;
 
 		if (isBlocked) {
@@ -309,6 +348,12 @@ export class MessagesPage extends Component {
 			try {
 				await new ApiClient().delete(`/api/blocks/${this.selectedFriendId}`);
 
+				// コンポーネントが破棄された後は何もしない
+				if (this.isDestroyed) {
+					console.log("[DEBUG] Component destroyed during unblock operation");
+					return;
+				}
+
 				new FloatingBanner({
 					message: `${friendName}のブロックを解除しました`,
 					type: "success",
@@ -323,10 +368,14 @@ export class MessagesPage extends Component {
 				}
 			} catch (error) {
 				console.error("Failed to unblock user:", error);
-				new FloatingBanner({
-					message: "ブロック解除に失敗しました",
-					type: "error",
-				}).show();
+
+				// コンポーネントが破棄された後はエラー表示を行わない
+				if (!this.isDestroyed) {
+					new FloatingBanner({
+						message: "ブロック解除に失敗しました",
+						type: "error",
+					}).show();
+				}
 
 				// Restore blocked state on error
 				if (button) {
@@ -351,6 +400,12 @@ export class MessagesPage extends Component {
 					blockedId: this.selectedFriendId,
 				});
 
+				// コンポーネントが破棄された後は何もしない
+				if (this.isDestroyed) {
+					console.log("[DEBUG] Component destroyed during block operation");
+					return;
+				}
+
 				new FloatingBanner({
 					message: `${friendName}をブロックしました`,
 					type: "success",
@@ -365,10 +420,14 @@ export class MessagesPage extends Component {
 				}
 			} catch (error) {
 				console.error("Failed to block user:", error);
-				new FloatingBanner({
-					message: "ユーザーのブロックに失敗しました",
-					type: "error",
-				}).show();
+
+				// コンポーネントが破棄された後はエラー表示を行わない
+				if (!this.isDestroyed) {
+					new FloatingBanner({
+						message: "ユーザーのブロックに失敗しました",
+						type: "error",
+					}).show();
+				}
 
 				// Re-enable button on error
 				if (button) {
@@ -445,6 +504,9 @@ export class MessagesPage extends Component {
 	private cleanup(): void {
 		console.log("[DEBUG] MessagesPage cleanup - Removing event listeners");
 
+		// コンポーネントを破棄済みとしてマーク
+		this.isDestroyed = true;
+
 		// Remove document-level event listeners
 		if (this.clickHandler) {
 			document.removeEventListener("click", this.clickHandler);
@@ -460,5 +522,11 @@ export class MessagesPage extends Component {
 
 		// Remove beforeunload listener (if previously added)
 		window.removeEventListener("beforeunload", this.cleanup);
+	}
+
+	// 外部からコンポーネントを破棄する際に使用する公開メソッド
+	destroy(): void {
+		console.log("[DEBUG] MessagesPage destroy called");
+		this.cleanup();
 	}
 }

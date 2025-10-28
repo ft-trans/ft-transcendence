@@ -238,4 +238,11 @@ export class BlockedUsersPage extends Component {
 			button.textContent = originalText;
 		}
 	}
+
+	// コンポーネントのクリーンアップ
+	destroy(): void {
+		console.log("[DEBUG] BlockedUsersPage cleanup - Removing event listeners");
+		// この Component には明示的なグローバルイベントリスナーはないが、
+		// 将来的に追加された場合のためにここでクリーンアップを行う
+	}
 }

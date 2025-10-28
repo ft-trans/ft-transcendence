@@ -19,4 +19,9 @@ export abstract class Component {
 	abstract render(): string;
 
 	onLoad(_params?: RouteParams): void {}
+
+	// コンポーネントのクリーンアップを行うメソッド（サブクラスでオーバーライド可能）
+	destroy(): void {
+		// デフォルトでは何もしない
+	}
 }
