@@ -20,6 +20,7 @@ import {
 } from "client/components";
 import { navigateTo } from "client/router";
 import { authStore } from "client/store/auth_store";
+import { buildWebSocketUrl } from "client/utils/websocket";
 
 type ViewState =
 	| { phase: "loading" }
@@ -73,7 +74,7 @@ export class TournamentDetail extends Component {
 	private connectWebSocket(): void {
 		if (!this.tournamentId) return;
 
-		const wsUrl = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws/tournaments`;
+		const wsUrl = buildWebSocketUrl('/ws/tournaments');
 		this.ws = new WebSocket(wsUrl);
 
 		this.ws.addEventListener("open", () => {

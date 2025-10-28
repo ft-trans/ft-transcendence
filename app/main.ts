@@ -285,6 +285,8 @@ const start = async () => {
 							timestamp: sentMessage.sentAt.toISOString(),
 						},
 					});
+				} else {
+					console.log(`[Chat] Receiver ${sentMessage.receiver.id} not connected via WebSocket`);
 				}
 
 				const responseBody = {

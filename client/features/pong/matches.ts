@@ -13,6 +13,7 @@ import {
 } from "client/components";
 import { PongGame } from "client/components/pong_game";
 import { navigateTo } from "client/router";
+import { buildWebSocketUrl } from "client/utils/websocket";
 
 export class MatchesPong extends Component {
 	private pongGame: PongGame | null = null;
@@ -34,7 +35,9 @@ export class MatchesPong extends Component {
 		if (!matchId) {
 			throw new Error("Match ID is required");
 		}
-		const socket = new WebSocket(`/ws/pong/matches/${matchId}`);
+		
+		const wsUrl = buildWebSocketUrl(`/ws/pong/matches/${matchId}`);
+		const socket = new WebSocket(wsUrl);
 
 		socket.onmessage = (event) => {
 			const state: PongGameStateResponse = JSON.parse(event.data);

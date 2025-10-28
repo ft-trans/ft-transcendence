@@ -1,5 +1,6 @@
 import type { ClientMessage, ServerMessage } from "@shared/api/chat";
 import { MESSAGE_TYPES } from "@shared/api/chat";
+import { buildWebSocketUrl } from "client/utils/websocket";
 
 type MessageHandler = (message: ServerMessage) => void;
 
@@ -16,7 +17,7 @@ export class WebSocketManager {
 		}
 
 		// Use cookie-based authentication - cookies are automatically sent with WebSocket connections
-		const wsUrl = `${import.meta.env.VITE_WS_URL || "ws://localhost:3000"}/ws/chat`;
+		const wsUrl = buildWebSocketUrl('/ws/chat');
 		console.log("[WS] Attempting to connect to:", wsUrl);
 		this.ws = new WebSocket(wsUrl);
 
