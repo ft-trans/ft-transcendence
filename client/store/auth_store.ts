@@ -12,6 +12,12 @@ type AuthState = {
 	loading: boolean;
 };
 
+/**
+ * 改善されたAuthStore
+ * - 専用heartbeatを廃止し、通常のAPIリクエストベースの状態管理に移行
+ * - Page Visibility APIを活用した効率的なプレゼンス管理
+ * - セッションベースの統合管理
+ */
 class AuthStore {
 	private state: AuthState = {
 		isAuthenticated: false,
@@ -19,37 +25,32 @@ class AuthStore {
 	};
 
 	private listeners: Set<(state: AuthState) => void> = new Set();
-	private heartbeatInterval: number | null = null;
 	private apiClient = new ApiClient();
 
+	// Page Visibility状態管理
+	private isPageVisible = true;
+	private visibilityChangeHandler = this.handleVisibilityChange.bind(this);
+	private beforeUnloadHandler = this.handleBeforeUnload.bind(this);
+	private pageHideHandler = this.handlePageHide.bind(this);
+
+	// 状態同期用のタイマー（フォールバックとして最小限に使用）
+	private statusSyncInterval: number | null = null;
+	private readonly STATUS_SYNC_INTERVAL = 300000; // 5分ごと（フォールバック）
+
 	constructor() {
-		// ページの可視性変更を監視
 		if (typeof document !== "undefined") {
-			document.addEventListener("visibilitychange", () => {
-				if (this.state.isAuthenticated) {
-					if (document.hidden) {
-						// ページが非表示になった場合はハートビートを停止
-						this.stopHeartbeat();
-					} else {
-						// ページが表示された場合はハートビートを再開
-						this.startHeartbeat();
-					}
-				}
-			});
+			// Page Visibility API の監視
+			document.addEventListener(
+				"visibilitychange",
+				this.visibilityChangeHandler,
+			);
 
-			// ページ離脱時にオフライン状態に設定
-			window.addEventListener("beforeunload", () => {
-				if (this.state.isAuthenticated) {
-					this.setOfflineStatus();
-				}
-			});
+			// ページ離脱時のイベント
+			window.addEventListener("beforeunload", this.beforeUnloadHandler);
+			window.addEventListener("pagehide", this.pageHideHandler);
 
-			// ページを離れる時にもオフライン状態に設定
-			window.addEventListener("pagehide", () => {
-				if (this.state.isAuthenticated) {
-					this.setOfflineStatus();
-				}
-			});
+			// 初期表示状態を設定
+			this.isPageVisible = !document.hidden;
 		}
 	}
 
@@ -73,21 +74,19 @@ class AuthStore {
 			loading: false,
 		};
 		this.notify();
-		this.startHeartbeat();
+
+		// ログイン時にオンライン状態を設定（サーバー側で自動処理）
+		this.startStatusSync();
 	}
 
 	clearUser(): void {
-		// ログアウト時にオフライン状態に設定
-		if (this.state.isAuthenticated) {
-			this.setOfflineStatus();
-		}
-
+		// ログアウト時の処理（サーバー側で自動的にオフライン化）
 		this.state = {
 			isAuthenticated: false,
 			loading: false,
 		};
 		this.notify();
-		this.stopHeartbeat();
+		this.stopStatusSync();
 	}
 
 	setLoading(loading: boolean): void {
@@ -98,68 +97,110 @@ class AuthStore {
 		this.notify();
 	}
 
-	private startHeartbeat(): void {
-		// 既存のハートビートがあれば停止
-		this.stopHeartbeat();
+	/**
+	 * ページ可視性変更の処理
+	 */
+	private handleVisibilityChange(): void {
+		const wasVisible = this.isPageVisible;
+		this.isPageVisible = !document.hidden;
 
-		// ログイン時に即座にオンライン状態に設定
-		this.setOnlineStatus();
+		if (this.state.isAuthenticated) {
+			if (this.isPageVisible && !wasVisible) {
+				// ページが表示されたとき：通常のAPIリクエストで状態が自動更新される
+				console.log(
+					"[AuthStore] Page became visible - status will be updated by next API request",
+				);
 
-		// 1分ごとにハートビートを送信してオンライン状態を延長
-		this.heartbeatInterval = window.setInterval(() => {
-			this.sendHeartbeat();
-		}, 60000); // 60秒 = 1分
-	}
-
-	private stopHeartbeat(): void {
-		if (this.heartbeatInterval !== null) {
-			window.clearInterval(this.heartbeatInterval);
-			this.heartbeatInterval = null;
+				// 念のため状態同期APIを呼び出し
+				this.syncStatusIfNeeded();
+			} else if (!this.isPageVisible && wasVisible) {
+				// ページが非表示になったとき：特別な処理は不要
+				// サーバー側のTTLが自然に期限切れになる
+				console.log(
+					"[AuthStore] Page became hidden - status will naturally expire",
+				);
+			}
 		}
 	}
 
-	private async setOnlineStatus(): Promise<void> {
-		try {
-			await this.apiClient.post("/api/presence/online", {});
-			console.log("[AuthStore] User set to online");
-		} catch (error) {
-			console.error("[AuthStore] Failed to set user online:", error);
+	/**
+	 * ページ離脱前の処理
+	 */
+	private handleBeforeUnload(): void {
+		if (this.state.isAuthenticated) {
+			// 新しいシステムではセッション管理で自動的にオフライン化されるため、
+			// 明示的なオフライン通知は不要
+			console.log("[AuthStore] Page unloading - session will auto-expire");
 		}
 	}
 
-	private async sendHeartbeat(): Promise<void> {
-		if (!this.state.isAuthenticated) {
+	/**
+	 * ページ非表示時の処理
+	 */
+	private handlePageHide(): void {
+		if (this.state.isAuthenticated) {
+			// 新しいシステムではセッション管理で自動的にオフライン化されるため、
+			// 明示的なオフライン通知は不要
+			console.log("[AuthStore] Page hidden - session will auto-expire");
+		}
+	}
+
+	/**
+	 * 必要に応じて状態同期
+	 */
+	private async syncStatusIfNeeded(): Promise<void> {
+		if (!this.state.isAuthenticated || !this.isPageVisible) {
 			return;
 		}
 
 		try {
-			await this.apiClient.post("/api/presence/heartbeat", {});
-			console.log("[AuthStore] Heartbeat sent successfully");
+			// 軽量なAPI呼び出しで状態同期（例：認証状態確認）
+			// このリクエストによってサーバー側で自動的にプレゼンスが更新される
+			await this.apiClient.get("/api/auth/status");
+			console.log("[AuthStore] Status sync completed via natural API request");
 		} catch (error) {
-			console.error("[AuthStore] Heartbeat failed:", error);
-			// ハートビートが連続で失敗した場合はハートビートを停止
-			// （サーバー接続が切れた、セッションが無効など）
-			this.stopHeartbeat();
+			console.error("[AuthStore] Status sync failed:", error);
 		}
 	}
 
-	private async setOfflineStatus(): Promise<void> {
-		try {
-			// navigator.sendBeaconで同期的に送信（ページ離脱時に確実に送信）
-			if (navigator.sendBeacon) {
-				const data = new Blob([JSON.stringify({})], {
-					type: "application/json",
-				});
-				navigator.sendBeacon("/api/presence/offline", data);
-				console.log("[AuthStore] User set to offline via beacon");
-			} else {
-				// フォールバック: 通常のHTTPリクエスト
-				await this.apiClient.post("/api/presence/offline", {});
-				console.log("[AuthStore] User set to offline");
+	/**
+	 * フォールバック用の定期状態同期を開始（最小限）
+	 */
+	private startStatusSync(): void {
+		this.stopStatusSync();
+
+		// 5分ごとに軽量なAPIリクエストで状態確認（フォールバック）
+		// 通常のAPIリクエストが頻繁に発生する場合、これは実質的に動作しない
+		this.statusSyncInterval = window.setInterval(() => {
+			if (this.isPageVisible) {
+				this.syncStatusIfNeeded();
 			}
-		} catch (error) {
-			console.error("[AuthStore] Failed to set user offline:", error);
+		}, this.STATUS_SYNC_INTERVAL);
+	}
+
+	/**
+	 * 定期状態同期を停止
+	 */
+	private stopStatusSync(): void {
+		if (this.statusSyncInterval !== null) {
+			window.clearInterval(this.statusSyncInterval);
+			this.statusSyncInterval = null;
 		}
+	}
+
+	/**
+	 * クリーンアップ処理（必要に応じて呼び出し）
+	 */
+	destroy(): void {
+		if (typeof document !== "undefined") {
+			document.removeEventListener(
+				"visibilitychange",
+				this.visibilityChangeHandler,
+			);
+			window.removeEventListener("beforeunload", this.beforeUnloadHandler);
+			window.removeEventListener("pagehide", this.pageHideHandler);
+		}
+		this.stopStatusSync();
 	}
 }
 

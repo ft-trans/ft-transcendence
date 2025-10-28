@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { AvatarUploadService } from "@domain/service/avatar_upload_service";
 import { MatchmakingService } from "@domain/service/matchmaking_service";
+import { SessionBasedPresenceService } from "@domain/service/session_based_presence_service";
 import FastifyCookie from "@fastify/cookie";
 import FastifyMultipart from "@fastify/multipart";
 import FastifyRedis from "@fastify/redis";
@@ -53,11 +54,9 @@ import { StartPongUsecase } from "@usecase/pong/start_pong_usecase";
 import { StopPongUsecase } from "@usecase/pong/stop_pong_usecase";
 import { UpdatePongPaddleUsecase } from "@usecase/pong/update_pong_paddle_usecase";
 import {
-	ExtendUserOnlineUsecase,
 	GetOnlineUsersUsecase,
 	GetUsersOnlineStatusUsecase,
 	IsUserOnlineUsecase,
-	SetUserOfflineUsecase,
 	SetUserOnlineUsecase,
 } from "@usecase/presence";
 import { BlockUserUsecase } from "@usecase/relationship/block_user_usecase";
@@ -147,24 +146,30 @@ const start = async () => {
 
 		await app.register(FastifyRedis, { url: redisUrl });
 
-		// グローバルエラーハンドラを設定
 		app.setErrorHandler(errorHandler);
 
 		const repo = new Repository(prisma, app.redis);
 		const tx = new Transaction(prisma, app.redis);
+
+		const presenceService = new SessionBasedPresenceService(repo);
+
 		const registerUserUsecase = new RegisterUserUsecase(tx);
 		const loginUserUsecase = new LoginUserUsecase(tx);
 		const logoutUserUsecase = new LogoutUserUsecase(tx);
+
 		const authPrehandler = createAuthPrehandler(
 			repo.newSessionRepository(),
 			repo.newUserRepository(),
+			presenceService,
 		);
+
 		await app.register(
 			authController(
 				registerUserUsecase,
 				loginUserUsecase,
 				logoutUserUsecase,
 				authPrehandler,
+				presenceService,
 			),
 			{ prefix: "/api" },
 		);
@@ -198,8 +203,8 @@ const start = async () => {
 
 		// プレゼンス機能のユースケース
 		const setUserOnlineUsecase = new SetUserOnlineUsecase(repo);
-		const setUserOfflineUsecase = new SetUserOfflineUsecase(repo);
-		const extendUserOnlineUsecase = new ExtendUserOnlineUsecase(repo);
+		// const setUserOfflineUsecase = new SetUserOfflineUsecase(repo); // 未使用
+		// const extendUserOnlineUsecase = new ExtendUserOnlineUsecase(repo); // 未使用
 		const getOnlineUsersUsecase = new GetOnlineUsersUsecase(repo);
 		const getUsersOnlineStatusUsecase = new GetUsersOnlineStatusUsecase(repo);
 		const isUserOnlineUsecase = new IsUserOnlineUsecase(repo);
@@ -210,6 +215,7 @@ const start = async () => {
 				updateUserUsecase,
 				deleteUserUsecase,
 				uploadAvatarUsecase,
+				// 自動プレゼンス更新を統合した認証プレハンドラーを使用
 				authPrehandler,
 			),
 			{ prefix: "/api" },
@@ -227,7 +233,7 @@ const start = async () => {
 
 		// WebSocketチャットコントローラーを後で登録（WebSocketプラグイン登録後）
 
-		// GET ハンドラー - メッセージ履歴取得
+		// GET ハンドラー - メッセージ履歴取得（自動プレゼンス更新統合）
 		app.get<{ Params: { partnerId: string } }>(
 			"/api/dms/:partnerId",
 			{ preHandler: authPrehandler },
@@ -377,12 +383,11 @@ const start = async () => {
 		await app.register(
 			presenceController(
 				setUserOnlineUsecase,
-				setUserOfflineUsecase,
-				extendUserOnlineUsecase,
 				getOnlineUsersUsecase,
 				getUsersOnlineStatusUsecase,
 				isUserOnlineUsecase,
 				authPrehandler,
+				presenceService,
 			),
 			{ prefix: "/api" },
 		);
@@ -451,8 +456,6 @@ const start = async () => {
 				authPrehandler,
 				matchmakingClientRepository,
 				setUserOnlineUsecase,
-				setUserOfflineUsecase,
-				extendUserOnlineUsecase,
 			),
 			{ prefix: "/ws" },
 		);
@@ -482,6 +485,7 @@ const start = async () => {
 		await app.vite.ready();
 		await app.listen({ host: "0.0.0.0", port: 3000 });
 		app.log.info("HTTP server listening on :3000");
+		app.log.info("Enhanced presence management system initialized");
 	} catch (err) {
 		app.log.error(err);
 		process.exit(1);

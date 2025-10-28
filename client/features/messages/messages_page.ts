@@ -209,33 +209,66 @@ export class MessagesPage extends Component {
 	private async handleGameInvite(): Promise<void> {
 		if (!this.selectedFriendId || !this.selectedFriend) return;
 
+		const btn = document.getElementById("game-invite-btn") as HTMLButtonElement;
+		if (!btn) return;
+
+		const originalText = btn.textContent;
+
 		try {
+			// Show loading state
+			btn.textContent = "送信中...";
+			btn.disabled = true;
+			btn.classList.add("bg-gray-500");
+			btn.classList.remove("bg-green-600", "hover:bg-green-700");
+
+			// Ensure WebSocket is connected before sending
+			if (!wsManager.isConnected()) {
+				console.log(
+					"[Messages] WebSocket not connected, attempting to reconnect...",
+				);
+				wsManager.connect();
+				// Wait a bit for connection to establish
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+			}
+
 			// Send game invite via WebSocket
 			wsManager.sendGameInvite(this.selectedFriendId);
 
 			// Show success feedback
-			const btn = document.getElementById(
-				"game-invite-btn",
-			) as HTMLButtonElement;
-			if (btn) {
-				const originalText = btn.textContent;
-				btn.textContent = "✓ Invited!";
-				btn.disabled = true;
-				btn.classList.add("bg-gray-500");
-				btn.classList.remove("bg-green-600", "hover:bg-green-700");
+			btn.textContent = "✓ Invited!";
+			btn.classList.remove("bg-gray-500");
+			btn.classList.add("bg-green-500");
 
-				// Reset button after 3 seconds
-				setTimeout(() => {
-					btn.textContent = originalText;
-					btn.disabled = false;
-					btn.classList.remove("bg-gray-500");
-					btn.classList.add("bg-green-600", "hover:bg-green-700");
-				}, 3000);
-			}
+			new FloatingBanner({
+				message: `${this.selectedFriend.username}にゲーム招待を送信しました`,
+				type: "success",
+			}).show();
+
+			// Reset button after 3 seconds
+			setTimeout(() => {
+				btn.textContent = originalText;
+				btn.disabled = false;
+				btn.classList.remove("bg-green-500");
+				btn.classList.add("bg-green-600", "hover:bg-green-700");
+			}, 3000);
 		} catch (error) {
 			console.error("Failed to send game invite:", error);
+
+			// Reset button immediately on error
+			btn.textContent = originalText;
+			btn.disabled = false;
+			btn.classList.remove("bg-gray-500");
+			btn.classList.add("bg-green-600", "hover:bg-green-700");
+
+			const errorMessage =
+				error instanceof Error
+					? error.message.includes("WebSocket")
+						? "WebSocket接続が切断されています。ページを更新してください。"
+						: "ゲーム招待の送信に失敗しました"
+					: "ゲーム招待の送信に失敗しました";
+
 			new FloatingBanner({
-				message: "ゲーム招待の送信に失敗しました",
+				message: errorMessage,
 				type: "error",
 			}).show();
 		}
